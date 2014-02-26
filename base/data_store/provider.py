@@ -7,7 +7,7 @@ __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
 # ----- Imports --------------------------------------------------------------
 
-from .mysql import DataStoreMySQL
+from .exception import DataStoreException
 from tinyAPI.base.config import ConfigManager
 from tinyAPI.base.data_store.memcache import Memcache
 from tinyAPI.base.singleton import Singleton
@@ -49,19 +49,19 @@ class RDBMSBase(__DataStoreBase):
 
     '''If the data has been cached, purge it.'''
     def memcache_purge():
-        if (self._memcache_key == ''):
+        if self._memcache_key == '':
             return
         Memcache().purge(self._memcache_key)
 
     '''If the data needs to be cached, cache it.'''
     def memcache_retrieve():
-        if (self._memcache_key == ''):
+        if self._memcache_key == '':
             return None
         Memcache().retrieve(self._memcache_key)
 
     '''If there is data and it should be cached, cache it.'''
     def memcache_store(data):
-        if (self._memcache_key == ''):
+        if self._memcache_key == '':
             return
         Memcache.store(self._memcache_key, data, self._memcache_ttl)
 
@@ -90,6 +90,21 @@ class RDBMSBase(__DataStoreBase):
     def update(target, data=tuple(), where=tuple(), binds=tuple()):
         return False
 
+
+class DataStoreMySQL(RDBMSBase):
+    '''Manages interactions with configured MySQL servers.'''
+
+    __mysql = None
+
+    def commit(self):
+        if self.__mysql is None:
+            raise DataStoreException(
+                'transaction cannot be committed becase a database connection '
+                + 'has not been established yet')
+        else:
+            self.__mysql.commit()
+
+
 class DataStoreProvider(metaclass=Singleton):
     '''Defines the main mechanism for retrieving a handle to a configured data
        store.'''
@@ -98,12 +113,12 @@ class DataStoreProvider(metaclass=Singleton):
 
     '''Get the active data store handle against which to execute operations.'''
     def get_data_store_handle(self):
-        if (ConfigManager.value('data store') == 'mysql'):
-            if (self.__dsh is None):
+        if ConfigManager.value('data store') == 'mysql':
+            if self.__dsh is None:
                 self.__dsh = DataStoreMySQL()
             return self.__dsh
         else:
             raise DataStoreException(
                 'configured data store is not currently supported')
 
-__all__ = ['DataStoreProvider', 'RDBMSBase']
+__all__ = ['DataStoreMySQL', 'DataStoreProvider', 'RDBMSBase']

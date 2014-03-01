@@ -8,9 +8,12 @@ __author__ = 'Michael Montero <mcmontero@gmail.com>'
 # ----- Imports --------------------------------------------------------------
 
 from .exception import DataStoreException
+from .mysql import MySQLCursorDict
+from mysql.connector import errorcode
 from tinyAPI.base.config import ConfigManager
 from tinyAPI.base.data_store.memcache import Memcache
 from tinyAPI.base.singleton import Singleton
+import mysql.connector
 
 # ----- Private Classes ------------------------------------------------------
 
@@ -19,8 +22,8 @@ class __DataStoreBase(object):
        RDBMS) should inherit.'''
 
     _connection_name = None
-    _charset = None
-    _db = None
+    _charset = 'utf8'
+    _db_name = None
     _memcache_key = None
     _memcache_ttl = None
 
@@ -30,64 +33,71 @@ class RDBMSBase(__DataStoreBase):
     '''Defines a data store that handles interactions with a RDBMS (MySQL,
        PostgreSQL, etc.).'''
 
-    '''Manually commit the active transaction.'''
     def commit():
+        '''Manually commit the active transaction.'''
         raise NotImplementedError
 
-    '''Create a new record in the RDBMS.'''
+    def count(self, sql, binds=tuple()):
+        '''Given a count(*) query, only return the resultant count.'''
+        return None
+
     def create(target, data=tuple(), return_insert_id=False):
+        '''Create a new record in the RDBMS.'''
         return '' if return_insert_id else None
 
-    '''Delete a record from the RDBMS.'''
     def delete(target, where=tuple(), binds=tuple()):
+        '''Delete a record from the RDBMS.'''
         return False
 
-    '''Specify that the result set should be cached in Memcache.'''
-    def memcache(key, ttl=0):
+    def memcache(self, key, ttl=0):
+        '''Specify that the result set should be cached in Memcache.'''
         self._memcache_key = key
         self._memcache_ttl = ttl
+        return self
 
-    '''If the data has been cached, purge it.'''
-    def memcache_purge():
-        if self._memcache_key == '':
+    def memcache_purge(self):
+        '''If the data has been cached, purge it.'''
+        if self._memcache_key is None:
             return
         Memcache().purge(self._memcache_key)
 
-    '''If the data needs to be cached, cache it.'''
-    def memcache_retrieve():
-        if self._memcache_key == '':
+    def memcache_retrieve(self):
+        '''If the data needs to be cached, cache it.'''
+        if self._memcache_key is None:
             return None
-        Memcache().retrieve(self._memcache_key)
+        return Memcache().retrieve(self._memcache_key)
 
-    '''If there is data and it should be cached, cache it.'''
-    def memcache_store(data):
-        if self._memcache_key == '':
+    def memcache_store(self, data):
+        '''If there is data and it should be cached, cache it.'''
+        if self._memcache_key is not None:
             return
         Memcache.store(self._memcache_key, data, self._memcache_ttl)
 
-    '''Execute an arbitrary query.'''
+    def nth(self, index, sql, binds=tuple()):
+        '''Return the value at the Nth position of the result set.'''
+        return None
+
     def query(caller, query, binds = []):
+        '''Execute an arbitrary query and return all of the results.'''
         return None
 
-    '''Select data from the RDBMS.'''
-    def retrieve(target, cols=tuple(), where=tuple(), binds=tuple()):
-        return None
-
-    '''Manually rollback the active transaction.'''
     def rollback():
+        '''Manually rollback the active transaction.'''
         raise NotImplementedError
 
-    '''Select which connection and database schema to use.'''
-    def select_db(connection, db):
+    def select_db(self, connection, db):
+        '''Select which connection and database schema to use.'''
         self._connection_name = connection
-        self._db = db
+        self._db_name = db
+        return self
 
-    '''Set the character for the RDBMS.'''
     def set_charset(charset):
+        '''Set the character for the RDBMS.'''
         self._charset = charset
+        return self
 
-    '''Update a record in the RDBMS.'''
-    def update(target, data=tuple(), where=tuple(), binds=tuple()):
+    def update(target, data=tuple(), where=tuple()):
+        '''Update a record in the RDBMS.'''
         return False
 
 
@@ -97,12 +107,174 @@ class DataStoreMySQL(RDBMSBase):
     __mysql = None
 
     def commit(self):
+        '''Commit the active transaction.'''
         if self.__mysql is None:
             raise DataStoreException(
                 'transaction cannot be committed becase a database connection '
                 + 'has not been established yet')
         else:
             self.__mysql.commit()
+
+    def __connect(self):
+        '''Perform the tasks required for connecting to the database.'''
+        if self.__mysql is not None:
+            return
+
+        if self._connection_name is None:
+            raise DataStoreException(
+                'cannot connect to MySQL because a connection name has not '
+                + 'been provided')
+
+        connection_data = ConfigManager().value('mysql connection data')
+        if self._connection_name not in connection_data:
+                raise DataStoreException(
+                    'the MySQL connection name you provided is invalid')
+
+        if self._db_name is None:
+            raise DataStoreException(
+                'cannot connection to MySQL because no database name was '
+                + 'selected')
+
+        self.__mysql = mysql.connector.connect(
+            user=connection_data[self._connection_name][1],
+            password=connection_data[self._connection_name][2],
+            host=connection_data[self._connection_name][0],
+            database=self._db_name,
+            charset=self._charset)
+
+    def __convert_to_prepared(self, separator, data=tuple()):
+        binds = self.__get_binds(data)
+
+        clause = []
+        for index, key in enumerate(data.keys()):
+            assignment = ''
+            assignment += key + ' = '
+            assignment += binds[index]
+            clause.append(assignment)
+
+        return separator.join(clause)
+
+    def count(self, sql, binds=tuple()):
+        return list(self.nth(0, sql, binds).values())[0]
+
+    def create(self, target, data=tuple(), return_insert_id=True):
+        if len(data) == 0:
+            return None
+
+        keys = list(data.keys())
+        binds = self.__get_binds(data)
+        vals = list(data.values())
+
+        sql  = 'insert into ' + target + '('
+        sql += ', '.join(keys)
+        sql += ')'
+        sql += ' values ('
+        sql += ', '.join(binds)
+        sql += ')'
+
+        self.__connect()
+
+        cursor = self.__get_cursor()
+        cursor.execute(sql, vals)
+
+        id = None
+        if return_insert_id:
+            id = cursor.getlastrowid()
+
+        cursor.close()
+
+        return id
+
+    def delete(self, target, data=tuple()):
+        if len(data) == 0:
+            return True
+
+        sql  = 'delete from ' + target
+        sql += ' where ' + self.__format_where_clause(data)
+
+        self.__connect()
+
+        cursor = self.__get_cursor()
+        cursor.execute(sql, vals)
+        cursor.close()
+
+        self.memcache_purge()
+
+        return True
+
+    def __get_binds(self, data=tuple()):
+        if len(data) == 0:
+            return tuple()
+
+        binds = []
+        for value in list(data.values()):
+            if (value == 'current_timestamp'):
+                binds.append(value)
+            else:
+                binds.append('%s')
+
+        return binds
+
+    def __get_cursor(self):
+        return self.__mysql.cursor(prepared=True,
+                                   cursor_class=MySQLCursorDict)
+
+    def nth(self, index, sql, binds=tuple()):
+        records = self.query(sql, binds)
+
+        if index < len(records):
+            return records[index]
+        else:
+            return None
+
+    def query(self, sql, binds=tuple()):
+        results_from_cache = self.memcache_retrieve()
+        if results_from_cache is not None:
+            return results_from_cache
+
+        self.__connect()
+
+        cursor = self.__get_cursor()
+        cursor.execute(sql, binds)
+
+        records = []
+        for record in cursor:
+            records.append(record)
+
+        cursor.close()
+
+        if records.count(self) == 1:
+            records = records[0]
+
+        self.memcache_store(records)
+
+        return records
+
+    def rollback(self):
+        '''Rolls back the active transaction.'''
+        if self.__mysql is None:
+            raise DataStoreException(
+                'transaction cannot be rolled back becase a database '
+                + 'connection has not been established yet')
+        else:
+            self.__mysql.rollback()
+
+    def update(self, target, data=tuple(), where=tuple()):
+        if len(data) == 0:
+            return True
+
+        sql  = 'update ' + target
+        sql += '   set ' + self.__convert_to_prepared(', ', data)
+        sql += ' where ' + self.__convert_to_prepared(' and ', where)
+
+        self.__connect()
+
+        cursor = self.__get_cursor()
+        cursor.execute(sql, list(data.values()) + list(where.values()))
+
+        self.memcache_purge()
+
+        return True
 
 
 class DataStoreProvider(metaclass=Singleton):
@@ -111,8 +283,9 @@ class DataStoreProvider(metaclass=Singleton):
 
     __dsh = None
 
-    '''Get the active data store handle against which to execute operations.'''
     def get_data_store_handle(self):
+        '''Get the active data store handle against which to execute
+           operations.'''
         if ConfigManager.value('data store') == 'mysql':
             if self.__dsh is None:
                 self.__dsh = DataStoreMySQL()
@@ -120,5 +293,6 @@ class DataStoreProvider(metaclass=Singleton):
         else:
             raise DataStoreException(
                 'configured data store is not currently supported')
+
 
 __all__ = ['DataStoreMySQL', 'DataStoreProvider', 'RDBMSBase']

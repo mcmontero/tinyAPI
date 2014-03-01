@@ -13,7 +13,9 @@ import tinyAPI_config
 class ConfigManager(object):
     '''Handles retrieval and validation of configuration settings.'''
 
+    @staticmethod
     def value(key):
+        '''Retrieves the configuration value named by key.'''
         if key in tinyAPI_config.values:
             return tinyAPI_config.values[key]
         else:

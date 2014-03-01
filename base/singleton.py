@@ -1,4 +1,4 @@
-''' singleton.py --- Singleton meta-class implementation.'''
+'''singleton.py --- Singleton meta-class implementation.'''
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'
 

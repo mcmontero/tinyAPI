@@ -6,13 +6,16 @@ __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
 from .exception import CLIException
 import argparse
+import errno
 import datetime
+import os
+import re
 import sys
 import time
 
 # ----- Public Functions  ----------------------------------------------------
 
-def cli_main(args, function):
+def cli_main(function, args=None):
     '''Executes the "main" CLI function passing in the configured arguments.'''
     function(CLI(args))
 
@@ -26,18 +29,30 @@ class CLI(object):
     STATUS_ERROR = 3;
 
     args = None
-    __started = None
+    __enable_status = False
+    __pid_lock_file = None
+    __started = int(time.time())
     __status_id = STATUS_OK
 
-    def __init__(self, args):
-        if not isinstance(args, argparse.ArgumentParser):
-            raise CLIException('args much be instance of ArgumentParser')
+    def __init__(self, args=None):
+        if args is not None:
+            if not isinstance(args, argparse.ArgumentParser):
+                raise CLIException('args much be instance of ArgumentParser')
+            self.args = args.parse_args()
 
-        self.args = args.parse_args()
-        self.__started = int(time.time())
+        self.__pid_lock()
+        self.__enable_status = True
 
     def __del__(self):
-        self.status()
+        if self.__enable_status:
+            self.status()
+
+        if self.__pid_lock_file is not None:
+            try:
+                os.remove(self.__pid_lock_file)
+            except OSError as e:
+                if e.errno != errno.ENOENT:
+                    raise
 
     def draw_header(self, title):
         '''Displays the header of the CLI containing the name.'''
@@ -56,6 +71,44 @@ class CLI(object):
         '''Outputs a notice message.'''
         self.__print_message(message, '+', indent)
 
+    def __pid_lock(self):
+        params = []
+        params_str = '';
+        if self.args is not None:
+            params = list(filter(None, list(vars(self.args).values())))
+            params_str = ' '.join(str(v) for v in params)
+
+        base_name = '/var/run/cli/' + os.path.basename(sys.argv[0])
+
+        if len(params) > 0:
+            base_name += '-' + re.sub('[^A-Za-z0-9]', '', params_str)
+
+        self.__pid_lock_file = base_name + '.pid_lock'
+
+        try:
+            pid_file = os.fdopen(os.open(self.__pid_lock_file,
+                                         os.O_CREAT | os.O_EXCL | os.O_WRONLY,
+                                         0o644),
+                                 'w')
+        except OSError as e:
+            if e.errno == errno.EEXIST:
+                self.__pid_lock_failed()
+
+        pid_file.write(str(os.getpid()))
+        pid_file.close()
+
+    def __pid_lock_failed(self):
+        self.__enable_status = False;
+
+        print("\n* Process is already running!")
+        print("* Could not acquire PID lock on:\n    " + self.__pid_lock_file)
+
+        with open(self.__pid_lock_file) as f:
+            print("* The lock is held by PID " + f.read() + '.\n')
+
+        self.__pid_lock_file = None
+        sys.exit(0);
+
     def __print_message(self, message, char, indent=None):
         if indent is not None:
             print((' ' * 4) + message)
@@ -63,12 +116,14 @@ class CLI(object):
             print(char + ' ' + message)
 
     def status(self):
+        '''Prints a final message about the overall status of a CLI when it
+           exits.'''
         elapsed = int(time.time()) - self.__started
         indicator = '';
         message = '';
         if self.__status_id == self.STATUS_OK:
             indicator = '+'
-            mesage = 'successfully'
+            message = 'successfully'
         elif self.__status_id == self.STATUS_WARN:
             indicator = '*'
             message = 'with warnings'
@@ -80,6 +135,8 @@ class CLI(object):
                + ' in ' + str('{0:,}'.format(elapsed)) + "s!\n"))
 
     def time_marker(self, num_iterations=None):
+        '''Outputs the time for each iteration of a CLI that runs in a loop
+           continuously.'''
         self.notice(
             ('----- Marker '
              + (str(num_iterations) if num_iterations is not None else '')

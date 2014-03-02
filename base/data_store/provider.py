@@ -14,6 +14,7 @@ from tinyAPI.base.config import ConfigManager
 from tinyAPI.base.data_store.memcache import Memcache
 from tinyAPI.base.singleton import Singleton
 import mysql.connector
+import re
 
 # ----- Private Classes ------------------------------------------------------
 
@@ -69,7 +70,7 @@ class RDBMSBase(__DataStoreBase):
 
     def memcache_store(self, data):
         '''If there is data and it should be cached, cache it.'''
-        if self._memcache_key is not None:
+        if self._memcache_key is None:
             return
         Memcache.store(self._memcache_key, data, self._memcache_ttl)
 
@@ -77,7 +78,7 @@ class RDBMSBase(__DataStoreBase):
         '''Return the value at the Nth position of the result set.'''
         return None
 
-    def query(caller, query, binds = []):
+    def query(self, query, binds = []):
         '''Execute an arbitrary query and return all of the results.'''
         return None
 
@@ -95,10 +96,6 @@ class RDBMSBase(__DataStoreBase):
         '''Set the character for the RDBMS.'''
         self._charset = charset
         return self
-
-    def update(target, data=tuple(), where=tuple()):
-        '''Update a record in the RDBMS.'''
-        return False
 
 
 class DataStoreMySQL(RDBMSBase):
@@ -186,16 +183,17 @@ class DataStoreMySQL(RDBMSBase):
         return id
 
     def delete(self, target, data=tuple()):
-        if len(data) == 0:
-            return True
+        sql = 'delete from ' + target
 
-        sql  = 'delete from ' + target
-        sql += ' where ' + self.__format_where_clause(data)
+        binds = None
+        if len(data) > 0:
+            sql += ' where ' + self.__convert_to_prepared(', ', data)
+            binds = list(data.values())
 
         self.__connect()
 
         cursor = self.__get_cursor()
-        cursor.execute(sql, vals)
+        cursor.execute(sql, binds)
         cursor.close()
 
         self.memcache_purge()
@@ -234,21 +232,28 @@ class DataStoreMySQL(RDBMSBase):
 
         self.__connect()
 
+        is_select = False
+        if re.match('^\(?select ', sql) or re.match('^show ', sql):
+            is_select = True
+
         cursor = self.__get_cursor()
         cursor.execute(sql, binds)
 
-        records = []
-        for record in cursor:
-            records.append(record)
+        if is_select:
+            results = []
+            for result in cursor:
+                results.append(result)
+
+            if results.count(self) == 1:
+                results = results[0]
+
+            self.memcache_store(results)
+        else:
+            results = True
 
         cursor.close()
 
-        if records.count(self) == 1:
-            records = records[0]
-
-        self.memcache_store(records)
-
-        return records
+        return results
 
     def rollback(self):
         '''Rolls back the active transaction.'''
@@ -258,23 +263,6 @@ class DataStoreMySQL(RDBMSBase):
                 + 'connection has not been established yet')
         else:
             self.__mysql.rollback()
-
-    def update(self, target, data=tuple(), where=tuple()):
-        if len(data) == 0:
-            return True
-
-        sql  = 'update ' + target
-        sql += '   set ' + self.__convert_to_prepared(', ', data)
-        sql += ' where ' + self.__convert_to_prepared(' and ', where)
-
-        self.__connect()
-
-        cursor = self.__get_cursor()
-        cursor.execute(sql, list(data.values()) + list(where.values()))
-
-        self.memcache_purge()
-
-        return True
 
 
 class DataStoreProvider(metaclass=Singleton):

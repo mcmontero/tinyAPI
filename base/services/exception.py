@@ -13,4 +13,14 @@ class CLIException(Exception):
     def __str__(self):
         return repr(self.value)
 
-__all__ = ['CLIException']
+
+class DataArmorException(Exception):
+    '''Named exception when issues with Data Armor arise.'''
+
+    def __init__(self, value):
+        self.value = value
+
+    def __str__(self):
+        return repr(self.value)
+
+__all__ = ['CLIException', 'DataArmorException']

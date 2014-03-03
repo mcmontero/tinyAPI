@@ -10,7 +10,7 @@ from tinyAPI.base.services.cli import cli_main
 def main(cli):
     '''Executes examples of all the ways in which you can use the data store
        sub-system for interacting with an RDBMS.'''
-    cli.draw_header('Data Store - RDBMS')
+    cli.header('Data Store - RDBMS')
 
     '''Select the named database you wish to connect to.  In this case, "local"
        is one of the connection names defined in tinyAPI_config.py.  "core" is

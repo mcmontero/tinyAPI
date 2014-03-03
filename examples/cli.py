@@ -17,7 +17,7 @@ args.add_argument('--optional_arg', help='This argument is optional.')
 def main(cli):
     '''The main program you want the CLI to execute.  The cli parameter here
        is an instance of cli.CLI.'''
-    cli.draw_header('My CLI')
+    cli.header('My CLI')
     cli.notice("I've started doing something and everything is OK!")
     cli.notice("now I am doing something related to the previous message", 1)
     cli.warn("You should know that something is amiss.")

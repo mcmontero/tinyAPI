@@ -17,7 +17,12 @@ import time
 
 def cli_main(function, args=None):
     '''Executes the "main" CLI function passing in the configured arguments.'''
-    function(CLI(args))
+    cli = CLI(args)
+    try:
+        function(cli)
+    except:
+        cli.set_status_error()
+        raise
 
 # ----- Public Classes  ------------------------------------------------------
 
@@ -54,10 +59,6 @@ class CLI(object):
                 if e.errno != errno.ENOENT:
                     raise
 
-    def draw_header(self, title):
-        '''Displays the header of the CLI containing the name.'''
-        print("\n" + CLIOutputRenderer().draw_header(title))
-
     def error(self, message, indent=None):
         '''Outputs an error message.'''
         self.__status_id = self.STATUS_ERROR
@@ -66,6 +67,10 @@ class CLI(object):
     def exit(self):
         '''Exits setting the return value based on the status of the CLI.'''
         exit(0 if self.__status_id == self.STATUS_OK else 1)
+
+    def header(self, title):
+        '''Displays the header of the CLI containing the name.'''
+        print("\n" + CLIOutputRenderer().draw_header(title))
 
     def notice(self, message, indent=None):
         '''Outputs a notice message.'''
@@ -114,6 +119,9 @@ class CLI(object):
             print((' ' * 4) + message)
         else:
             print(char + ' ' + message)
+
+    def set_status_error(self):
+        self.__status_id = self.STATUS_ERROR
 
     def status(self):
         '''Prints a final message about the overall status of a CLI when it

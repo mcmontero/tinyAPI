@@ -1,5 +1,5 @@
 '''data_armor.py -- Allows for the creation of secure, encrypted packets of
-   data.'''
+   data.  It is highly recommended that you use a key length of 32 bytes.'''
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'
 

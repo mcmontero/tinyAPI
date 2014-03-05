@@ -14,4 +14,15 @@ class DataStoreException(Exception):
     def __str__(self):
         return repr(self.value)
 
-__all__ = ['DataStoreException']
+
+class DataStoreDuplicateKeyException(DataStoreException):
+    '''Named exception identifying when a duplicate key is being added to a
+       RDBMS.'''
+
+    def __init__(self, value):
+        self.value = value
+
+    def __str__(self):
+        return repr(self.value)
+
+__all__ = ['DataStoreDuplicateKeyException', 'DataStoreException']

@@ -13,8 +13,6 @@ import memcache
 class Memcache(metaclass=Singleton):
     '''Manages interactions with configured Memcached servers.'''
 
-    __handle = None
-
     def __init__(self):
         self.__handle=memcache.Client(ConfigManager.value('memcached servers'),
                                       debug=0)

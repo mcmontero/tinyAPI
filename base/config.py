@@ -1,4 +1,4 @@
-'''config.py -- Manages the retrieval and validatio nof configuration
+'''config.py -- Manages the retrieval and validation of configuration
    settings.'''
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'

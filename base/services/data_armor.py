@@ -19,9 +19,6 @@ class DataArmor(object):
     '''Creates an encrypted token that cannot be modified without detection and
        can be expired by TTL.'''
 
-    __key = None
-    __data = None
-
     def __init__(self, key, data):
         key_len = len(key)
         if key_len != 16 and key_len != 24 and key_len != 32:

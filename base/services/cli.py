@@ -33,31 +33,38 @@ class CLI(object):
     STATUS_WARN = 2;
     STATUS_ERROR = 3;
 
-    args = None
-    __enable_status = False
-    __pid_lock_file = None
-    __started = int(time.time())
-    __status_id = STATUS_OK
-
     def __init__(self, args=None):
+        self.args = None
         if args is not None:
             if not isinstance(args, argparse.ArgumentParser):
                 raise CLIException('args much be instance of ArgumentParser')
             self.args = args.parse_args()
 
+        self.__enable_status = False
+        self.__pid_lock_file = None
+        self.__started = int(time.time())
+        self.__status_id = self.STATUS_OK
+
         self.__pid_lock()
+        # Now that PID locking has succeeded, enable the status.
         self.__enable_status = True
 
     def __del__(self):
-        if self.__enable_status:
-            self.status()
+        try:
+            if self.__enable_status is True:
+                self.status()
+        except AttributeError:
+            pass
 
-        if self.__pid_lock_file is not None:
-            try:
-                os.remove(self.__pid_lock_file)
-            except OSError as e:
-                if e.errno != errno.ENOENT:
-                    raise
+        try:
+            if self.__pid_lock_file is not None:
+                try:
+                    os.remove(self.__pid_lock_file)
+                except OSError as e:
+                    if e.errno != errno.ENOENT:
+                        raise
+        except AttributeError:
+            pass
 
     def error(self, message, indent=None):
         '''Outputs an error message.'''

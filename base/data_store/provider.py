@@ -7,7 +7,7 @@ __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
 # ----- Imports --------------------------------------------------------------
 
-from .exception import DataStoreException
+from .exception import DataStoreException, DataStoreDuplicateKeyException
 from .mysql import MySQLCursorDict
 from mysql.connector import errorcode
 from tinyAPI.base.config import ConfigManager
@@ -22,11 +22,12 @@ class __DataStoreBase(object):
     '''Defines the base level class from which all data store types (like
        RDBMS) should inherit.'''
 
-    _connection_name = None
-    _charset = 'utf8'
-    _db_name = None
-    _memcache_key = None
-    _memcache_ttl = None
+    def __init__(self):
+        self._connection_name = None
+        self._charset = 'utf8'
+        self._db_name = None
+        self._memcache_key = None
+        self._memcache_ttl = None
 
 # ----- Public Classes -------------------------------------------------------
 
@@ -101,7 +102,10 @@ class RDBMSBase(__DataStoreBase):
 class DataStoreMySQL(RDBMSBase):
     '''Manages interactions with configured MySQL servers.'''
 
-    __mysql = None
+    def __init__(self):
+        super(DataStoreMySQL, self).__init__()
+
+        self.__mysql = None
 
     def commit(self):
         '''Commit the active transaction.'''
@@ -172,7 +176,14 @@ class DataStoreMySQL(RDBMSBase):
         self.__connect()
 
         cursor = self.__get_cursor()
-        cursor.execute(sql, vals)
+
+        try:
+            cursor.execute(sql, vals)
+        except mysql.connector.errors.IntegrityError as e:
+            if e.errno == 1062:
+                raise DataStoreDuplicateKeyException(e.msg)
+            else:
+                raise
 
         id = None
         if return_insert_id:
@@ -269,18 +280,18 @@ class DataStoreProvider(metaclass=Singleton):
     '''Defines the main mechanism for retrieving a handle to a configured data
        store.'''
 
-    __dsh = None
-
     def get_data_store_handle(self):
         '''Get the active data store handle against which to execute
            operations.'''
         if ConfigManager.value('data store') == 'mysql':
-            if self.__dsh is None:
+            try:
+                self.__dsh
+            except AttributeError:
                 self.__dsh = DataStoreMySQL()
+
             return self.__dsh
         else:
             raise DataStoreException(
                 'configured data store is not currently supported')
-
 
 __all__ = ['DataStoreMySQL', 'DataStoreProvider', 'RDBMSBase']

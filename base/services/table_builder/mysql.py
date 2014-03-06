@@ -6,6 +6,7 @@ __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
 from .exception import TableBuilderException
 from inspect import stack
+import re
 
 # ----- Private Classes  -----------------------------------------------------
 
@@ -34,7 +35,9 @@ class __MySQLColumn(object):
         if self._default == 'current_timestamp':
             term += 'current_timestamp'
         else:
-            term += "'" + self._default + "'"
+            term += "'" + str(self._default) + "'"
+
+        return term
 
     def get_on_update_term(self):
         if self._on_update is None:
@@ -58,6 +61,7 @@ class __MySQLColumn(object):
     def unique(self):
         self._unique = True
 
+# ----- Protected Classes  ---------------------------------------------------
 
 class _MySQLNumericColumn(__MySQLColumn):
     '''Defines a numeric MySQL column.'''
@@ -98,7 +102,7 @@ class _MySQLNumericColumn(__MySQLColumn):
         return self
 
     def float_type(self, precision):
-        self.__type_id = TYPE_FLOAT
+        self.__type_id = self.TYPE_FLOAT
         self.__precision = precision
         return self
 
@@ -206,28 +210,264 @@ class _MySQLNumericColumn(__MySQLColumn):
         self.__zero_fill = True
         return self
 
+
+class _MySQLStringColumn(__MySQLColumn):
+    '''Defines a string MySQL column.'''
+
+    TYPE_CHAR = 1
+    TYPE_VARCHAR = 2
+    TYPE_BINARY = 3
+    TYPE_VARBINARY = 4
+    TYPE_TINYBLOB = 5
+    TYPE_BLOB = 6
+    TYPE_MEDIUMBLOB = 7
+    TYPE_LONGBLOB = 8
+    TYPE_TINYTEXT = 9
+    TYPE_TEXT = 10
+    TYPE_MEDIUMTEXT = 11
+    TYPE_LONGTEXT = 12
+    TYPE_ENUM = 13
+    TYPE_SET = 14
+
+    def __init__(self, name):
+        super(_MySQLStringColumn, self).__init__(name)
+
+        self.__type_id = None
+        self.__length = None
+        self.__charset = 'utf8'
+        self.__collation = 'utf8_unicode_ci'
+        self.__list = []
+
+    def binary_type(self, type_id, length=None):
+        self.__validate_type_id(type_id)
+
+        self.__type_id = type_id
+        self.__length = length
+
+        return self
+
+    def blob_type(self, type_id, length=None):
+        self.__validate_type_id(type_id)
+
+        if type_id != self.TYPE_BLOB and length is not None:
+            raise TableBuilderException(
+                'you can only specify the length if the column is blob')
+
+        self.__type_id = type_id
+        self.__length = length
+
+        return self
+
+    def char_type(self, type_id, length=None):
+        self.__validate_type_id(type_id)
+
+        self.__type_id = type_id
+        self.__length = length
+
+        return self
+
+    def charset(self, charset):
+        self.__charset = charset
+        return self
+
+    def collation(self, name):
+        self.__collation = name
+        return self
+
+    def __format_list(self):
+        list = []
+        for value in self.__list:
+            list.append("'" + str(value) + "'")
+
+        return ', '.join(list)
+
+    def get_definition(self):
+        terms = [self._name]
+
+        if self.__type_id == self.TYPE_CHAR:
+            terms.append('char(' + str(self.__length) + ')')
+        elif self.__type_id == self.TYPE_VARCHAR:
+            terms.append('varchar(' + str(self.__length) + ')')
+        elif self.__type_id == self.TYPE_BINARY:
+            terms.append('binary(' + str(self.__length) + ')')
+        elif self.__type_id == self.TYPE_VARBINARY:
+            terms.append('varbinary(' + str(self.__length) + ')')
+        elif self.__type_id == self.TYPE_TINYBLOB:
+            terms.append('tinyblob')
+        elif self.__type_id == self.TYPE_BLOB:
+            terms.append('blobl(' + str(self.__length) + ')')
+        elif self.__type_id == self.TYPE_MEDIUMBLOB:
+            terms.append('mediumblob')
+        elif self.__type_id == self.TYPE_LONGBLOB:
+            terms.append('longblob')
+        elif self.__type_id == self.TYPE_TINYTEXT:
+            terms.append('tinytext')
+        elif self.__type_id == self.TYPE_TEXT:
+            terms.append(('text'
+                          + ('' if self.__length is None else
+                                '(' + str(self.__length) + ')')))
+        elif self.__type_id == self.TYPE_MEDIUMTEXT:
+            terms.append('mediumtext')
+        elif self.__type_id == self.TYPE_LONGTEXT:
+            terms.append('longtext')
+        elif self.__type_id == self.TYPE_ENUM:
+            terms.append('enum(' + self.__format_list() + ')')
+        elif self.__type_id == self.TYPE_SET:
+            terms.append('set(' + self.__format_list() + ')')
+        else:
+            raise TableBuilderException('unrecognized string column type "'
+                                         + self.__type_id
+                                         + '"')
+
+        if self.__charset is not None:
+            terms.append('character set ' + self.__charset)
+
+        if self.__collation is not None:
+            terms.append('collate ' + self.__collation)
+
+        if self._not_null is True:
+            terms.append('not null')
+
+        if self._primary_key is False and self._unique is True:
+            terms.append('unique')
+
+        default_term = self.get_default_term()
+        if default_term is not None:
+            terms.append(default_term)
+
+        if self._primary_key is True:
+            terms.append('primary key')
+
+        return ' '.join(terms)
+
+    def list_type(self, type_id, values=tuple()):
+        self.__validate_type_id(type_id)
+
+        self.__type_id = type_id
+        self.__list = values
+        return self
+
+    def text_type(self, type_id, length=None):
+        self.__validate_type_id(type_id)
+
+        if type_id != self.TYPE_TEXT and length is not None:
+            raise TableBuilderException(
+                'you can only specify the length if the column is text')
+
+        self.__type_id = type_id
+        self.__length = length
+        return self
+
+    def __validate_type_id(self, type_id):
+        if type_id not in [self.TYPE_CHAR,
+                           self.TYPE_VARCHAR,
+                           self.TYPE_BINARY,
+                           self.TYPE_VARBINARY,
+                           self.TYPE_TINYBLOB,
+                           self.TYPE_BLOB,
+                           self.TYPE_MEDIUMBLOB,
+                           self.TYPE_LONGBLOB,
+                           self.TYPE_TINYTEXT,
+                           self.TYPE_TEXT,
+                           self.TYPE_MEDIUMTEXT,
+                           self.TYPE_LONGTEXT,
+                           self.TYPE_ENUM,
+                           self.TYPE_SET]:
+            raise TableBuilderException('the type ID provided is invalid')
+
+
+class _MySQLDateTimeColumn(__MySQLColumn):
+    '''Defines a date/time MySQL column.'''
+
+    TYPE_DATE = 1
+    TYPE_DATETIME = 2
+    TYPE_TIMESTAMP = 3
+    TYPE_TIME = 4
+    TYPE_YEAR = 5
+
+    def __init__(self, name):
+        super(_MySQLDateTimeColumn, self).__init__(name)
+
+        self.__type_id = None
+        self.__num_digits = None
+
+    def date_time_type(self, type_id):
+        self.__validate_type_id(type_id)
+
+        self.__type_id = type_id
+        return self
+
+    def get_definition(self):
+        terms = [self._name]
+
+        if self.__type_id == self.TYPE_DATE:
+            terms.append('date')
+        elif self.__type_id == self.TYPE_DATETIME:
+            terms.append('datetime')
+        elif self.__type_id == self.TYPE_TIMESTAMP:
+            terms.append('timestamp')
+        elif self.__type_id == self.TYPE_TIME:
+            terms.append('time')
+        elif self.__type_id == self.TYPE_YEAR:
+            terms.append('year(' + str(self.__num_digits) + ')')
+        else:
+            raise TableBuilderException('unrecognized date/time column type "'
+                                         + self.__type_id
+                                         + '"')
+
+        if self._not_null is True:
+            terms.append('not null')
+
+        if self._primary_key is False and self._unique is True:
+            terms.append('unique')
+
+        default_term = self.get_default_term()
+        if default_term is not None:
+            terms.append(default_term)
+
+        if self._primary_key is True:
+            terms.append('primary key')
+
+        if self._on_update is not None:
+            terms.append(self.get_on_update_term())
+
+        return ' '.join(terms)
+
+    def __validate_type_id(self, type_id):
+        if type_id not in [self.TYPE_DATE,
+                           self.TYPE_DATETIME,
+                           self.TYPE_TIMESTAMP,
+                           self.TYPE_TIME,
+                           self.TYPE_YEAR]:
+            raise TableBuilderException('the type ID provided is invalid')
+
+    def year(self, num_digits=4):
+        self.__type_id = self.TYPE_YEAR
+        self.__num_digits = num_digits
+        return self
+
 # ----- Public Classes  ------------------------------------------------------
 
 class Table(object):
     '''Allows for the description of a table that can be compiled to SQL.'''
 
     def __init__(self, db_name, name):
-        self.__db_name = db_name
-        self.__name = name
-        self.__engine = 'innodb'
-        self.__columns = []
-        self.__map = {}
         self.__active_column = None
-        self.__temporary = False
-        self.__primary_key = []
-        self.__unique_keys = []
-        self.__foreign_keys = []
-        self.__dependencies = []
-        self.__indexes = []
-        self.__rows = []
-        self.__indexed_cols = []
         self.__charset = 'utf8'
         self.__collation = 'utf8_unicode_ci'
+        self.__columns = []
+        self.__db_name = db_name
+        self.__dependencies = []
+        self.__engine = 'innodb'
+        self.__foreign_keys = []
+        self.__indexed_cols = []
+        self.__indexes = []
+        self.__map = {}
+        self.__name = name
+        self.__primary_key = []
+        self.__rows = []
+        self.__temporary = False
+        self.__unique_keys = []
 
     def ai():
         '''Makes the active column auto increment.'''
@@ -259,14 +499,14 @@ class Table(object):
     def bin(self, name, length, not_null=False):
         '''Define a binary column.'''
         self.__add_column(
-            _MySQLNumericColumn(name)
-                .binary_type(_MySQLNumericColumn.TYPE_BINARY, length))
+            _MySQLStringColumn(name)
+                .binary_type(_MySQLStringColumn.TYPE_BINARY, length))
 
         self.__set_attributes(not_null, None, None)
 
         return self
 
-    def bit(self, not_null=False, num_bits=None):
+    def bit(self, name, not_null=False, num_bits=None):
         '''Define a column of bits.'''
         self.__add_column(
             _MySQLNumericColumn(name)
@@ -279,8 +519,8 @@ class Table(object):
     def bint(self,
              name,
              not_null=False,
-             unsigned=False,
              max_display_width=None,
+             unsigned=False,
              zero_fill=False):
         '''Define a bit integer column.'''
         self.__add_column(
@@ -304,7 +544,7 @@ class Table(object):
 
     def bool(self, name, not_null=False):
         '''Define a boolean column.'''
-        self.tint(name, 1, not_null)
+        self.tint(name, not_null, 1)
         return self
 
     def char(self, name, length, not_null=False):
@@ -328,7 +568,7 @@ class Table(object):
 
     def created(self):
         '''Create a standardized date_created column.'''
-        self.dtt('date_created', true)
+        self.dtt('date_created', True)
         return self
 
     def dec(self,
@@ -381,7 +621,7 @@ class Table(object):
         '''Define a date/time column.'''
         self.__add_column(
             _MySQLDateTimeColumn(name)
-                .date_type_type(_MySQLDateTimeColumn.TYPE_DATETIME))
+                .date_time_type(_MySQLDateTimeColumn.TYPE_DATETIME))
 
         self.__set_attributes(not_null, None, None)
 
@@ -400,8 +640,8 @@ class Table(object):
     def enum(self, name, list=tuple(), not_null=False):
         '''Define an enumeration.'''
         self.__add_column(
-            MySQLStringColumn(name)
-                .list_type(MySQLStringColumn.TYPE_ENUM, list))
+            _MySQLStringColumn(name)
+                .list_type(_MySQLStringColumn.TYPE_ENUM, list))
 
         self.__set_attributes(not_null, None, None)
 
@@ -446,13 +686,14 @@ class Table(object):
         return self
 
     def float(self,
+              name,
               not_null=False,
               precision=None,
               unsigned=False,
               zero_fill=False):
         '''Define a float column.'''
         self.__add_column(
-            MySQLNumericColumn(name)
+            _MySQLNumericColumn(name)
                 .float_type(precision))
 
         self.__set_attributes(not_null, unsigned, zero_fill)
@@ -476,7 +717,7 @@ class Table(object):
         if len(self.__unique_keys) > 0:
             for i in range(0, len(self.__unique_keys)):
                 terms.append('    unique key'
-                             + self._name
+                             + self.__name
                              + '_' + i
                              + '_uk ('
                              + ', '.join(self.__unique_keys[i])
@@ -484,7 +725,7 @@ class Table(object):
 
         if len(self.__primary_key) > 0:
             terms.append('    primary key'
-                         + self._name
+                         + self.__name
                          + '_pk ('
                          + ', '.join(self.__primary_key)
                          + ')')
@@ -513,6 +754,93 @@ class Table(object):
     def get_dependencies(self):
         '''Return a list of this tables dependencies.'''
         return self.__dependencies
+
+    def get_foreign_key_definitions(self):
+        '''Get SQL statements to create foreign keys defined for this table.'''
+        if len(self.__foreign_keys) == 0:
+            return []
+
+        fks = []
+        for i in range(0, len(self.__foreign_keys)):
+            parent_table = self.__foreign_keys[i][0]
+            on_delete_cascade = self.__foreign_keys[i][1]
+            cols = self.__foreign_keys[i][2]
+            parent_cols = self.__foreign_keys[i][3]
+
+            constraint_name = self.__name + '_' + str(i) + '_fk'
+
+            fks.append(('   alter table ' + self.__name + "\n"
+                        + 'add constraint '
+                        + self.__name
+                        + '_' . str(i)
+                        + '_fk\n'
+                        + '   foreign key ('
+                        + ', '.join(cols)
+                        + ')\n    references ' + parent_table
+                        + ('' if len(parent_cols) == 0 else
+                            ' (' + ', '.join(parent_cols) + ')')
+                        + ('' if on_delete_cascade is False else
+                            '\n     on delete cascade')))
+
+        return fks
+
+    def get_index_definitions(self):
+        '''Get SQL statements to create indexes defined for this table.'''
+        indexes = []
+        for i in range(0, len(self.__indexes)):
+            indexes.append(('create index '
+                            + self.__name
+                            + '_' + str(i)
+                            + '_idx\n          on '
+                            + self.__name
+                            + '\n             ('
+                            + ', '.join(self.__indexes[i])
+                            + ')'))
+
+        return indexes
+
+    def get_insert_statements(self):
+        '''Get SQL statements to add data that should be inserted into this
+           table.'''
+        if len(self.__rows) == 0:
+            return None
+
+        rows = []
+        for row in self.__rows:
+            statement = 'insert into ' + self.__name + "\n(\n"
+
+            cols = []
+            for col in self.__columns:
+                cols.append('    ' + col.get_name())
+
+            statement += (',\n'.join(cols)
+                          + "\n)\nvalues\n(\n")
+
+            vals = []
+            for val in row:
+                if val == 'current_timestamp':
+                    vals.append('    current_timestamp')
+                else:
+                    vals.append("    '" + str(val) + "'")
+
+            statement += ',\n'.join(vals) + '\n);'
+            rows.append(statement)
+
+        return rows
+
+    def get_unindexed_foreign_keys(self):
+        '''Return a list of foreign keys that do not have indexes.'''
+        unindexed = []
+        for fk in self.__foreign_keys:
+            parent_table = fk[0]
+            on_delete_cascade = fk[1]
+            cols = fk[2]
+            parent_cols = fk[3]
+
+            if ','.join(cols) not in self.__unindexed_cols:
+                unindexed.append([self.__name, parent_table, cols, parent_cols])
+
+        return unindexed
 
     def id(self, name, unique=False, serial=False):
         '''Define a standard ID column.'''
@@ -557,11 +885,21 @@ class Table(object):
 
         return self
 
+    def ins(self, *args):
+        '''Insert a new row into this table when it is created.'''
+        if len(args) != len(self.__columns):
+            raise TableBuilderException(
+                'this table has ' + str(len(self.__columns)) + ' column(s) but '
+                + 'your insert data only has ' + len(args))
+
+        self.__rows.append(args)
+        return self
+
     def int(self,
             name,
             not_null=False,
-            unsigned=False,
             max_display_width=None,
+            unsigned=False,
             zero_fill=False):
         '''Define an integer column.'''
         self.__add_column(
@@ -575,8 +913,8 @@ class Table(object):
     def lblob(self, name, not_null=False):
         '''Define a long binary large object column.'''
         self.__add_column(
-            MySQLStringColumn(name)
-                .blob_type(MySQLStringColumn.TYPE_LONGBLOB))
+            _MySQLStringColumn(name)
+                .blob_type(_MySQLStringColumn.TYPE_LONGBLOB))
 
         self.__set_attributes(not_null, None, None)
 
@@ -585,8 +923,8 @@ class Table(object):
     def ltext(self, name, not_null=False):
         '''Define a long text column.'''
         self.__add_column(
-            MySQLStringColumn(name)
-                .text_type(MySQLStringColumn.TYPE_LONGTEXT))
+            _MySQLStringColumn(name)
+                .text_type(_MySQLStringColumn.TYPE_LONGTEXT))
 
         self.__set_attributes(not_null, None, None)
 
@@ -595,8 +933,8 @@ class Table(object):
     def mblob(self, name, not_null=False):
         '''Define a medium binary large object column.'''
         self.__add_column(
-            MySQLStringColumn(name)
-                .blob_type(MySQLStringColumn.TYPE_MEDIUMBLOB))
+            _MySQLStringColumn(name)
+                .blob_type(_MySQLStringColumn.TYPE_MEDIUMBLOB))
 
         self.__set_attributes(not_null, None, None)
 
@@ -610,8 +948,8 @@ class Table(object):
              zero_fill=False):
         '''Define a medium integer column.'''
         self.__add_column(
-            MySQLNumericColumn(name)
-                .integer_type(MySQLNumericColumn.TYPE_MEDIUMINT,
+            _MySQLNumericColumn(name)
+                .integer_type(_MySQLNumericColumn.TYPE_MEDIUMINT,
                               max_display_width))
 
         self.__set_attributes(not_null, None, None)
@@ -621,8 +959,8 @@ class Table(object):
     def mtext(self, name, not_null=False):
         '''Define a medium text column.'''
         self.__add_column(
-            MySQLStringColumn(name)
-                .text_type(MySQLStringColumn.TYPE_MEDIUMTEXT))
+            _MySQLStringColumn(name)
+                .text_type(_MySQLStringColumn.TYPE_MEDIUMTEXT))
 
         self.__set_attributes(not_null, None, None)
 
@@ -655,8 +993,8 @@ class Table(object):
     def set(self, name, list=tuple(), not_null=False):
         '''Define a set column.'''
         self.__add_column(
-            MySQLStringColumn(name)
-                .list_type(MySQLStringColumn.TYPE_SET, list))
+            _MySQLStringColumn(name)
+                .list_type(_MySQLStringColumn.TYPE_SET, list))
 
         self.__set_attributes(not_null, None, None)
 
@@ -680,8 +1018,8 @@ class Table(object):
              zero_fill=False):
         '''Define a small integer column.'''
         self.__add_column(
-            MySQLNumericColumn(name)
-                .integer_type(MySQLNumericColumn.TYPE_SMALLINT,
+            _MySQLNumericColumn(name)
+                .integer_type(_MySQLNumericColumn.TYPE_SMALLINT,
                               max_display_width))
 
         self.__set_attributes(not_null, unsigned, zero_fill)
@@ -691,10 +1029,10 @@ class Table(object):
     def tblob(self, name, not_null=False):
         '''Define a tiny binary large object.'''
         self.__add_column(
-            MySQLStringColumn(name)
-                .blob_type(MySQLStringColumn.TYPE_TINYBLOB))
+            _MySQLStringColumn(name)
+                .blob_type(_MySQLStringColumn.TYPE_TINYBLOB))
 
-        self.__set_attribute(not_null, None, None)
+        self.__set_attributes(not_null, None, None)
 
         return self
 
@@ -706,8 +1044,8 @@ class Table(object):
     def text(self, name, not_null=False, length=None):
         '''Define a text column.'''
         self.__add_column(
-            MySQLStringColumn(name)
-                .text_type(MySQLStringColumn.TYPE_TEXT, length))
+            _MySQLStringColumn(name)
+                .text_type(_MySQLStringColumn.TYPE_TEXT, length))
 
         self.__set_attributes(not_null, None, None)
 
@@ -716,8 +1054,8 @@ class Table(object):
     def ti(self, name, not_null=False):
         '''Define a time column.'''
         self.__add_column(
-            MySQLDateTimeColumn(name)
-                .date_time_type(MySQLDateTimeColumn.TYPE_TIME))
+            _MySQLDateTimeColumn(name)
+                .date_time_type(_MySQLDateTimeColumn.TYPE_TIME))
 
         self.__set_attributes(not_null, None, None)
 
@@ -731,8 +1069,8 @@ class Table(object):
              zero_fill=False):
         '''Define a tiny integer column.'''
         self.__add_column(
-            MySQLNumericColumn(name)
-                .integer_type(MySQLNumericColumn.TYPE_TINYINT,
+            _MySQLNumericColumn(name)
+                .integer_type(_MySQLNumericColumn.TYPE_TINYINT,
                               max_display_width))
 
         self.__set_attributes(not_null, unsigned, zero_fill)
@@ -742,18 +1080,18 @@ class Table(object):
     def ts(self, name, not_null=False):
         '''Define a timestamp column.'''
         self.__add_column(
-            MySQLDateTimeColumn(name)
-                .date_time_type(MySQLDateTimeColumn.TYPE_TIMESTAMP))
+            _MySQLDateTimeColumn(name)
+                .date_time_type(_MySQLDateTimeColumn.TYPE_TIMESTAMP))
 
-        self.__set_attribute(not_null, None, None)
+        self.__set_attributes(not_null, None, None)
 
         return self
 
     def ttext(self, name, not_null=False):
         '''Define a tiny text column.'''
         self.__add_column(
-            MySQLStringColumn(name)
-                .text_type(MySQLStringColumn.TYPE_TINYTEXT))
+            _MySQLStringColumn(name)
+                .text_type(_MySQLStringColumn.TYPE_TINYTEXT))
 
         self.__set_attributes(not_null, None, None)
 
@@ -778,11 +1116,11 @@ class Table(object):
             self.__unique_keys.append(unique_key)
             self.__add_indexed_cols(unique_key)
 
-            return self
+        return self
 
     def updated(self):
         '''Create a standardized date_updated column.'''
-        self.ts('date_updated', true)
+        self.ts('date_updated', True)
         self.__active_column.on_update('current_timestamp')
         return self
 
@@ -793,11 +1131,11 @@ class Table(object):
 
         self.__map.update({name: True})
 
-    def vbin(self, length, not_null=False):
+    def vbin(self, name, length, not_null=False):
         '''Define a variable length binary column.'''
         self.__add_column(
-            MySQLStringColumn(name)
-                .char_type(MySQLStringColumn.TYPE_VARBINARY, length))
+            _MySQLStringColumn(name)
+                .char_type(_MySQLStringColumn.TYPE_VARBINARY, length))
 
         self.__set_attributes(not_null, None, None)
 
@@ -806,17 +1144,61 @@ class Table(object):
     def vchar(self, name, length, not_null=False):
         '''Define a variable length character column.'''
         self.__add_column(
-            MySQLStringColumn(name)
-                .char_type(MySQLStringColumn.TYPE_VARCHAR, length))
+            _MySQLStringColumn(name)
+                .char_type(_MySQLStringColumn.TYPE_VARCHAR, length))
 
         self.__set_attributes(not_null, None, None)
 
         return self
 
-    def yr(name, not_null=False, num_digits=4):
+    def yr(self, name, not_null=False, num_digits=4):
         '''Define a year column.'''
-        self.__add_column(MySQLDateTimeColumn(name).year(num_digits))
+        self.__add_column(_MySQLDateTimeColumn(name).year(num_digits))
         self.__set_attributes(not_null, None, None)
         return self
 
-__all__ = ['Table']
+
+class RefTable(Table):
+    '''Create a reference table that maps ID values to strings.'''
+
+    def __init__(self, db_name, name):
+        self.__validate_name(name)
+
+        super(RefTable, self).__init__(db_name, name)
+
+        self.__ids = {}
+        self.__display_orders = {}
+        self.__display_order = 1
+
+        self.id('id', True, True) \
+            .vchar('value', 100, True) \
+            .int('display_order')
+
+    def add(self, id, value, display_order=None):
+        '''Add a new ID to value mapping to the table.'''
+        if id in self.__ids:
+            raise TableBuilderException(
+                'the ID "' + str(id) + '" is already defined')
+
+        if display_order in self.__display_orders:
+            raise TableBuilderException(
+                'the diplay order "' + str(display_order) + 'is already '
+                + 'defined')
+
+        if display_order is None:
+            display_order = self.__display_order
+            self.__display_order += 1
+
+        self.ins(id, value, display_order)
+
+        self.__ids[id] = True
+        self.__display_orders[display_order] = True
+
+        return self
+
+    def __validate_name(self, name):
+        if not re.match('^\w+_ref_', name):
+            raise TableBuilderException(
+                'the name of the reference table must contain "_ref_"')
+
+__all__ = ['RefTable', 'Table']

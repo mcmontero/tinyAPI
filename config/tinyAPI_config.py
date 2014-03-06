@@ -23,7 +23,7 @@ values = {
     #   ...
     #   ['IP Address N':Port N]
     ##
-    'memcached servers': ['127.0.0.1:11211']
+    'memcached servers': ['127.0.0.1:11211'],
 
     ##
     # An array that maps a defined configuration name to the necessary MySQL
@@ -40,5 +40,10 @@ values = {
     'mysql connection data': {
 
         'local': ['', '', '']
-    }
+    },
+
+    ##
+    # An array of paths containing unit test files.
+    ##
+    'unit test paths': ['/opt/tinyAPI']
 }

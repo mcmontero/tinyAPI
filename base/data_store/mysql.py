@@ -4,11 +4,11 @@ __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
 # ----- Imports --------------------------------------------------------------
 
-import mysql.connector
+from mysql.connector.cursor import MySQLCursor
 
 # ----- Public Classes -------------------------------------------------------
 
-class MySQLCursorDict(mysql.connector.cursor.MySQLCursor):
+class MySQLCursorDict(MySQLCursor):
     '''Defines a MySQL cursor that returns result sets as dictionaries.'''
 
     def _row_to_python(self, rowdata, desc=None):

@@ -23,6 +23,7 @@ class __MySQLColumn(object):
 
     def default_value(self, default):
         self._default = default
+        return self
 
     def get_default_term(self):
         if self._default is None:
@@ -54,12 +55,15 @@ class __MySQLColumn(object):
 
     def on_update(self, value):
         self._on_update = value
+        return self
 
     def primary_key(self):
         self._primary_key = True
+        return self
 
     def unique(self):
         self._unique = True
+        return self
 
 # ----- Protected Classes  ---------------------------------------------------
 
@@ -181,7 +185,7 @@ class _MySQLNumericColumn(__MySQLColumn):
                            self.TYPE_FLOAT,
                            self.TYPE_DOUBLE,
                            self.TYPE_REAL]:
-            raise TableBuilderException('the type ID provided is invalid')
+            raise TableBuilderException('the type ID provided was invalid')
 
     def __with_max_display_width(self, type):
         if self.__max_display_width is None:
@@ -295,7 +299,7 @@ class _MySQLStringColumn(__MySQLColumn):
         elif self.__type_id == self.TYPE_TINYBLOB:
             terms.append('tinyblob')
         elif self.__type_id == self.TYPE_BLOB:
-            terms.append('blobl(' + str(self.__length) + ')')
+            terms.append('blob(' + str(self.__length) + ')')
         elif self.__type_id == self.TYPE_MEDIUMBLOB:
             terms.append('mediumblob')
         elif self.__type_id == self.TYPE_LONGBLOB:
@@ -373,7 +377,7 @@ class _MySQLStringColumn(__MySQLColumn):
                            self.TYPE_LONGTEXT,
                            self.TYPE_ENUM,
                            self.TYPE_SET]:
-            raise TableBuilderException('the type ID provided is invalid')
+            raise TableBuilderException('the type ID provided was invalid')
 
 
 class _MySQLDateTimeColumn(__MySQLColumn):
@@ -439,7 +443,7 @@ class _MySQLDateTimeColumn(__MySQLColumn):
                            self.TYPE_TIMESTAMP,
                            self.TYPE_TIME,
                            self.TYPE_YEAR]:
-            raise TableBuilderException('the type ID provided is invalid')
+            raise TableBuilderException('the type ID provided was invalid')
 
     def year(self, num_digits=4):
         self.__type_id = self.TYPE_YEAR
@@ -469,7 +473,7 @@ class Table(object):
         self.__temporary = False
         self.__unique_keys = []
 
-    def ai():
+    def ai(self):
         '''Makes the active column auto increment.'''
         self.__assert_active_column_is_set(stack()[0][3])
 
@@ -716,15 +720,15 @@ class Table(object):
 
         if len(self.__unique_keys) > 0:
             for i in range(0, len(self.__unique_keys)):
-                terms.append('    unique key'
+                terms.append('    unique key '
                              + self.__name
-                             + '_' + i
+                             + '_' + str(i)
                              + '_uk ('
                              + ', '.join(self.__unique_keys[i])
                              + ')')
 
         if len(self.__primary_key) > 0:
-            terms.append('    primary key'
+            terms.append('    primary key '
                          + self.__name
                          + '_pk ('
                          + ', '.join(self.__primary_key)
@@ -749,7 +753,8 @@ class Table(object):
                 + '\n(\n'
                 + ',\n'.join(terms)
                 + '\n)'
-                + ('' if len(table_config) == 0 else ' ' + table_config))
+                + ('' if len(table_config) == 0 else ' ' + table_config)
+                + ';')
 
     def get_dependencies(self):
         '''Return a list of this tables dependencies.'''
@@ -772,7 +777,7 @@ class Table(object):
             fks.append(('   alter table ' + self.__name + "\n"
                         + 'add constraint '
                         + self.__name
-                        + '_' . str(i)
+                        + '_' + str(i)
                         + '_fk\n'
                         + '   foreign key ('
                         + ', '.join(cols)
@@ -866,7 +871,7 @@ class Table(object):
         '''Define an index.'''
         if len(cols) == 0:
             self.__assert_active_column_is_set(stack()[0][3])
-            cols.append(self.__active_column.get_name())
+            cols = [self.__active_column.get_name()]
 
         for col in cols:
             composite = col.split(' ')
@@ -1127,7 +1132,7 @@ class Table(object):
     def __validate_name_does_not_exist_and_register(self, name):
         if name in self.__map:
             raise TableBuilderException(
-                'the column"' + name + '" already exists')
+                'the column "' + name + '" already exists')
 
         self.__map.update({name: True})
 
@@ -1182,7 +1187,7 @@ class RefTable(Table):
 
         if display_order in self.__display_orders:
             raise TableBuilderException(
-                'the diplay order "' + str(display_order) + 'is already '
+                'the display order "' + str(display_order) + '" is already '
                 + 'defined')
 
         if display_order is None:

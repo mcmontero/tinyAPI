@@ -7,10 +7,13 @@ __author__ = 'Michael Montero <mcmontero@gmail.com>'
 class TableBuilderException(Exception):
     '''Named exception when issues with the Table Builder arise.'''
 
-    def __init__(self, value):
-        self.value = value
+    def __init__(self, message):
+        self.message = message
 
     def __str__(self):
-        return repr(self.value)
+        return repr(self.message)
+
+    def get_message(self):
+        return self.message;
 
 __all__ = ['TableBuilderException']

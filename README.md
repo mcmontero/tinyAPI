@@ -21,6 +21,11 @@ GOALS
 PYTHON CONFIGURATION
 ====================
 
+    - pip3 install --allow-external mysql-connector-python \
+                mysql-connector-python
+
+    - pip3 install python3-memcached
+
     - Create a module called
 
         tinyAPI_config.py

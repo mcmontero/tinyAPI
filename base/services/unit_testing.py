@@ -40,7 +40,13 @@ class Manager(object):
 
                 failed = False
                 for line in output.split("\n"):
-                    self.__cli.notice(line, 1)
+                    test_case = ''
+                    matches = re.search(' \(.*?\.(.*?)\)', line)
+                    if matches is not None:
+                        test_case = matches.group(1) + '::'
+
+                    self.__cli.notice(
+                        test_case + re.sub(' \(.*?\..*?\)', '', line), 1)
 
                     matches = re.match('Ran (\d+) test', line)
                     if matches is not None:

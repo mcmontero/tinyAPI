@@ -2,25 +2,19 @@
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
+# ----- Imports --------------------------------------------------------------
+
+from tinyAPI.base.exception import tinyAPIException
+
 # ----- Public Classes -------------------------------------------------------
 
-class CLIException(Exception):
+class CLIException(tinyAPIException):
     '''Named exception when issues with CLI arise.'''
-
-    def __init__(self, message):
-        self.message = message
-
-    def __str__(self):
-        return repr(self.message)
+    pass
 
 
-class DataArmorException(Exception):
+class DataArmorException(tinyAPIException):
     '''Named exception when issues with Data Armor arise.'''
-
-    def __init__(self, message):
-        self.message = message
-
-    def __str__(self):
-        return repr(self.message)
+    pass
 
 __all__ = ['CLIException', 'DataArmorException']

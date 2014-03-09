@@ -77,7 +77,7 @@ class CLI(object):
 
     def header(self, title):
         '''Displays the header of the CLI containing the name.'''
-        print("\n" + CLIOutputRenderer().draw_header(title))
+        print("\n" + CLIOutputRenderer().header(title))
 
     def notice(self, message, indent=None):
         '''Outputs a notice message.'''
@@ -90,7 +90,12 @@ class CLI(object):
             params = list(filter(None, list(vars(self.args).values())))
             params_str = ' '.join(str(v) for v in params)
 
-        base_name = '/var/run/cli/' + os.path.basename(sys.argv[0])
+        base_name = '/var/run/cli'
+        if os.path.isdir(base_name) is False:
+            raise CLIException(
+                'base directory "' + base_name + '" does not exist')
+
+        base_name += '/' +os.path.basename(sys.argv[0])
 
         if len(params) > 0:
             base_name += '-' + re.sub('[^A-Za-z0-9]', '', params_str)
@@ -168,7 +173,7 @@ class CLIOutputRenderer(object):
     '''Provides methods for consistent output from CLI programs.'''
 
     @staticmethod
-    def draw_header(title, width=79):
+    def header(title, width=79):
         enclosure = '# +' + ('-' * (width - 5)) + "+\n"
         body = '# | ' + title
         body += ' ' * (width - 2 - len(body)) + "|\n"

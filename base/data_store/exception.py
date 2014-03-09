@@ -2,27 +2,21 @@
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
+# ----- Import ---------------------------------------------------------------
+
+from tinyAPI.base.exception import tinyAPIException
+
 # ----- Public Classes -------------------------------------------------------
 
-class DataStoreException(Exception):
+class DataStoreException(tinyAPIException):
     '''Named exception identifying an issue specifically with an underlying
        data store.'''
-
-    def __init__(self, message):
-        self.message = message
-
-    def __str__(self):
-        return repr(self.message)
+    pass
 
 
 class DataStoreDuplicateKeyException(DataStoreException):
     '''Named exception identifying when a duplicate key is being added to a
        RDBMS.'''
-
-    def __init__(self, message):
-        self.message = message
-
-    def __str__(self):
-        return repr(self.message)
+    pass
 
 __all__ = ['DataStoreDuplicateKeyException', 'DataStoreException']

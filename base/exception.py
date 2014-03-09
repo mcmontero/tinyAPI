@@ -4,13 +4,25 @@ __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
 # ----- Public Classes -------------------------------------------------------
 
-class ConfigurationException(Exception):
-    '''Named exception when issues with configuration arise.'''
+class tinyAPIException(Exception):
+    '''Base exception for tinyAPI to represent messages in a standard format.'''
 
     def __init__(self, message):
         self.message = message
 
-    def __str__(self):
-        return repr(self.message)
+    def get_message(self):
+        return self.message
 
-__all__ = ['ConfigurationException']
+    def __str__(self):
+        return ("\n====================================================="
+                + "=========================\n"
+                + repr(self.message)
+                + "\n===================================================="
+                + "==========================\n")
+
+
+class ConfigurationException(tinyAPIException):
+    '''Named exception when issues with configuration arise.'''
+    pass
+
+__all__ = ['ConfigurationException', 'tinyAPIException']

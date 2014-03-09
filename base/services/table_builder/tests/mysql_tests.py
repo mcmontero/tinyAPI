@@ -1,4 +1,4 @@
-'''mysql.py -- Unit tests for MySQL Table Builder.'''
+'''mysql_tests.py -- Unit tests for MySQL Table Builder.'''
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'
 

@@ -21,6 +21,8 @@ GOALS
 PYTHON CONFIGURATION
 ====================
 
+    - pip3 install pycrypto
+
     - pip3 install --allow-external mysql-connector-python \
                 mysql-connector-python
 

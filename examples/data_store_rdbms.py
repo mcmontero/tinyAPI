@@ -13,9 +13,9 @@ def main(cli):
     cli.header('Data Store - RDBMS')
 
     '''Select the named database you wish to connect to.  In this case, "local"
-       is one of the connection names defined in tinyAPI_config.py.  "core" is
-       the name of the schema you wish to connect to.'''
-    tinyAPI.dsh().select_db('local', 'core')
+       is one of the connection names defined in tinyAPI_config.py.  "tinyAPI"
+       is the name of the schema you wish to connect to.'''
+    tinyAPI.dsh().select_db('local', 'tinyAPI')
 
     cli.notice('Creating table called "a_table"...')
     tinyAPI.dsh().query(

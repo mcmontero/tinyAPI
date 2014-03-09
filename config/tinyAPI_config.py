@@ -43,6 +43,12 @@ values = {
     },
 
     ##
+    # A list of schema names that the RDBMS Builder should manage.  If the
+    # RDBMS Builder is in use you must provide values here.
+    ##
+    'rdbms builder schemas': ['local'],
+
+    ##
     # An array of paths containing unit test files.
     ##
     'unit test paths': ['/opt/tinyAPI']

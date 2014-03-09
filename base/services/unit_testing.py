@@ -52,7 +52,7 @@ class Manager(object):
                     if matches is not None:
                         self.__total_tests += int(matches.group(1))
 
-                    if re.match('FAILED \(', line):
+                    if re.match('FAILED \(', line) or re.search('Error:', line):
                         failed = True
 
                 if failed is True:

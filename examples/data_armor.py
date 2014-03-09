@@ -5,7 +5,7 @@
 import time
 import tinyAPI
 from tinyAPI.base.services.cli import cli_main
-from tinyAPI.base.services.data_armor import DataArmor
+from tinyAPI.base.services.crypto import DataArmor
 
 # ----- Main ----------------------------------------------------------------
 

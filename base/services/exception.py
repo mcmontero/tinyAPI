@@ -13,8 +13,8 @@ class CLIException(tinyAPIException):
     pass
 
 
-class DataArmorException(tinyAPIException):
-    '''Named exception when issues with Data Armor arise.'''
+class CryptoException(tinyAPIException):
+    '''Named exception when issues with cryptography arise.'''
     pass
 
-__all__ = ['CLIException', 'DataArmorException']
+__all__ = ['CLIException', 'CryptoException']

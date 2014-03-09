@@ -89,6 +89,9 @@ class RDBMSBase(__DataStoreBase):
 
     def select_db(self, connection, db):
         '''Select which connection and database schema to use.'''
+        if self._connection_name != connection or self._db_name != db:
+            self.__mysql = None
+
         self._connection_name = connection
         self._db_name = db
         return self

@@ -7,7 +7,7 @@ __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
 from Crypto import Random
 from Crypto.Cipher import AES
-from .exception import DataArmorException
+from .exception import CryptoException
 import base64
 import hashlib
 import json
@@ -22,7 +22,7 @@ class DataArmor(object):
     def __init__(self, key, data):
         key_len = len(key)
         if key_len != 16 and key_len != 24 and key_len != 32:
-            raise DataArmorException(
+            raise CryptoException(
                 'key must be of length 16, 24, or 32 bytes')
 
         self.__key = key
@@ -63,7 +63,7 @@ class DataArmor(object):
         try:
             data = self.__decrypt(parts[0]).decode()
         except:
-            raise DataArmorException(
+            raise CryptoException(
                 'data failed to decrypt; contents were likely tampered with')
 
         sha = parts[1]
@@ -74,12 +74,11 @@ class DataArmor(object):
 
         if hashlib.sha224(
             data.encode('utf8') + timestamp.encode('utf8')).hexdigest() != sha:
-                raise DataArmorException(
-                    'armored data have been tampered with');
+                raise CryptoException('armored token has been tampered with');
 
         if ttl is not None:
             if (int(time.time()) - int(timestamp)) > ttl:
-                raise DataArmorException('token has expired')
+                raise CryptoException('token has expired')
 
         return json.loads(data)
 

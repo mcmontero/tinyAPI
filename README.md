@@ -39,10 +39,10 @@ PYTHON CONFIGURATION
 
     - Customize it for your project.
 
-    - Added the path to where tinyAPI is stored and the path to the
-      configuration file to the environment variable PYTHONPATH.  If tinyAPI
-      is deployed in /opt/tinyAPI and the configuration file is located at
-      /opt/my_application/config, make sure you environment contains the
+    - Add the path to where tinyAPI is stored and the path to the configuration
+      file to the environment variable PYTHONPATH.  If tinyAPI is deployed in
+      /opt/tinyAPI and the configuration file is located at
+      /opt/my_application/config, make sure your environment contains the
       following:
 
         export PYTHONPATH=$PYTHONPATH:/opt/:/opt/my_application/config

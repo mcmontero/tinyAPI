@@ -58,7 +58,7 @@ class Manager(object):
                 if failed is True:
                     sys.exit(1)
 
-        self.__total_run_time += time.time() - file_run_time_start;
+                self.__total_run_time += time.time() - file_run_time_start;
 
     def print_summary(self):
         self.__cli.notice('  Total number of tests executed: '

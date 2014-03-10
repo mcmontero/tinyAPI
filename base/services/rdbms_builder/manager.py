@@ -7,9 +7,53 @@ __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
 from .exception import RDBMSBuilderException
 from tinyAPI.base.config import ConfigManager
+import hashlib
+import importlib.machinery
 import os
 import re
+import subprocess
+import sys
+import tempfile
 import tinyAPI
+
+# ----- Protected Classes ----------------------------------------------------
+
+class _RDBMSBuilderModule(object):
+    '''Defines all of the information relevant to an API module.'''
+
+    def __init__(self, name, prefix):
+        self.__name = name
+        self.__prefix = prefix
+        self.__dml_files = []
+        self.__build_file = None
+        self.__sql = None
+
+    def add_dml_file(self, dml_file):
+        self.__dml_files.append(dml_file)
+        return self
+
+    def get_build_file(self):
+        return self.__build_file
+
+    def get_dml_files(self):
+        return self.__dml_files
+
+    def get_name(self):
+        return self.__name
+
+    def get_prefix(self):
+        return self.__prefix
+
+    def get_sql(self):
+        return self.__sql
+
+    def set_build_file(self, build_file):
+        self.__build_file = build_file
+        return self
+
+    def set_sql(self, sql=tuple()):
+        self.__sql = sql
+        return self
 
 # ----- Public Classes -------------------------------------------------------
 
@@ -19,43 +63,363 @@ class Manager(object):
     def __init__(self, cli=None):
         self.__cli = cli
         self.__managed_schema = None
-        self.__modules = []
+        self.__modules = {}
         self.__num_rdbms_objects = 0
         self.__num_rdbms_tables = 0
         self.__num_rdbms_indexes = 0
         self.__num_rdbms_routines = 0
         self.__connection_name = None
-        self.__dependencies_map = []
-        self.__dependents_map = []
-        self.__modules_to_build = []
-        self.__modules_to_build_prefix = []
-        self.__foreign_keys = []
+        self.__exec_sql_command = None
+        self.__dependencies_map = {}
+        self.__dependents_map = {}
+        self.__modules_to_build = {}
+        self.__modules_to_build_prefix = {}
+        self.__foreign_keys = {}
         self.__unindexed_foreign_keys = []
+
+    def __add_foreign_key_constraints(self):
+        self.__notice("Adding foreign key constraints...")
+
+        for module_name in self.__foreign_keys.keys():
+            if module_name in self.__modules_to_build:
+                for fk in self.__foreign_keys[module_name]:
+                    db_name = fk[0]
+                    foreign_key = fk[1]
+
+                    matches = re.search('add constraint (.*?)',
+                                        foreign_key,
+                                        re.M | re.I | re.S)
+                    if matches is None:
+                        raise RDBMSBuilderException(
+                                'could not find name of constraint in '
+                                + 'statement:\n'
+                                + foreign_key)
+
+                    self.__execute_statement(foreign_key, db_name)
+                    self.__notice('(+) ' . matches.group(1), 1)
+
+                    self.__num_rdbms_objects += 1
+
+    def __assemble_all_modules(self):
+        '''Finds all of the modules in the application and puts their
+           respective parts together in a centralize module object.'''
+        self.__notice('Assembling all modules...')
+
+        for path in ConfigManager.value('application dirs'):
+            results = subprocess.check_output('/usr/bin/find '
+                                              + path
+                                              + '/* -type f -name "build.py"',
+                                              shell=True).decode()
+            for file in results.rstrip().split("\n"):
+                if file != '':
+                    module_name = None
+                    prefix = None
+
+                    matches = re.search('(.*)/sql/ddl/build.py$', file)
+                    if matches is not None:
+                        module_name = re.sub(path + '/',
+                                             '',
+                                             matches.group(1))
+
+                        with open(file) as f:
+                            contents = f.read()
+
+                        if contents != '':
+                            matches = re.search('def ((.*)_build)\s?\(',
+                                                contents,
+                                                re.M | re.S | re.I)
+                            build_func = matches.group(1)
+                            prefix = matches.group(2)
+
+                    if module_name is not None and prefix is not None:
+                        module = _RDBMSBuilderModule(module_name, prefix)
+                        module.set_build_file(file)
+                        self.__modules[module_name] = module
+
+                        if module_name not in self.__dependencies_map:
+                            self.__dependencies_map[module_name] = []
+
+                        if module_name not in self.__dependents_map:
+                            self.__dependents_map[module_name] = []
+
+                        loader = importlib.machinery.SourceFileLoader(
+                                            module_name, file)
+                        build_file = loader.load_module(module_name)
+
+                        build = getattr(build_file, build_func)
+                        objects = build()
+
+                        sql = []
+                        for object in objects:
+                            sql.append([
+                                object.get_db_name(),
+                                object.get_definition()])
+
+                            if isinstance(object, tinyAPI.Table):
+                                self.__assign_dependencies(module, object)
+
+                            indexes = object.get_index_definitions()
+                            for index in indexes:
+                                sql.append([
+                                    object.get_db_name(),
+                                    index + ';'])
+
+                            inserts = object.get_insert_statements()
+                            if inserts is not None:
+                                for insert in inserts:
+                                    sql.append([
+                                        object.get_db_name(),
+                                        insert])
+
+                            fks = object.get_foreign_key_definitions()
+                            for fk in fks:
+                                if module_name not in self.__foreign_keys:
+                                    self.__foreign_keys[module_name] = []
+
+                                self.__foreign_keys[module_name].append([
+                                    object.get_db_name(),
+                                    fk + ';'])
+
+                            self.__unindexed_foreign_keys = \
+                                self.__unindexed_foreign_keys + \
+                                object.get_unindexed_foreign_keys()
+
+                        self.__modules[module_name].set_sql(sql)
+                        self.__handle_module_dml(module, path)
+
+    def __assign_dependencies(self, module, table):
+        '''Record all of the dependencies between modules so the system can be
+           rebuilt with dependencies in mind.'''
+        dependencies = table.get_dependencies()
+        for dependency in dependencies:
+            if module.get_name() != dependency:
+                self.__dependencies_map[module.get_name()].append(dependency)
+
+                if dependency not in self.__dependents_map:
+                    self.__dependents_map[dependency] = []
+
+                self.__dependents_map[dependency].append(module.get_name())
+
+    def __build_dml(self, module):
+        for file in module.get_dml_files():
+            with open(file, 'rb') as f:
+                self.__execute_statement(f.read())
+
+            self.__track_module_info(module, file)
+
+        routines = tinyAPI.dsh().query(
+            """select routine_type,
+                      routine_name
+                 from information_schema.routines
+                where routine_name like '"""
+                + module.get_prefix()
+                + "\_%'")
+
+        for routine in routines:
+            self.__notice('(+) '
+                          + routine['routine_type'].lower()
+                          + ' '
+                          + routine['routine_name'],
+                          2)
+
+            self.__num_rdbms_routines += 1
+
+    def __build_sql(self, module):
+        for data in module.get_sql():
+            db_name = data[0]
+            statement = data[1]
+
+            matches = re.search('^create table (.*?)$',
+                                statement,
+                                re.M | re.S | re.I)
+            if matches is not None:
+                self.__notice('(+) ' + db_name + '.' + matches.group(1), 2)
+                self.__num_rdbms_tables += 1
+                self.__num_rdbms_objects += 1
+            else:
+                matches = re.search('^create index (.*?)',
+                                    statement,
+                                    re.M | re.S | re.I)
+                if matches is not None:
+                    self.__notice('(+) ' + db_name + '.' + matches.group(1), 2)
+                    self.__num_rdbms_indexes += 1
+                    self.__num_rdbms_objects += 1
+                else:
+                    matches = re.search('^insert into', statement)
+                    if matches is not None:
+                        self.__notice('(i) row', 2)
+
+            self.__execute_statement(statement, db_name)
+
+        self.__track_module_info(module, module.get_build_file())
 
     def __clean_up_rdbms_builder_files(self):
         self.__notice('Cleaning up RDBMS Builder files...');
 
         for file in os.listdir('/tmp'):
-            if re.match('tiny-api-rdbms-builder-', file):
-                os.remove(file)
-                self.__notice('(-) ' + file, 1)
+            if re.match('tinyAPI_rdbms_builder_', file):
+                os.remove('/tmp/' + file)
+                self.__notice('(-) /tmp/' + file, 1)
+
+    def __compile_build_list_by_changes(self):
+        '''Mark for build modules that contain modified build or DML files.'''
+        for module in list(self.__modules.values()):
+            requires_build = False
+
+            if self.__file_has_been_modified(module.get_build_file()):
+                requires_build = True
+            else:
+                for file in module.get_dml_files():
+                    if self.__file_has_been_modified(file):
+                        requires_build = True
+                        break
+
+            if requires_build and \
+               module.get_name() not in self.__modules_to_build:
+                    self.__notice('(+) ' + module.get_name(), 1)
+                    self.__compile_build_list_for_module(module.get_name())
+
+    def __compile_build_list_for_all_modules(self):
+        '''Force a build for a specific module.'''
+        for module_name in list(self.__modules.keys()):
+            self.__compile_build_list_for_module(module_name)
+
+    def __compile_build_list_for_module(self, module_name):
+        '''Mark a module for building and determine which of its dependents
+           also needs to be build.'''
+        self.__modules_to_build[
+            module_name] = True;
+        self.__modules_to_build_prefix[
+            self.__modules[module_name].get_prefix()] = True
+
+        if module_name in self.__dependents_map:
+            for dependent in self.__dependents_map[module_name]:
+                self.__compile_build_list_for_module(dependent)
+
+    def __compile_dirty_module_list(self):
+        self.__notice('Determining if there are dirty modules...')
+
+        records = tinyAPI.dsh().query(
+            '''select name
+                 from rdbms_builder.dirty_module''')
+
+        for record in records:
+            if record['name'] not in self.__modules:
+                self.__notice('(-) ' + record['name'], 1)
+
+                tinyAPI.dsh().query(
+                    '''delete from rdbms_builder.dirty_module
+                        where name = %s''',
+                    [record['name']])
+                tinyAPI.dsh().commit()
+            else:
+                self.__notice('(+) ' + record['name'], 1)
+                self.__compile_build_list_for_module(record['name'])
+
+    def __compile_reference_definitions(self):
+        '''Compile the reference tables created with RefTable() into variables
+           so that no database interactions are required to interact with
+           them.'''
+        if ConfigManager.value('reference definition file') is None:
+            return
+
+        self.__notice('Compiling reference definitions...')
 
     def __data_store_not_supported(self):
         raise RDBMSBuilderException(
             'the RDBMS Builder does not currently support "'
-            + ConfigManager.value('data_store')
+            + ConfigManager.value('data store')
             + '"')
 
     def __determine_managed_schemas(self):
+        '''The database may contain many schemas, some of which should be
+           ignored by tinyAPI.  A list of which schemas to manage is created
+           here.'''
         self.__notice('Determining managed schemas...')
 
         schemas = []
         for schema in ConfigManager.value('rdbms builder schemas'):
-            schemas.append(schema)
+            schemas.append("'" + schema + "'")
 
         self.__managed_schemas = ', '.join(schemas)
 
         self.__notice(self.__managed_schemas, 1)
+
+    def __drop_foreign_key_constraints(self):
+        self.__notice('Dropping relevant foreign key constraints...')
+
+        if ConfigManager.value('data store') != 'mysql':
+            self.__data_store_not_supported()
+
+        constraints = tinyAPI.dsh().query(
+            '''select constraint_schema,
+                      table_name,
+                      constraint_name
+                 from referential_constraints
+                where constraint_schema in ('''
+                      + self.__managed_schemas
+                      + ')')
+
+        for constraint in constraints:
+            parts = contraint['constraint_name'].split('_')
+            if parts[0] in self.__modules_to_build_prefix:
+                self.__notice('(-) ' + constraint['constraint_name'])
+
+                tinyAPI.dsh().query(
+                    'alter table '
+                    + constraint['constraint_schema']
+                    + '.'
+                    + constraint['table_name']
+                    + ' drop foreign key '
+                    + constraint['constraint_name'])
+
+    def __drop_objects(self):
+        self.__notice('Dropping objects that will be rebuilt...')
+
+        if ConfigManager.value('data store') != 'mysql':
+            self.__data_store_not_supported()
+
+        tables = tinyAPI.dsh().query(
+            '''select table_schema,
+                      table_name
+                 from tables
+                where table_schema in ('''
+                      + self.__managed_schemas
+                      + ')')
+        for table in tables:
+            parts = table['table_name'].split('_')
+
+            if parts[0] in self.__modules_to_build_prefix:
+                self.__notice('(-) table ' + table['table_name'], 1)
+
+                tinyAPI.dsh().query(
+                    'drop table '
+                    + table['table_schema' ]
+                    + '.'
+                    + table['table_name'])
+
+        routines = tinyAPI.dsh().query(
+            '''select routine_schema,
+                      routine_type,
+                      routine_name
+                 from routines
+                where routine_schema in ('''
+                      + self.__managed_schemas
+                      + ')')
+        for routine in routines:
+            parts = routine['routine_name'].split('_')
+
+            if parts[0] in self.__modules_to_build_prefix:
+                self.__notice('(-) '
+                              + routine['routine_type'].lower()
+                              + ' '
+                              + routine['routine_name'])
+
+                tinyAPI.dsh().query(
+                    'drop type '
+                    + routine['routine_schema']
+                    + '.'
+                    + routine['routine_name'])
 
     def __error(self, message, indent=None):
         if self.__cli is None:
@@ -93,11 +457,258 @@ class Manager(object):
 
         self.__determine_managed_schemas()
 
+        # +------------------------------------------------------------------+
+        # | Step 4                                                           |
+        # |                                                                  |
+        # | Execute any SQL files that are intended to be loaded before the  |
+        # | the build.                                                       |
+        # +------------------------------------------------------------------+
+
+        if self.__cli is not None and self.__cli.args.all is True:
+            self.__execute_prebuild_scripts()
+
+        # +------------------------------------------------------------------+
+        # | Step 5                                                           |
+        # |                                                                  |
+        # | Create an array containing data about all modules that exist in  |
+        # | this API.                                                        |
+        # +------------------------------------------------------------------+
+
+        self.__assemble_all_modules()
+
+        # +------------------------------------------------------------------+
+        # | Step 6                                                           |
+        # |                                                                  |
+        # | If there are modules that have been marked dirty, add them to    |
+        # | the build.                                                       |
+        # +------------------------------------------------------------------+
+
+        self.__compile_dirty_module_list()
+
+        # +------------------------------------------------------------------+
+        # | Step 7                                                           |
+        # |                                                                  |
+        # | Compile the list of modules that need to be build.               |
+        # +------------------------------------------------------------------+
+
+        if self.__cli is not None and self.__cli.args.all is True:
+            self.__notice('Compiling build list of all modules...')
+            self.__compile_build_list_for_all_modules()
+        else:
+            if self.__cli.args.module_name is not None:
+                self.__notice('Compiling build list for specific module...')
+                self.__notice('(+) ' + self.__cli.args.module_name, 1)
+                self.__compile_build_list_for_module(
+                        self.__cli.args.module_name)
+            else:
+                self.__notice('Comiling build list based on changes...')
+                self.__compile_build_list_by_changes()
+
+        # +------------------------------------------------------------------+
+        # | Step 8                                                           |
+        # |                                                                  |
+        # | Determine if the build should continue.                          |
+        # +------------------------------------------------------------------+
+
+        if len(self.__modules_to_build.keys()) == 0:
+            self.__notice('RDBMS is up to date!')
+            sys.exit(0)
+
+        # +------------------------------------------------------------------+
+        # | Step 9                                                           |
+        # |                                                                  |
+        # | Drop all foreign key constraints for the tables that need to be  |
+        # | built so we can tear down objects without errors.                |
+        # +------------------------------------------------------------------+
+
+        self.__drop_foreign_key_constraints()
+
+        # +------------------------------------------------------------------+
+        # | Step 10                                                          |
+        # |                                                                  |
+        # | Drop objects for modules marked for rebuild.                     |
+        # +------------------------------------------------------------------+
+
+        self.__drop_objects()
+
+        # +------------------------------------------------------------------+
+        # | Step 11                                                          |
+        # |                                                                  |
+        # | Rebuild modules.                                                 |
+        # +------------------------------------------------------------------+
+
+        self.__rebuild_modules()
+
+        # +------------------------------------------------------------------+
+        # | Step 12                                                          |
+        # |                                                                  |
+        # | Recompile all DML.                                               |
+        # +------------------------------------------------------------------+
+
+        self.__recompile_dml()
+
+        # +------------------------------------------------------------------+
+        # | Step 13                                                          |
+        # |                                                                  |
+        # | Add all foreign key constraints.                                 |
+        # +------------------------------------------------------------------+
+
+        self.__add_foreign_key_constraints()
+
+        # +------------------------------------------------------------------+
+        # | Step 14                                                          |
+        # |                                                                  |
+        # | Verify foreign key indexes.                                      |
+        # +------------------------------------------------------------------+
+
+        self.__verify_foreign_key_indexes()
+
+        # +------------------------------------------------------------------+
+        # | Step 15                                                          |
+        # |                                                                  |
+        # | Compile reference table data into variables.                     |
+        # +------------------------------------------------------------------+
+
+        self.__compile_reference_definitions()
+
+    def __execute_prebuild_scripts(self):
+        self.__notice('Finding and executing pre-build files...')
+
+        for path in ConfigManager.value('application dirs'):
+            results = subprocess.check_output(
+                        '/usr/bin/find '
+                        + path
+                        + '/* -type d -name rdbms_prebuild',
+                        shell=True).decode()
+            if results != '':
+                dirs = results.rstrip().split("\n")
+                for dir in dirs:
+                    self.__notice(dir, 1)
+                    files = os.listdir(dir)
+                    files.sort()
+                    for file in files:
+                        if re.search('\.sql$', file):
+                            self.__notice(file, 2)
+
+                            try:
+                                subprocess.check_output(
+                                    self.__get_exec_sql_command()
+                                    + ' < ' + dir + '/' + file,
+                                    stderr=subprocess.STDOUT,
+                                    shell=True)
+                            except subprocess.CalledProcessError as e:
+                                raise RDBMSBuilderException(
+                                        e.output.rstrip().decode())
+
+    def __execute_statement(self, statement, db_name=None):
+        file = tempfile.NamedTemporaryFile(dir='/tmp',
+                                           prefix='tinyAPI_rdbms_builder_',
+                                           delete=False)
+        file.write(statement.encode())
+        file.close()
+
+        try:
+            subprocess.check_output(
+                self.__get_exec_sql_command()
+                + ('' if db_name is None else ' --database=' + db_name)
+                + ' < ' + file.name,
+                stderr=subprocess.STDOUT,
+                shell=True)
+        except subprocess.CalledProcessError as e:
+            raise RDBMSBuilderException(
+                    'execution of this file:\n\n'
+                    + file.name
+                    + "\n\nproduced this error:\n\n"
+                    + e.output.rstrip().decode())
+
+        os.remove(file.name)
+
+    def __file_has_been_modified(self, file):
+        if ConfigManager.value('data store') != 'mysql':
+            self.__data_store_not_supported()
+
+        with open(file, 'rb') as f:
+            sha1 = hashlib.sha1(f.read()).hexdigest();
+
+        records = tinyAPI.dsh().query(
+            '''select sha1
+                 from rdbms_builder.module_info
+                where file = %s''',
+            [file])
+
+        return len(records) == 0 or records[0]['sha1'] != sha1
+
+    def __get_exec_sql_command(self):
+        if self.__exec_sql_command is not None:
+            return self.__exec_sql_command
+
+        if ConfigManager.value('data store') == 'mysql':
+            if self.__connection_name is None:
+                raise RDBMSBuilderException(
+                    'cannot execute SQL because connection name has not been '
+                    + 'set')
+
+            connection_data = ConfigManager.value('mysql connection data')
+            if self.__connection_name not in connection_data:
+                raise RDBMSBuilderException(
+                    'no connection data has been configured for "'
+                    + self.__connection_name
+                    + '"')
+
+            host = connection_data[self.__connection_name][0]
+            user = connection_data[self.__connection_name][1]
+            password = connection_data[self.__connection_name][2]
+
+            command = ['/usr/bin/mysql']
+            if host != '':
+                command.append('--host=' + host)
+
+            if user != '':
+                command.append('--user=' + user)
+
+            if password != '':
+                command.append("--password='" + password + "'")
+
+            if host == '' and user == '' and password == '':
+                command.append('--user root')
+
+            self.__exec_sql_command = ' '.join(command)
+            return self.__exec_sql_command
+        else:
+            self.__data_store_not_supported()
+
+    def __handle_module_dml(self, module, path):
+        results = subprocess.check_output('/usr/bin/find '
+                                          + path
+                                          + ' -type f -name "*.sql"',
+                                          shell=True).decode()
+        if results != '':
+            files = results.rstrip().split("\n")
+            for files in file:
+                module.add_dml_file(file)
+
     def __notice(self, message, indent=None):
         if self.__cli is None:
             return None
 
         self.__cli.notice(message, indent)
+
+    def __rebuild_modules(self):
+        self.__notice('Rebuilding all DDL...')
+
+        for module_name in self.__modules_to_build.keys():
+            self.__notice('building module ' + module_name, 1)
+            self.__build_sql(self.__modules[module_name])
+
+    def __recompile_dml(self):
+        self.__notice('Recompiling all DML...')
+
+        for module_name in self.__modules_to_build.keys():
+            dml_files = self.__modules[module_name].get_dml_files()
+            if len(dml_files) > 0:
+                self.__notice('compiling for ' + module_name, 1);
+
+                self.__build_dml(self.__modules[module_name])
 
     def set_connection_name(self, connection_name):
         '''Tell the RDBMS Builder which connection (configured in
@@ -105,6 +716,61 @@ class Manager(object):
            structures.'''
         self.__connection_name = connection_name
         return self
+
+    def __track_module_info(self, module, file):
+        if ConfigManager.value('data store') != 'mysql':
+            self.__data_store_not_supported()
+
+        with open(file, 'rb') as f:
+            sha1 = hashlib.sha1(f.read()).hexdigest();
+
+        tinyAPI.dsh().query(
+            '''insert into rdbms_builder.module_info
+               (
+                  file,
+                  sha1
+               )
+               values
+               (
+                  %s,
+                  %s
+               )
+               on duplicate key
+               update sha1 = %s''',
+            [file, sha1, sha1])
+
+        tinyAPI.dsh().query(
+            '''delete from rdbms_builder.dirty_module
+                where name = %s''',
+            [module.get_name()])
+
+        tinyAPI.dsh().commit()
+
+    def __verify_foreign_key_indexes(self):
+        self.__notice('Verifying foreign key indexes...')
+
+        for data in self.__unindexed_foreign_keys:
+            table_name = data[0]
+            parent_table_name = data[1]
+            cols = data[2]
+            parent_cols = data[3]
+
+            parts = table_name.split('_')
+            tinyAPI.dsh().create(
+                'rdbms_builder.dirty_module',
+                {'name': parts[0]})
+            tinyAPI.dsh().commit()
+
+            self.__notice('(!) unindexed foreign key', 1)
+            self.__notice('table: '
+                          + table_name
+                          + ' -> parent: '
+                          + parent_table_name,
+                          2)
+            self.__notice(repr(cols) + ' -> ' + repr(parent_cols))
+
+        if len(self.__unindexed_foreign_keys) > 0:
+            raise RDBMSBuilderException('unindexed foreign keys (see above)')
 
     def __verify_rdbms_builder_objects(self):
         if ConfigManager.value('data store') != 'mysql':
@@ -129,7 +795,7 @@ create table rdbms_builder.module_info
 
 create table rdbms_builder.dirty_module
 (
-    file varchar(100) not null primary key
+    name varchar(100) not null primary key
 );
 
 grant all privileges

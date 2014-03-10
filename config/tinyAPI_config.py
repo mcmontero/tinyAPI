@@ -5,6 +5,11 @@
 values = {
 
     ##
+    # Defines in which paths tinyAPI and your application live.
+    ##
+    'application dirs': ['/opt/tinyAPI'],
+
+    ##
     # Defines the underlying data store into which all entities are stored.
     #
     # Supported values include:
@@ -49,7 +54,10 @@ values = {
     'rdbms builder schemas': ['local'],
 
     ##
-    # An array of paths containing unit test files.
+    # The RDBMS Builder can compile the reference tables create with RefTable()
+    # into variables so that no database interactions are required to interact
+    # with them.  If this value is None, reference definitions will not be
+    # compiled.
     ##
-    'unit test paths': ['/opt/tinyAPI']
+    'reference definition file' => None
 }

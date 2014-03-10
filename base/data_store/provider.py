@@ -251,7 +251,17 @@ class DataStoreMySQL(RDBMSBase):
             is_select = True
 
         cursor = self.__get_cursor()
-        cursor.execute(sql, binds)
+
+        try:
+            cursor.execute(sql, binds)
+        except mysql.connector.errors.ProgrammingError as e:
+            raise DataStoreException(
+                    'execution of this query:\n\n'
+                    + sql
+                    + "\n\n"
+                    + (repr(binds) if binds is not None else '')
+                    + '\n\nproduced this error:\n\n'
+                    + e.msg)
 
         if is_select:
             results = []

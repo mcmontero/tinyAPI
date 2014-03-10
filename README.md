@@ -45,4 +45,4 @@ PYTHON CONFIGURATION
       /opt/my_application/config, make sure your environment contains the
       following:
 
-        export PYTHONPATH=$PYTHONPATH:/opt/:/opt/my_application/config
+        export PYTHONPATH=$PYTHONPATH:/opt:/opt/my_application/config

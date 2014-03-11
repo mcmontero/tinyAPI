@@ -3,13 +3,13 @@
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
-# ----- Import ---------------------------------------------------------------
+# ----- Import ----------------------------------------------------------------
 
 from tinyAPI.base.config import ConfigManager
 import tinyAPI
 import unittest
 
-# ----- Tests ----------------------------------------------------------------
+# ----- Tests -----------------------------------------------------------------
 
 class ProviderMySQLTestCase(unittest.TestCase):
 
@@ -79,7 +79,7 @@ class ProviderMySQLTestCase(unittest.TestCase):
                 4,
                 tinyAPI.dsh().count('select count(*) from unit_test_table'))
 
-# ----- Main -----------------------------------------------------------------
+# ----- Main ------------------------------------------------------------------
 
 if __name__ == '__main__':
     unittest.main()

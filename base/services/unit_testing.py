@@ -3,14 +3,14 @@
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
-# ----- Imports --------------------------------------------------------------
+# ----- Imports ---------------------------------------------------------------
 
 import re
 import subprocess
 import sys
 import time
 
-# ----- Public Classes  ------------------------------------------------------
+# ----- Public Classes  -------------------------------------------------------
 
 class Manager(object):
     '''Provides methods for executing and reporting on unit tests.'''

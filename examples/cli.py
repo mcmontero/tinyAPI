@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 
-# ----- Imports --------------------------------------------------------------
+# ----- Imports ---------------------------------------------------------------
 
 import argparse
 import tinyAPI
 from tinyAPI.base.services.cli import cli_main
 
-# ----- Configuration --------------------------------------------------------
+# ----- Configuration ---------------------------------------------------------
 
 args = argparse.ArgumentParser()
 args.add_argument('required_arg', help='This argument is required.')
 args.add_argument('--optional_arg', help='This argument is optional.')
 
-# ----- Main -----------------------------------------------------------------
+# ----- Main ------------------------------------------------------------------
 
 def main(cli):
     '''The main program you want the CLI to execute.  The cli parameter here
@@ -23,6 +23,6 @@ def main(cli):
     cli.warn("You should know that something is amiss.")
     cli.error("Something is really wrong now!")
 
-# ----- Instructions ---------------------------------------------------------
+# ----- Instructions ----------------------------------------------------------
 
 cli_main(main, args)

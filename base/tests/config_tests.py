@@ -2,14 +2,14 @@
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
-# ----- Import ---------------------------------------------------------------
+# ----- Import ----------------------------------------------------------------
 
 from tinyAPI.base.config import ConfigManager
 from tinyAPI.base.exception import ConfigurationException
 import tinyAPI
 import unittest
 
-# ----- Tests ----------------------------------------------------------------
+# ----- Tests -----------------------------------------------------------------
 
 class ConfigTestCase(unittest.TestCase):
 
@@ -24,7 +24,7 @@ class ConfigTestCase(unittest.TestCase):
                 '"no-such-option" is not configured in tinyAPI_config',
                 e.get_message())
 
-# ----- Main -----------------------------------------------------------------
+# ----- Main ------------------------------------------------------------------
 
 if __name__ == '__main__':
     unittest.main()

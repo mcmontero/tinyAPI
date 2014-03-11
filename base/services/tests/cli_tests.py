@@ -2,13 +2,13 @@
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
-# ----- Import ---------------------------------------------------------------
+# ----- Import ----------------------------------------------------------------
 
 from tinyAPI.base.services.cli import CLIOutputRenderer
 import tinyAPI
 import unittest
 
-# ----- Tests ----------------------------------------------------------------
+# ----- Tests -----------------------------------------------------------------
 
 class ServicesCLITestCase(unittest.TestCase):
 
@@ -20,7 +20,7 @@ class ServicesCLITestCase(unittest.TestCase):
 
         self.assertEqual(expected, CLIOutputRenderer.header('Test'))
 
-# ----- Main -----------------------------------------------------------------
+# ----- Main ------------------------------------------------------------------
 
 if __name__ == '__main__':
     unittest.main()

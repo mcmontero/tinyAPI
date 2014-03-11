@@ -2,7 +2,7 @@
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
-# ----- Public Classes -------------------------------------------------------
+# ----- Public Classes --------------------------------------------------------
 
 class tinyAPIException(Exception):
     '''Base exception for tinyAPI to represent messages in a standard format.'''

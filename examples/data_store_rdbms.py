@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
-# ----- Imports --------------------------------------------------------------
+# ----- Imports ---------------------------------------------------------------
 
 import tinyAPI
 from tinyAPI.base.services.cli import cli_main
 
-# ----- Main -----------------------------------------------------------------
+# ----- Main ------------------------------------------------------------------
 
 def main(cli):
     '''Executes examples of all the ways in which you can use the data store
@@ -72,6 +72,6 @@ def main(cli):
     cli.notice('Drop a_table...')
     tinyAPI.dsh().query('drop table a_table')
 
-# ----- Instructions ---------------------------------------------------------
+# ----- Instructions ----------------------------------------------------------
 
 cli_main(main)

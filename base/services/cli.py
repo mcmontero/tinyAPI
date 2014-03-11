@@ -2,7 +2,7 @@
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
-# ----- Imports --------------------------------------------------------------
+# ----- Imports ---------------------------------------------------------------
 
 from .exception import CLIException
 import argparse
@@ -13,7 +13,7 @@ import re
 import sys
 import time
 
-# ----- Public Functions  ----------------------------------------------------
+# ----- Public Functions  -----------------------------------------------------
 
 def cli_main(function, args=None):
     '''Executes the "main" CLI function passing in the configured arguments.'''
@@ -24,7 +24,7 @@ def cli_main(function, args=None):
         cli.set_status_error()
         raise
 
-# ----- Public Classes  ------------------------------------------------------
+# ----- Public Classes  -------------------------------------------------------
 
 class CLI(object):
     '''Provides methods for executing and managing CLI programs.'''

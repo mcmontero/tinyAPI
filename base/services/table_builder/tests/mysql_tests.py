@@ -2,7 +2,7 @@
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
-# ----- Import ---------------------------------------------------------------
+# ----- Import ----------------------------------------------------------------
 
 from tinyAPI.base.services.table_builder.exception \
     import TableBuilderException
@@ -13,7 +13,7 @@ from tinyAPI.base.services.table_builder.mysql \
 import tinyAPI
 import unittest
 
-# ----- Tests ----------------------------------------------------------------
+# ----- Tests -----------------------------------------------------------------
 
 class TableBuilderMySQLTestCase(unittest.TestCase):
 
@@ -916,7 +916,7 @@ add constraint abc_0_fk
         self.assertEqual('db',
                          tinyAPI.RefTable('db', 'abc_ref_def').get_db_name())
 
-# ----- Main -----------------------------------------------------------------
+# ----- Main ------------------------------------------------------------------
 
 if __name__ == '__main__':
     unittest.main()

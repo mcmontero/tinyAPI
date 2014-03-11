@@ -2,13 +2,13 @@
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
-# ----- Import ---------------------------------------------------------------
+# ----- Import ----------------------------------------------------------------
 
 from tinyAPI.base.services.rdbms_builder.manager import _RDBMSBuilderModule
 import tinyAPI
 import unittest
 
-# ----- Test  ----------------------------------------------------------------
+# ----- Test  -----------------------------------------------------------------
 
 class RDBMSBuilderManagerTestCase(unittest.TestCase):
 
@@ -43,7 +43,7 @@ class RDBMSBuilderManagerTestCase(unittest.TestCase):
         self.assertEqual('a', sql[0])
         self.assertEqual('b', sql[1])
 
-# ----- Main -----------------------------------------------------------------
+# ----- Main ------------------------------------------------------------------
 
 if __name__ == '__main__':
     unittest.main()

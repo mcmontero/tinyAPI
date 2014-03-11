@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 
-# ----- Imports --------------------------------------------------------------
+# ----- Imports ---------------------------------------------------------------
 
 import time
 import tinyAPI
 from tinyAPI.base.services.cli import cli_main
 from tinyAPI.base.services.crypto import DataArmor
 
-# ----- Main ----------------------------------------------------------------
+# ----- Main -----------------------------------------------------------------
 
 def main(cli):
     cli.header('Data Armor')
@@ -37,6 +37,6 @@ def main(cli):
 
     DataArmor(key, token).unlock(1)
 
-# ----- Instructions ---------------------------------------------------------
+# ----- Instructions ----------------------------------------------------------
 
 cli_main(main)

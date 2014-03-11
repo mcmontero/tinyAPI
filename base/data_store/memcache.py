@@ -2,13 +2,13 @@
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
-# ----- Imports --------------------------------------------------------------
+# ----- Imports ---------------------------------------------------------------
 
 from tinyAPI.base.config import ConfigManager
 from tinyAPI.base.singleton import Singleton
 import memcache
 
-# ----- Public Classes -------------------------------------------------------
+# ----- Public Classes --------------------------------------------------------
 
 class Memcache(metaclass=Singleton):
     '''Manages interactions with configured Memcached servers.'''

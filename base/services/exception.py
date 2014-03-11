@@ -2,11 +2,11 @@
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
-# ----- Imports --------------------------------------------------------------
+# ----- Imports ---------------------------------------------------------------
 
 from tinyAPI.base.exception import tinyAPIException
 
-# ----- Public Classes -------------------------------------------------------
+# ----- Public Classes --------------------------------------------------------
 
 class CLIException(tinyAPIException):
     '''Named exception when issues with CLI arise.'''

@@ -2,13 +2,13 @@
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
-# ----- Import ---------------------------------------------------------------
+# ----- Import ----------------------------------------------------------------
 
 from .exception import TableBuilderException
 from inspect import stack
 import re
 
-# ----- Private Classes  -----------------------------------------------------
+# ----- Private Classes  ------------------------------------------------------
 
 class __MySQLColumn(object):
     '''Defines shared data and functionality for all types of columns.'''
@@ -65,7 +65,7 @@ class __MySQLColumn(object):
         self._unique = True
         return self
 
-# ----- Protected Classes  ---------------------------------------------------
+# ----- Protected Classes  ----------------------------------------------------
 
 class _MySQLNumericColumn(__MySQLColumn):
     '''Defines a numeric MySQL column.'''
@@ -450,7 +450,7 @@ class _MySQLDateTimeColumn(__MySQLColumn):
         self.__num_digits = num_digits
         return self
 
-# ----- Public Classes  ------------------------------------------------------
+# ----- Public Classes  -------------------------------------------------------
 
 class Table(object):
     '''Allows for the description of a table that can be compiled to SQL.'''

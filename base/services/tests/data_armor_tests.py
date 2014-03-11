@@ -2,14 +2,14 @@
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
-# ----- Import ---------------------------------------------------------------
+# ----- Import ----------------------------------------------------------------
 
 from tinyAPI.base.services.crypto import DataArmor
 from tinyAPI.base.services.exception import CryptoException
 import tinyAPI
 import unittest
 
-# ----- Tests ----------------------------------------------------------------
+# ----- Tests -----------------------------------------------------------------
 
 class CryptoTestCase(unittest.TestCase):
 
@@ -47,7 +47,7 @@ class CryptoTestCase(unittest.TestCase):
             self.assertEqual('armored token has been tampered with',
                              e.get_message())
 
-# ----- Main -----------------------------------------------------------------
+# ----- Main ------------------------------------------------------------------
 
 if __name__ == '__main__':
     unittest.main()

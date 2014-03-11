@@ -3,7 +3,7 @@
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
-# ----- Import ---------------------------------------------------------------
+# ----- Import ----------------------------------------------------------------
 
 from Crypto import Random
 from Crypto.Cipher import AES
@@ -13,7 +13,7 @@ import hashlib
 import json
 import time
 
-# ----- Public Classes -------------------------------------------------------
+# ----- Public Classes --------------------------------------------------------
 
 class DataArmor(object):
     '''Creates an encrypted token that cannot be modified without detection and

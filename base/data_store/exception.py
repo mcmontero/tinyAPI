@@ -2,11 +2,11 @@
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
-# ----- Import ---------------------------------------------------------------
+# ----- Import ----------------------------------------------------------------
 
 from tinyAPI.base.exception import tinyAPIException
 
-# ----- Public Classes -------------------------------------------------------
+# ----- Public Classes --------------------------------------------------------
 
 class DataStoreException(tinyAPIException):
     '''Named exception identifying an issue specifically with an underlying

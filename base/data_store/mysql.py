@@ -2,11 +2,11 @@
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
-# ----- Imports --------------------------------------------------------------
+# ----- Imports ---------------------------------------------------------------
 
 from mysql.connector.cursor import MySQLCursor
 
-# ----- Public Classes -------------------------------------------------------
+# ----- Public Classes --------------------------------------------------------
 
 class MySQLCursorDict(MySQLCursor):
     '''Defines a MySQL cursor that returns result sets as dictionaries.'''

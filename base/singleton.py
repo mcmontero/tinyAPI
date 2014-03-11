@@ -2,7 +2,7 @@
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
-# ----- Public Classes -------------------------------------------------------
+# ----- Public Classes --------------------------------------------------------
 
 class Singleton(type):
     _instances = {}

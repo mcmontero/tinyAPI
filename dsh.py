@@ -2,7 +2,7 @@
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
-# ----- Imports --------------------------------------------------------------
+# ----- Imports ---------------------------------------------------------------
 
 from tinyAPI.base.data_store.provider import DataStoreProvider
 

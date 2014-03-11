@@ -5,7 +5,7 @@
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
-# ----- Imports --------------------------------------------------------------
+# ----- Imports ---------------------------------------------------------------
 
 from .exception import DataStoreException, DataStoreDuplicateKeyException
 from .mysql import MySQLCursorDict
@@ -16,7 +16,7 @@ from tinyAPI.base.singleton import Singleton
 import mysql.connector
 import re
 
-# ----- Private Classes ------------------------------------------------------
+# ----- Private Classes -------------------------------------------------------
 
 class __DataStoreBase(object):
     '''Defines the base level class from which all data store types (like
@@ -29,7 +29,7 @@ class __DataStoreBase(object):
         self._memcache_key = None
         self._memcache_ttl = None
 
-# ----- Public Classes -------------------------------------------------------
+# ----- Public Classes --------------------------------------------------------
 
 class RDBMSBase(__DataStoreBase):
     '''Defines a data store that handles interactions with a RDBMS (MySQL,

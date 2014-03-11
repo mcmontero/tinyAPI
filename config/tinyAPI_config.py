@@ -59,5 +59,5 @@ values = {
     # with them.  If this value is None, reference definitions will not be
     # compiled.
     ##
-    'reference definition file' => None
+    'reference definition file': None
 }

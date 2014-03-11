@@ -648,16 +648,17 @@ class Manager(object):
         # +------------------------------------------------------------------+
 
         self.__notice('RDBMS Builder stats:')
-        self.__notice('       # tables : '
+        self.__notice('       # tables: '
                       + '{:,}'.format(self.__num_rdbms_tables),
                       1)
-        self.__notice('      # indexes : '
+        self.__notice('      # indexes: '
                       + '{:,}'.format(self.__num_rdbms_indexes),
                       1)
-        self.__notice('     # routines : '
+        self.__notice('     # routines: '
                       + '{:,}'.format(self.__num_rdbms_routines),
                       1)
-        self.__notice('total # objects : '
+        self.__notice('------------------', 1)
+        self.__notice('total # objects: '
                       + '{:,}'.format(self.__num_rdbms_objects),
                       1)
 

@@ -45,8 +45,13 @@ class Manager(object):
                     if matches is not None:
                         test_case = matches.group(1) + '::'
 
-                    self.__cli.notice(
-                        test_case + re.sub(' \(.*?\..*?\)', '', line), 1)
+                    method_name = re.sub(' \(.*?\..*?\)', '', line)
+                    if method_name is not None:
+                        length = len(test_case) + len(method_name) + 4
+                        if length > 79:
+                            method_name = '...' + method_name[(length - 76):]
+
+                    self.__cli.notice(test_case + method_name, 1)
 
                     matches = re.match('Ran (\d+) test', line)
                     if matches is not None:

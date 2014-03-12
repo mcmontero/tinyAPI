@@ -20,6 +20,13 @@ values = {
     'data store': 'mysql',
 
     ##
+    # tinyAPI comes with various libraries that can install data structures
+    # into an RDBMS.  The schema defined here is where the objects will be
+    # placed.  If this value is set to None, nothing will be loaded.
+    ##
+    'default schema': None,
+
+    ##
     # An array of Memcached servers to use for caching.  The array should be
     # in the following format:
     #

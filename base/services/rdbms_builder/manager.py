@@ -481,7 +481,7 @@ builtins._tinyapi_ref_unit_test = _tinyapi_ref_unit_test
         for constraint in constraints:
             parts = constraint['constraint_name'].split('_')
             if parts[0] in self.__modules_to_build_prefix:
-                self.__notice('(-) ' + constraint['constraint_name'])
+                self.__notice('(-) ' + constraint['constraint_name'], 1)
 
                 tinyAPI.dsh().query(
                     'alter table '

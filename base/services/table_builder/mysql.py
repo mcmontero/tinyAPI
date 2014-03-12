@@ -464,7 +464,7 @@ class Table(object):
         self.__dependencies = []
         self.__engine = 'innodb'
         self.__foreign_keys = []
-        self.__indexed_cols = []
+        self.__indexed_cols = {}
         self.__indexes = []
         self.__map = {}
         self.__name = name
@@ -492,8 +492,8 @@ class Table(object):
         self.__columns.append(column)
 
     def __add_indexed_cols(self, cols=tuple()):
-        for col in cols:
-            self.__indexed_cols.append({','.join(cols[0:]): True})
+        for i in range(len(cols)):
+            self.__indexed_cols[','.join(cols[0:i + 1])] = True
 
     def __assert_active_column_is_set(self, caller):
         if self.__active_column is None:
@@ -628,6 +628,17 @@ class Table(object):
                 .date_time_type(_MySQLDateTimeColumn.TYPE_DATETIME))
 
         self.__set_attributes(not_null, None, None)
+
+        return self
+
+    def email(self, name, not_null=False):
+        '''Define a column to store an email address.'''
+        if name != 'email_address' and not re.match('em_', name):
+            raise TableBuilderException(
+                    'email column must be named "email_address" or start with '
+                    + '"em_"')
+
+        self.vchar(name, 100, not_null)
 
         return self
 
@@ -842,14 +853,14 @@ class Table(object):
             cols = fk[2]
             parent_cols = fk[3]
 
-            if ','.join(cols) not in self.__unindexed_cols:
+            if ','.join(cols) not in self.__indexed_cols.keys():
                 unindexed.append([self.__name, parent_table, cols, parent_cols])
 
         return unindexed
 
     def id(self, name, unique=False, serial=False):
         '''Define a standard ID column.'''
-        if name != 'id' and not re.match('_id$', name):
+        if name != 'id' and not re.search('_id$', name):
             raise TableBuilderException(
                 'an ID column must be named "id" or end in "_id"')
 
@@ -917,7 +928,7 @@ class Table(object):
 
     def lat(self, name, not_null=False):
         '''Define a latitude column.'''
-        if not re.match('^lat_', name) and name != 'latitude':
+        if name != 'latitude' and not re.match('^lat_', name):
             raise TableBuilderException(
                     'latitude column must be named "latitude" or start with '
                     + '"lat_"')
@@ -938,7 +949,7 @@ class Table(object):
 
     def long(self, name, not_null=False):
         '''Define a longitude column.'''
-        if not re.match('^long_', name) and name != 'longitude':
+        if name != 'longitude' and not re.match('^long_', name):
             raise TableBuilderException(
                     'longitude column must be named "longitude" or start with '
                     + '"long_"')

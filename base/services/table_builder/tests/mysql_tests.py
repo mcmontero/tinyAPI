@@ -978,6 +978,30 @@ add constraint abc_0_fk
             text,
             tinyAPI.Table('db', 'abc').long('long_x', True).get_definition())
 
+    def test_email_column_exceptions(self):
+        try:
+            tinyAPI.Table('db', 'abc').email('invalid')
+
+            self.fail('Was able to create an email column with an invalid '
+                      + 'name.')
+        except TableBuilderException as e:
+            self.assertEqual(
+                'email column must be named "email_address" or start with '
+                + '"em_"',
+                e.get_message())
+
+    def test_email_column(self):
+        text = '''create table abc
+(
+    em_address varchar(100) character set utf8 collate utf8_unicode_ci not null
+) engine = innodb default charset = utf8 collate = utf8_unicode_ci;'''
+
+        self.assertEqual(
+            text,
+            tinyAPI.Table('db', 'abc') \
+                .email('em_address', True)\
+                .get_definition())
+
 # ----- Main ------------------------------------------------------------------
 
 if __name__ == '__main__':

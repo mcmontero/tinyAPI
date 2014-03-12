@@ -87,8 +87,12 @@ class CLI(object):
         params = []
         params_str = '';
         if self.args is not None:
-            params = list(filter(None, list(vars(self.args).values())))
-            params_str = ' '.join(str(v) for v in params)
+            for param in list(vars(self.args).values()):
+                if param is not None:
+                    params.append(str(param).lower())
+
+            params.sort()
+            params_str = '_'.join(str(v) for v in params)
 
         base_name = '/var/run/cli'
         if os.path.isdir(base_name) is False:
@@ -98,7 +102,7 @@ class CLI(object):
         base_name += '/' +os.path.basename(sys.argv[0])
 
         if len(params) > 0:
-            base_name += '-' + re.sub('[^A-Za-z0-9]', '', params_str)
+            base_name += '-' + re.sub('[^A-Za-z0-9_\-]', '', params_str.lower())
 
         self.__pid_lock_file = base_name + '.pid_lock'
 

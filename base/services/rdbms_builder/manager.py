@@ -14,6 +14,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import time
 import tinyAPI
 
 # ----- Protected Classes -----------------------------------------------------
@@ -86,7 +87,7 @@ class Manager(object):
                     db_name = fk[0]
                     foreign_key = fk[1]
 
-                    matches = re.search('add constraint (.*?)',
+                    matches = re.search('add constraint (.*?)$',
                                         foreign_key,
                                         re.M | re.I | re.S)
                     if matches is None:
@@ -96,7 +97,7 @@ class Manager(object):
                                 + foreign_key)
 
                     self.__execute_statement(foreign_key, db_name)
-                    self.__notice('(+) ' . matches.group(1), 1)
+                    self.__notice('(+) ' + matches.group(1), 1)
 
                     self.__num_rdbms_objects += 1
 
@@ -223,32 +224,35 @@ class Manager(object):
             self.__num_rdbms_routines += 1
 
     def __build_sql(self, module):
+        inserts = []
         for data in module.get_sql():
             db_name = data[0]
             statement = data[1]
 
-            matches = re.search('^create table (.*?)$',
-                                statement,
-                                re.M | re.S | re.I)
+            matches = re.search('^insert into', statement)
             if matches is not None:
-                self.__notice('(+) ' + db_name + '.' + matches.group(1), 2)
-                self.__num_rdbms_tables += 1
-                self.__num_rdbms_objects += 1
+                inserts.append([statement, db_name])
             else:
-                matches = re.search('^create index (.*?)',
+                matches = re.search('^create table (.*?)$',
                                     statement,
                                     re.M | re.S | re.I)
                 if matches is not None:
                     self.__notice('(+) ' + db_name + '.' + matches.group(1), 2)
-                    self.__num_rdbms_indexes += 1
+                    self.__num_rdbms_tables += 1
                     self.__num_rdbms_objects += 1
                 else:
-                    matches = re.search('^insert into', statement)
+                    matches = re.search('^create index (.*?)$',
+                                        statement,
+                                        re.M | re.S | re.I)
                     if matches is not None:
-                        self.__notice('(+) table row', 2)
+                        self.__notice('(+) ' + db_name + '.' + matches.group(1),
+                                      2)
+                        self.__num_rdbms_indexes += 1
+                        self.__num_rdbms_objects += 1
 
-            self.__execute_statement(statement, db_name)
+                self.__execute_statement(statement, db_name)
 
+        self.__display_insert_progress(inserts)
         self.__track_module_info(module, module.get_build_file())
 
     def __clean_up_rdbms_builder_files(self):
@@ -437,6 +441,28 @@ builtins._tinyapi_ref_unit_test = _tinyapi_ref_unit_test
 
         self.__notice(self.__managed_schemas, 1)
 
+    def __display_insert_progress(self, inserts=tuple()):
+        if len(inserts) == 0:
+            return
+
+        print('        (+) adding table data ', end = '')
+        sys.stdout.flush()
+
+        chars = ['-', '-', '\\', '\\', '|', '|', '/', '/']
+        index = 0
+        for insert in inserts:
+            print(chars[index], end = '')
+            sys.stdout.flush()
+            self.__execute_statement(insert[0], insert[1])
+            print("\b", end = '')
+            sys.stdout.flush()
+
+            index += 1
+            if index >= len(chars):
+                index = 0
+
+        print(" ")
+
     def __drop_foreign_key_constraints(self):
         self.__notice('Dropping relevant foreign key constraints...')
 
@@ -453,7 +479,7 @@ builtins._tinyapi_ref_unit_test = _tinyapi_ref_unit_test
                       + ')')
 
         for constraint in constraints:
-            parts = contraint['constraint_name'].split('_')
+            parts = constraint['constraint_name'].split('_')
             if parts[0] in self.__modules_to_build_prefix:
                 self.__notice('(-) ' + constraint['constraint_name'])
 
@@ -512,6 +538,18 @@ builtins._tinyapi_ref_unit_test = _tinyapi_ref_unit_test
                     + routine['routine_schema']
                     + '.'
                     + routine['routine_name'])
+
+    def __enhance_build_error(self, message):
+        if ConfigManager.value('data store') != 'mysql':
+            return ''
+
+        if re.match('ERROR (1005|1215)', message) or \
+           re.search('errno: 150', message):
+            return ('\n\npossible causes:\n\n'
+                    + 'o A column that has a foreign key is not the exact '
+                    + 'same type as the column it is\n  referencing.\n\n'
+                    + 'o The column you are trying to reference does not have '
+                    + 'an index on it.\n')
 
     def __error(self, message, indent=None):
         if self.__cli is None:
@@ -604,7 +642,11 @@ builtins._tinyapi_ref_unit_test = _tinyapi_ref_unit_test
 
         if len(self.__modules_to_build.keys()) == 0:
             self.__notice('RDBMS is up to date!')
-            sys.exit(0)
+
+            if self.__cli is not None:
+                self.__cli.exit()
+            else:
+                sys.exit(0)
 
         # +------------------------------------------------------------------+
         # | Step 9                                                           |
@@ -679,7 +721,7 @@ builtins._tinyapi_ref_unit_test = _tinyapi_ref_unit_test
         self.__notice('     # routines: '
                       + '{:,}'.format(self.__num_rdbms_routines),
                       1)
-        self.__notice('------------------', 1)
+        self.__notice('--------------------', 1)
         self.__notice('total # objects: '
                       + '{:,}'.format(self.__num_rdbms_objects),
                       1)
@@ -728,11 +770,22 @@ builtins._tinyapi_ref_unit_test = _tinyapi_ref_unit_test
                 stderr=subprocess.STDOUT,
                 shell=True)
         except subprocess.CalledProcessError as e:
-            raise RDBMSBuilderException(
-                    'execution of this file:\n\n'
-                    + file.name
-                    + "\n\nproduced this error:\n\n"
-                    + e.output.rstrip().decode())
+            message = e.output.rstrip().decode()
+
+            if len(statement) <= 2048:
+                raise RDBMSBuilderException(
+                        'execution of this:\n\n'
+                        + statement
+                        + "\n\nproduced this error:\n\n"
+                        + message
+                        + self.__enhance_build_error(message))
+            else:
+                raise RDBMSBuilderException(
+                        'execution of this file:\n\n'
+                        + file.name
+                        + "\n\nproduced this error:\n\n"
+                        + message
+                        + self.__enhance_build_error(message))
 
         os.remove(file.name)
 
@@ -880,7 +933,9 @@ builtins._tinyapi_ref_unit_test = _tinyapi_ref_unit_test
                           + ' -> parent: '
                           + parent_table_name,
                           2)
-            self.__notice(repr(cols) + ' -> ' + repr(parent_cols))
+            self.__notice(repr(cols) + ' -> ' + repr(parent_cols), 2)
+            self.__notice('--------------------------------------------------'
+                          + '------------', 2)
 
         if len(self.__unindexed_foreign_keys) > 0:
             raise RDBMSBuilderException('unindexed foreign keys (see above)')

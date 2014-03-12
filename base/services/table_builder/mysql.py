@@ -915,6 +915,17 @@ class Table(object):
 
         return self
 
+    def lat(self, name, not_null=False):
+        '''Define a latitude column.'''
+        if not re.match('^lat_', name) and name != 'latitude':
+            raise TableBuilderException(
+                    'latitude column must be named "latitude" or start with '
+                    + '"lat_"')
+
+        self.dec(name, not_null, 10, 8)
+
+        return self
+
     def lblob(self, name, not_null=False):
         '''Define a long binary large object column.'''
         self.__add_column(
@@ -922,6 +933,17 @@ class Table(object):
                 .blob_type(_MySQLStringColumn.TYPE_LONGBLOB))
 
         self.__set_attributes(not_null, None, None)
+
+        return self
+
+    def long(self, name, not_null=False):
+        '''Define a longitude column.'''
+        if not re.match('^long_', name) and name != 'longitude':
+            raise TableBuilderException(
+                    'longitude column must be named "longitude" or start with '
+                    + '"long_"')
+
+        self.dec(name, not_null, 11, 8)
 
         return self
 

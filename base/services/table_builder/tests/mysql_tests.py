@@ -916,6 +916,68 @@ add constraint abc_0_fk
         self.assertEqual('db',
                          tinyAPI.RefTable('db', 'abc_ref_def').get_db_name())
 
+    def test_latitude_column_exceptions(self):
+        try:
+            tinyAPI.Table('db', 'abc').lat('invalid')
+
+            self.fail('Was able to create a latitude column with an invalid '
+                      + 'name.')
+        except TableBuilderException as e:
+            self.assertEqual(
+                'latitude column must be named "latitude" or start with '
+                + '"lat_"',
+                e.get_message())
+
+    def test_latitude_column(self):
+        text = '''create table abc
+(
+    latitude decimal(10, 8) default null
+) engine = innodb default charset = utf8 collate = utf8_unicode_ci;'''
+
+        self.assertEqual(
+            text,
+            tinyAPI.Table('db', 'abc').lat('latitude').get_definition())
+
+        text = '''create table abc
+(
+    lat_x decimal(10, 8) not null
+) engine = innodb default charset = utf8 collate = utf8_unicode_ci;'''
+
+        self.assertEqual(
+            text,
+            tinyAPI.Table('db', 'abc').lat('lat_x', True).get_definition())
+
+    def test_longitude_column_exceptions(self):
+        try:
+            tinyAPI.Table('db', 'abc').long('invalid')
+
+            self.fail('Was able to create a longitude column with an invalid '
+                      + 'name.')
+        except TableBuilderException as e:
+            self.assertEqual(
+                'longitude column must be named "longitude" or start with '
+                + '"long_"',
+                e.get_message())
+
+    def test_longitude_column(self):
+        text = '''create table abc
+(
+    longitude decimal(11, 8) default null
+) engine = innodb default charset = utf8 collate = utf8_unicode_ci;'''
+
+        self.assertEqual(
+            text,
+            tinyAPI.Table('db', 'abc').long('longitude').get_definition())
+
+        text = '''create table abc
+(
+    long_x decimal(11, 8) not null
+) engine = innodb default charset = utf8 collate = utf8_unicode_ci;'''
+
+        self.assertEqual(
+            text,
+            tinyAPI.Table('db', 'abc').long('long_x', True).get_definition())
+
 # ----- Main ------------------------------------------------------------------
 
 if __name__ == '__main__':

@@ -5,6 +5,7 @@ __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
 # ----- Imports ---------------------------------------------------------------
 
+from tinyAPI.base.context import Context
 import re
 import subprocess
 import sys
@@ -34,9 +35,11 @@ class Manager(object):
                 num_file_tests = 0
 
                 output = subprocess.check_output(
-                    "/usr/bin/python3 " + file + " -v ; exit 0",
-                    stderr=subprocess.STDOUT,
-                    shell=True).decode();
+                            "export ENV_UNIT_TEST=1 ; "
+                            + "/usr/bin/python3 " + file + " -v ; "
+                            + "exit 0",
+                            stderr=subprocess.STDOUT,
+                            shell=True).decode();
 
                 failed = False
                 for line in output.split("\n"):
@@ -70,5 +73,9 @@ class Manager(object):
                           + str('{0:,}'.format(self.__total_tests)))
         self.__cli.notice('Total elapsed time for all tests: '
                           + str(self.__total_run_time))
+
+# ----- Instructions ----------------------------------------------------------
+
+Context().set_unit_test()
 
 __all__ = ['Manager']

@@ -25,4 +25,8 @@ class ConfigurationException(tinyAPIException):
     '''Named exception when issues with configuration arise.'''
     pass
 
-__all__ = ['ConfigurationException', 'tinyAPIException']
+class ContextException(tinyAPIException):
+    '''Named exception when issues with context arise.'''
+    pass
+
+__all__ = ['ConfigurationException', 'ContextException', 'tinyAPIException']

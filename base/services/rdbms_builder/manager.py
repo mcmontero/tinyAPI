@@ -549,7 +549,9 @@ builtins._tinyapi_ref_unit_test = _tinyapi_ref_unit_test
                     + 'o A column that has a foreign key is not the exact '
                     + 'same type as the column it is\n  referencing.\n\n'
                     + 'o The column you are trying to reference does not have '
-                    + 'an index on it.\n')
+                    + 'an index on it.\n\n'
+                    + 'o The table name provided for the parent table does not '
+                    + 'exist.\n')
 
     def __error(self, message, indent=None):
         if self.__cli is None:

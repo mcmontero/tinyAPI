@@ -3,6 +3,7 @@
 from .dsh import dsh
 from importlib.machinery import SourceFileLoader
 from tinyAPI.base.config import ConfigManager
+from tinyAPI.base.context import *
 from tinyAPI.base.data_store.memcache import Memcache
 from tinyAPI.base.data_store.exception import DataStoreDuplicateKeyException
 from tinyAPI.base.data_store.provider import DataStoreMySQL

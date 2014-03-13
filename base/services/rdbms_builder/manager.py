@@ -7,6 +7,7 @@ __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
 from .exception import RDBMSBuilderException
 from tinyAPI.base.config import ConfigManager
+from tinyAPI.base.utils import find_dirs, find_files
 import hashlib
 import importlib.machinery
 import os
@@ -107,11 +108,8 @@ class Manager(object):
         self.__notice('Assembling all modules...')
 
         for path in ConfigManager.value('application dirs'):
-            results = subprocess.check_output('/usr/bin/find '
-                                              + path
-                                              + '/* -type f -name "build.py"',
-                                              shell=True).decode()
-            for file in results.rstrip().split("\n"):
+            files = find_files(path + '/*', 'build.py')
+            for file in files:
                 if file != '':
                     module_name = None
                     prefix = None
@@ -278,11 +276,11 @@ class Manager(object):
 
             if requires_build and \
                module.get_name() not in self.__modules_to_build:
-                    self.__notice('(+) ' + module.get_name(), 1)
-                    self.__compile_build_list_for_module(module.get_name())
+                self.__notice('(+) ' + module.get_name(), 1)
+                self.__compile_build_list_for_module(module.get_name())
 
     def __compile_build_list_for_all_modules(self):
-        '''Force a build for a specific module.'''
+        '''Force a build for all modules.'''
         for module_name in list(self.__modules.keys()):
             self.__compile_build_list_for_module(module_name)
 
@@ -307,6 +305,8 @@ class Manager(object):
 
         for record in records:
             if record['name'] not in self.__modules:
+                # The dirty module is no longer part of the application, so
+                # we should stop tracking it here.
                 self.__notice('(-) ' + record['name'], 1)
 
                 tinyAPI.dsh().query(
@@ -631,7 +631,7 @@ builtins._tinyapi_ref_unit_test = _tinyapi_ref_unit_test
                 self.__notice('Compiling build list for specific module...')
                 self.__notice('(+) ' + self.__cli.args.module_name, 1)
                 self.__compile_build_list_for_module(
-                        self.__cli.args.module_name)
+                    self.__cli.args.module_name)
             else:
                 self.__notice('Comiling build list based on changes...')
                 self.__compile_build_list_by_changes()
@@ -732,30 +732,24 @@ builtins._tinyapi_ref_unit_test = _tinyapi_ref_unit_test
         self.__notice('Finding and executing pre-build files...')
 
         for path in ConfigManager.value('application dirs'):
-            results = subprocess.check_output(
-                        '/usr/bin/find '
-                        + path
-                        + '/* -type d -name rdbms_prebuild',
-                        shell=True).decode()
-            if results != '':
-                dirs = results.rstrip().split("\n")
-                for dir in dirs:
-                    self.__notice(dir, 1)
-                    files = os.listdir(dir)
-                    files.sort()
-                    for file in files:
-                        if re.search('\.sql$', file):
-                            self.__notice(file, 2)
+            dirs = find_dirs(path + '/*', 'rdbms_prebuild')
+            for dir in dirs:
+                self.__notice(dir, 1)
+                files = os.listdir(dir)
+                files.sort()
+                for file in files:
+                    if re.search('\.sql$', file):
+                        self.__notice(file, 2)
 
-                            try:
-                                subprocess.check_output(
-                                    self.__get_exec_sql_command()
-                                    + ' < ' + dir + '/' + file,
-                                    stderr=subprocess.STDOUT,
-                                    shell=True)
-                            except subprocess.CalledProcessError as e:
-                                raise RDBMSBuilderException(
-                                        e.output.rstrip().decode())
+                        try:
+                            subprocess.check_output(
+                                self.__get_exec_sql_command()
+                                + ' < ' + dir + '/' + file,
+                                stderr=subprocess.STDOUT,
+                                shell=True)
+                        except subprocess.CalledProcessError as e:
+                            raise RDBMSBuilderException(
+                                    e.output.rstrip().decode())
 
     def __execute_statement(self, statement, db_name=None):
         file = tempfile.NamedTemporaryFile(dir='/tmp',
@@ -846,14 +840,9 @@ builtins._tinyapi_ref_unit_test = _tinyapi_ref_unit_test
             self.__data_store_not_supported()
 
     def __handle_module_dml(self, module, path):
-        results = subprocess.check_output('/usr/bin/find '
-                                          + path
-                                          + ' -type f -name "*.sql"',
-                                          shell=True).decode()
-        if results != '':
-            files = results.rstrip().split("\n")
-            for files in file:
-                module.add_dml_file(file)
+        files = find_files(path, "*.sql")
+        for file in files:
+            module.add_dml_file(file)
 
     def __notice(self, message, indent=None):
         if self.__cli is None:

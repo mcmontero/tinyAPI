@@ -1,4 +1,4 @@
-'''crypto_tests.py -- Unit tests for cryptographic functionality.'''
+'''config_tests.py -- Unit tests for configuration functionality.'''
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'
 

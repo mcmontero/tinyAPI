@@ -685,7 +685,8 @@ class Table(object):
                                     on_delete_cascade,
                                     cols,
                                     parent_cols])
-        self.__dependencies.append(parent_table)
+
+        self.__dependencies.append(parent_table.split('_')[0])
 
         return self
 

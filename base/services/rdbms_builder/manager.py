@@ -92,6 +92,7 @@ class Manager(object):
         self.__dependents_map = {}
         self.__modules_to_build = {}
         self.__modules_to_build_prefix = {}
+        self.__prefix_to_module = {}
         self.__foreign_keys = {}
         self.__unindexed_foreign_keys = []
 
@@ -123,6 +124,15 @@ class Manager(object):
            respective parts together in a centralize module object.'''
         self.__notice('Assembling all modules...')
 
+        ##
+        # Step 1
+        #
+        # Take an initial pass at building the modules with the minimum set of
+        # information required.  This is necessary so that the second pass can
+        # properly assign dependencies based on knowing all of the available
+        # modules.
+        ##
+
         for path in ConfigManager.value('application dirs'):
             files = find_files(path + '/*', 'build.py')
             for file in files:
@@ -141,18 +151,33 @@ class Manager(object):
                             matches = re.search('def (.*?)_build\s?\(',
                                                 contents,
                                                 re.M | re.S | re.I)
+                            if matches is None:
+                                raise RDBMSBuilderException(
+                                        'found build.py file but could not '
+                                        + 'find build function in "'
+                                        + file
+                                        + '"')
+
                             prefix = matches.group(1)
 
                     if module_name is not None and prefix is not None:
                         module = _RDBMSBuilderModuleSQL(module_name, prefix)
                         module.set_build_file(file)
                         self.__modules[module_name] = module
+                        self.__prefix_to_module[prefix] = module_name
 
                         if module_name not in self.__dependencies_map:
                             self.__dependencies_map[module_name] = []
 
                         if module_name not in self.__dependents_map:
                             self.__dependents_map[module_name] = []
+
+        ##
+        # Step 2
+        #
+        # Take a second pass at all of the modules, assign dependencies and
+        # associate all necessary SQL so the objects can be built.
+        ##
 
         for module in self.__modules.values():
             loader = importlib.machinery.SourceFileLoader(
@@ -197,13 +222,22 @@ class Manager(object):
            rebuilt with dependencies in mind.'''
         dependencies = table.get_dependencies()
         for dependency in dependencies:
-            if module.get_name() != dependency:
-                self.__dependencies_map[module.get_name()].append(dependency)
+            if dependency not in self.__prefix_to_module.keys():
+                raise RDBMSBuilderException(
+                        'found dependency "' + dependency + '" but do not have '
+                        + 'a module for it')
 
-                if dependency not in self.__dependents_map:
-                    self.__dependents_map[dependency] = []
+            if module.get_name() != self.__prefix_to_module[dependency]:
+                self.__dependencies_map[module.get_name()] \
+                    .append(self.__prefix_to_module[dependency])
 
-                self.__dependents_map[dependency].append(module.get_name())
+                if self.__prefix_to_module[dependency] not in \
+                   self.__dependents_map:
+                    self.__dependents_map[
+                        self.__prefix_to_module[dependency]] = []
+
+                self.__dependents_map[self.__prefix_to_module[dependency]] \
+                                .append(module.get_name())
 
     def __build_dml(self, module):
         for file in module.get_dml_files():
@@ -306,7 +340,8 @@ class Manager(object):
 
         if module_name in self.__dependents_map:
             for dependent in self.__dependents_map[module_name]:
-                self.__compile_build_list_for_module(dependent)
+                if dependent not in self.__modules_to_build:
+                    self.__compile_build_list_for_module(dependent)
 
     def __compile_dirty_module_list(self):
         self.__notice('Determining if there are dirty modules...')

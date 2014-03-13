@@ -20,25 +20,48 @@ import tinyAPI
 
 # ----- Protected Classes -----------------------------------------------------
 
-class _RDBMSBuilderModule(object):
-    '''Defines all of the information relevant to an API module.'''
+class _RDBMSBuilderModuleSQL(object):
+    '''Simple container for all of the SQL related assets for a module.'''
 
     def __init__(self, name, prefix):
         self.__name = name
         self.__prefix = prefix
         self.__dml_files = []
         self.__build_file = None
-        self.__sql = None
+        self.__definitions = []
+        self.__indexes = []
+        self.__inserts = []
+
+    def add_definition(self, db_name, statement):
+        self.__definitions.append([db_name, statement])
+        return self
 
     def add_dml_file(self, dml_file):
         self.__dml_files.append(dml_file)
         return self
 
+    def add_index(self, db_name, statement):
+        self.__indexes.append([db_name, statement])
+        return self
+
+    def add_insert(self, db_name, statement):
+        self.__inserts.append([db_name, statement])
+        return self
+
     def get_build_file(self):
         return self.__build_file
 
+    def get_definitions(self):
+        return self.__definitions
+
     def get_dml_files(self):
         return self.__dml_files
+
+    def get_indexes(self):
+        return self.__indexes
+
+    def get_inserts(self):
+        return self.__inserts
 
     def get_name(self):
         return self.__name
@@ -46,15 +69,8 @@ class _RDBMSBuilderModule(object):
     def get_prefix(self):
         return self.__prefix
 
-    def get_sql(self):
-        return self.__sql
-
     def set_build_file(self, build_file):
         self.__build_file = build_file
-        return self
-
-    def set_sql(self, sql=tuple()):
-        self.__sql = sql
         return self
 
 # ----- Public Classes --------------------------------------------------------
@@ -122,14 +138,13 @@ class Manager(object):
                             contents = f.read()
 
                         if contents != '':
-                            matches = re.search('def ((.*)_build)\s?\(',
+                            matches = re.search('def (.*?)_build\s?\(',
                                                 contents,
                                                 re.M | re.S | re.I)
-                            build_func = matches.group(1)
-                            prefix = matches.group(2)
+                            prefix = matches.group(1)
 
                     if module_name is not None and prefix is not None:
-                        module = _RDBMSBuilderModule(module_name, prefix)
+                        module = _RDBMSBuilderModuleSQL(module_name, prefix)
                         module.set_build_file(file)
                         self.__modules[module_name] = module
 
@@ -139,50 +154,43 @@ class Manager(object):
                         if module_name not in self.__dependents_map:
                             self.__dependents_map[module_name] = []
 
-                        loader = importlib.machinery.SourceFileLoader(
-                                            module_name, file)
-                        build_file = loader.load_module(module_name)
+        for module in self.__modules.values():
+            loader = importlib.machinery.SourceFileLoader(
+                        module.get_name(), module.get_build_file())
+            build_file = loader.load_module(module.get_name())
 
-                        build = getattr(build_file, build_func)
-                        objects = build()
+            build = getattr(build_file, module.get_prefix() + '_build')
+            objects = build()
 
-                        sql = []
-                        for object in objects:
-                            sql.append([
-                                object.get_db_name(),
-                                object.get_definition()])
+            for object in objects:
+                module.add_definition(object.get_db_name(),
+                                      object.get_definition())
 
-                            if isinstance(object, tinyAPI.Table):
-                                self.__assign_dependencies(module, object)
+                if isinstance(object, tinyAPI.Table):
+                    self.__assign_dependencies(module, object)
 
-                            indexes = object.get_index_definitions()
-                            for index in indexes:
-                                sql.append([
-                                    object.get_db_name(),
-                                    index + ';'])
+                indexes = object.get_index_definitions()
+                for index in indexes:
+                    module.add_index(object.get_db_name(), index)
 
-                            inserts = object.get_insert_statements()
-                            if inserts is not None:
-                                for insert in inserts:
-                                    sql.append([
-                                        object.get_db_name(),
-                                        insert])
+                inserts = object.get_insert_statements()
+                if inserts is not None:
+                    for insert in inserts:
+                        module.add_insert(object.get_db_name(), insert)
 
-                            fks = object.get_foreign_key_definitions()
-                            for fk in fks:
-                                if module_name not in self.__foreign_keys:
-                                    self.__foreign_keys[module_name] = []
+                fks = object.get_foreign_key_definitions()
+                for fk in fks:
+                    if module.get_name() not in self.__foreign_keys:
+                        self.__foreign_keys[module.get_name()] = []
 
-                                self.__foreign_keys[module_name].append([
-                                    object.get_db_name(),
-                                    fk + ';'])
+                    self.__foreign_keys[module.get_name()].append([
+                            object.get_db_name(), fk + ';'])
 
-                            self.__unindexed_foreign_keys = \
-                                self.__unindexed_foreign_keys + \
-                                object.get_unindexed_foreign_keys()
+                self.__unindexed_foreign_keys = \
+                    self.__unindexed_foreign_keys + \
+                    object.get_unindexed_foreign_keys()
 
-                        self.__modules[module_name].set_sql(sql)
-                        self.__handle_module_dml(module, path)
+            self.__handle_module_dml(module, path)
 
     def __assign_dependencies(self, module, table):
         '''Record all of the dependencies between modules so the system can be
@@ -222,35 +230,39 @@ class Manager(object):
             self.__num_rdbms_routines += 1
 
     def __build_sql(self, module):
-        inserts = []
-        for data in module.get_sql():
-            db_name = data[0]
-            statement = data[1]
-
-            matches = re.search('^insert into', statement)
-            if matches is not None:
-                inserts.append([statement, db_name])
-            else:
+        statements = module.get_definitions()
+        if len(statements) > 0:
+            for statement in statements:
                 matches = re.search('^create table (.*?)$',
-                                    statement,
+                                    statement[1],
                                     re.M | re.S | re.I)
                 if matches is not None:
-                    self.__notice('(+) ' + db_name + '.' + matches.group(1), 2)
+                    self.__notice('(+) '
+                                  + statement[0]
+                                  + '.'
+                                  + matches.group(1), 2)
                     self.__num_rdbms_tables += 1
                     self.__num_rdbms_objects += 1
-                else:
-                    matches = re.search('^create index (.*?)$',
-                                        statement,
-                                        re.M | re.S | re.I)
-                    if matches is not None:
-                        self.__notice('(+) ' + db_name + '.' + matches.group(1),
-                                      2)
-                        self.__num_rdbms_indexes += 1
-                        self.__num_rdbms_objects += 1
 
-                self.__execute_statement(statement, db_name)
+                self.__execute_statement(statement[1], statement[0])
 
-        self.__display_insert_progress(inserts)
+        statements = module.get_indexes()
+        if len(statements) > 0:
+            for statement in statements:
+                matches = re.match('create index (.*?)$',
+                                   statement[1],
+                                   re.M | re.S | re.I)
+                if matches is not None:
+                    self.__notice('(+) '
+                                  + statement[0]
+                                  + '.'
+                                  + matches.group(1), 2)
+                    self.__num_rdbms_indexes += 1
+                    self.__num_rdbms_objects += 1
+
+                self.__execute_statement(statement[1], statement[0])
+
+        self.__display_insert_progress(module.get_inserts())
         self.__track_module_info(module, module.get_build_file())
 
     def __clean_up_rdbms_builder_files(self):
@@ -453,7 +465,7 @@ builtins._tinyapi_ref_unit_test = _tinyapi_ref_unit_test
         for insert in inserts:
             print(chars[index], end = '')
             sys.stdout.flush()
-            self.__execute_statement(insert[0], insert[1])
+            self.__execute_statement(insert[1], insert[0])
             print("\b", end = '')
             sys.stdout.flush()
 
@@ -552,6 +564,8 @@ builtins._tinyapi_ref_unit_test = _tinyapi_ref_unit_test
                     + 'an index on it.\n\n'
                     + 'o The table name provided for the parent table does not '
                     + 'exist.\n')
+        else:
+            return ''
 
     def __error(self, message, indent=None):
         if self.__cli is None:
@@ -755,6 +769,7 @@ builtins._tinyapi_ref_unit_test = _tinyapi_ref_unit_test
         file = tempfile.NamedTemporaryFile(dir='/tmp',
                                            prefix='tinyAPI_rdbms_builder_',
                                            delete=False)
+
         file.write(statement.encode())
         file.close()
 

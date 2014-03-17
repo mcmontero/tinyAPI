@@ -15,6 +15,7 @@ from tinyAPI.base.data_store.memcache import Memcache
 from tinyAPI.base.singleton import Singleton
 import mysql.connector
 import re
+import tinyAPI.base.context as Context
 
 # ----- Private Classes -------------------------------------------------------
 
@@ -121,7 +122,10 @@ class DataStoreMySQL(RDBMSBase):
                 'transaction cannot be committed becase a database connection '
                 + 'has not been established yet')
         else:
-            self.__mysql.commit()
+            if Context.env_unit_test():
+                return
+            else:
+                self.__mysql.commit()
 
     def __connect(self):
         '''Perform the tasks required for connecting to the database.'''

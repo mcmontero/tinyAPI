@@ -54,7 +54,10 @@ class Manager(object):
                         if length > 79:
                             method_name = '...' + method_name[(length - 76):]
 
-                    self.__cli.notice(test_case + method_name, 1)
+                    if line == 'OK':
+                        print()
+                    elif test_case + method_name != '':
+                        self.__cli.notice(test_case + method_name, 1)
 
                     matches = re.match('Ran (\d+) test', line)
                     if matches is not None:

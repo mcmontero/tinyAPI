@@ -79,6 +79,10 @@ class RDBMSBase(__DataStoreBase):
         '''Return the value at the Nth position of the result set.'''
         return None
 
+    def one(self, sql, binds=tuple()):
+        '''Return the first (and only the first) of the result set.'''
+        return self.nth(0, sql, binds)
+
     def query(self, query, binds = []):
         '''Execute an arbitrary query and return all of the results.'''
         return None

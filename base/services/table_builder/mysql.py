@@ -837,6 +837,8 @@ class Table(object):
             for val in row:
                 if val == 'current_timestamp':
                     vals.append('    current_timestamp')
+                elif val is None:
+                    vals.append('    null')
                 else:
                     vals.append("    '" + str(val) + "'")
 

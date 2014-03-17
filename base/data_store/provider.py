@@ -171,7 +171,7 @@ class DataStoreMySQL(RDBMSBase):
 
         keys = list(data.keys())
         binds = self.__get_binds(data)
-        vals = list(data.values())
+        vals = self.__get_values(data.values())
 
         sql  = 'insert into ' + target + '('
         sql += ', '.join(keys)
@@ -191,6 +191,10 @@ class DataStoreMySQL(RDBMSBase):
                 raise DataStoreDuplicateKeyException(e.msg)
             else:
                 raise
+        except mysql.connector.errors.ProgrammingError as e:
+            raise DataStoreException(
+                    self.__format_query_execution_error(
+                                sql, e.msg, binds))
 
         id = None
         if return_insert_id:
@@ -218,13 +222,21 @@ class DataStoreMySQL(RDBMSBase):
 
         return True
 
+    def __format_query_execution_error(self, sql, message, binds=tuple()):
+        return ('execution of this query:\n\n'
+                + sql
+                + "\n\n"
+                + (repr(binds) if binds is not None else '')
+                + '\n\nproduced this error:\n\n'
+                + message)
+
     def __get_binds(self, data=tuple()):
         if len(data) == 0:
             return tuple()
 
         binds = []
         for value in list(data.values()):
-            if (value == 'current_timestamp'):
+            if value == 'current_timestamp':
                 binds.append(value)
             else:
                 binds.append('%s')
@@ -234,6 +246,17 @@ class DataStoreMySQL(RDBMSBase):
     def __get_cursor(self):
         return self.__mysql.cursor(prepared=True,
                                    cursor_class=MySQLCursorDict)
+
+    def __get_values(self, data=tuple()):
+        if len(data) == 0:
+            return tuple()
+
+        values = []
+        for value in data:
+            if value != 'current_timestamp':
+                values.append(value)
+
+        return values
 
     def nth(self, index, sql, binds=tuple()):
         records = self.query(sql, binds)
@@ -260,12 +283,8 @@ class DataStoreMySQL(RDBMSBase):
             cursor.execute(sql, binds)
         except mysql.connector.errors.ProgrammingError as e:
             raise DataStoreException(
-                    'execution of this query:\n\n'
-                    + sql
-                    + "\n\n"
-                    + (repr(binds) if binds is not None else '')
-                    + '\n\nproduced this error:\n\n'
-                    + e.msg)
+                    self.__format_query_execution_error(
+                                sql, e.msg, binds))
 
         if is_select:
             results = []

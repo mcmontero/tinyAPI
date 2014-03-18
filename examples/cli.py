@@ -2,9 +2,9 @@
 
 # ----- Imports ---------------------------------------------------------------
 
+from tinyAPI.base.services.cli import cli_main
 import argparse
 import tinyAPI
-from tinyAPI.base.services.cli import cli_main
 
 # ----- Configuration ---------------------------------------------------------
 

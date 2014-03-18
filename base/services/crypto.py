@@ -29,7 +29,7 @@ class DataArmor(object):
         self.__data = data
 
     def __decrypt(self, data):
-        data = base64.b64decode(data.encode())
+        data = base64.b64decode(data.encode(), b'_|')
         iv = data[:AES.block_size]
         cipher = AES.new(self.__key, AES.MODE_CBC, iv)
 
@@ -40,7 +40,7 @@ class DataArmor(object):
         iv = Random.new().read(AES.block_size)
         cipher = AES.new(self.__key, AES.MODE_CBC, iv)
 
-        return base64.b64encode(iv + cipher.encrypt(data))
+        return base64.b64encode(iv + cipher.encrypt(data), b'_|')
 
     def lock(self):
         '''Secure the data.'''

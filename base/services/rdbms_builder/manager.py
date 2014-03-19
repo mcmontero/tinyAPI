@@ -892,7 +892,8 @@ builtins._tinyapi_ref_unit_test = _tinyapi_ref_unit_test
     def __handle_module_dml(self, module, path):
         files = find_files(path, "*.sql")
         for file in files:
-            module.add_dml_file(file)
+            if re.search('/rdbms_prebuild/', file) is None:
+                module.add_dml_file(file)
 
     def __notice(self, message, indent=None):
         if self.__cli is None:

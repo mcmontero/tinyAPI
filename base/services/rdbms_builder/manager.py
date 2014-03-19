@@ -881,7 +881,7 @@ builtins._tinyapi_ref_unit_test = _tinyapi_ref_unit_test
             if password != '':
                 command.append("--password='" + password + "'")
 
-            if host == '' and user == '' and password == '':
+            if user == '' and password == '':
                 command.append('--user root')
 
             self.__exec_sql_command = ' '.join(command)

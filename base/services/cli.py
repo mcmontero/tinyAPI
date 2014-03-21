@@ -75,6 +75,18 @@ class CLI(object):
         '''Exits setting the return value based on the status of the CLI.'''
         exit(0 if self.__status_id == self.STATUS_OK else 1)
 
+    def __get_active_pid(self):
+        active_pid = None
+
+        try:
+           file = open(self.__pid_lock_file, 'r')
+           active_pid = int(file.read())
+           file.close()
+        except FileNotFoundError:
+            return None
+
+        return active_pid
+
     def header(self, title):
         '''Displays the header of the CLI containing the name.'''
         print("\n" + CLIOutputRenderer().header(title))
@@ -106,6 +118,14 @@ class CLI(object):
             base_name += '-' + re.sub('[^A-Za-z0-9_\-]', '', params_str.lower())
 
         self.__pid_lock_file = base_name + '.pid_lock'
+
+        active_pid = self.__get_active_pid()
+        if active_pid is not None:
+            try:
+                os.kill(int(active_pid), 0)
+                self.__pid_lock_failed()
+            except OSError:
+                os.unlink(self.__pid_lock_file)
 
         try:
             pid_file = os.fdopen(os.open(self.__pid_lock_file,

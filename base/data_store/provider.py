@@ -191,11 +191,15 @@ class DataStoreMySQL(RDBMSBase):
         try:
             cursor.execute(sql, vals)
         except mysql.connector.errors.IntegrityError as e:
+            self.rollback()
+            cursor.close()
             if e.errno == 1062:
                 raise DataStoreDuplicateKeyException(e.msg)
             else:
                 raise
         except mysql.connector.errors.ProgrammingError as e:
+            self.rollback()
+            cursor.close()
             raise DataStoreException(
                     self.__format_query_execution_error(
                                 sql, e.msg, binds))
@@ -286,6 +290,8 @@ class DataStoreMySQL(RDBMSBase):
         try:
             cursor.execute(sql, binds)
         except mysql.connector.errors.ProgrammingError as e:
+            self.rollback()
+            cursor.close()
             raise DataStoreException(
                     self.__format_query_execution_error(
                                 sql, e.msg, binds))
@@ -299,6 +305,10 @@ class DataStoreMySQL(RDBMSBase):
                 results = results[0]
 
             self.memcache_store(results)
+
+            # This is less a formal commit and more ending the current
+            # transaction so the cursor and connection are flushed.
+            self.commit()
         else:
             results = True
 

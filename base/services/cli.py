@@ -78,6 +78,7 @@ class CLI(object):
     def header(self, title):
         '''Displays the header of the CLI containing the name.'''
         print("\n" + CLIOutputRenderer().header(title))
+        sys.stdout.flush()
 
     def notice(self, message, indent=None):
         '''Outputs a notice message.'''
@@ -128,6 +129,8 @@ class CLI(object):
             print("* The lock is held by PID " + f.read() + '.\n')
 
         self.__pid_lock_file = None
+
+        sys.stdout.flush()
         sys.exit(0);
 
     def __print_message(self, message, char, indent=None):
@@ -135,6 +138,8 @@ class CLI(object):
             print((' ' * 4 *indent) + message)
         else:
             print(char + ' ' + message)
+
+        sys.stdout.flush()
 
     def set_status_error(self):
         self.__status_id = self.STATUS_ERROR
@@ -157,6 +162,7 @@ class CLI(object):
 
         print(("\n" + indicator + ' Execution completed ' + message
                + ' in ' + str('{0:,}'.format(elapsed)) + "s!\n"))
+        sys.stdout.flush()
 
     def time_marker(self, num_iterations=None):
         '''Outputs the time for each iteration of a CLI that runs in a loop

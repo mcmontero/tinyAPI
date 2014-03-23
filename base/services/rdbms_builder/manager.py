@@ -7,6 +7,7 @@ __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
 from .exception import RDBMSBuilderException
 from tinyAPI.base.config import ConfigManager
+from tinyAPI.base.data_store.exception import DataStoreDuplicateKeyException
 from tinyAPI.base.utils import find_dirs, find_files
 import hashlib
 import importlib.machinery
@@ -964,10 +965,14 @@ builtins._tinyapi_ref_unit_test = _tinyapi_ref_unit_test
             parent_cols = data[3]
 
             parts = table_name.split('_')
-            tinyAPI.dsh().create(
-                'rdbms_builder.dirty_module',
-                {'name': parts[0]})
-            tinyAPI.dsh().commit()
+
+            try:
+                tinyAPI.dsh().create(
+                    'rdbms_builder.dirty_module',
+                    {'name': parts[0]})
+                tinyAPI.dsh().commit()
+            except DataStoreDuplicateKeyException:
+                pass
 
             self.__notice('(!) unindexed foreign key', 1)
             self.__notice('table: '

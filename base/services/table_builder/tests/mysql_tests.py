@@ -931,7 +931,7 @@ add constraint abc_0_fk
     def test_latitude_column(self):
         text = '''create table abc
 (
-    latitude decimal(10, 8) default null
+    latitude float(53) default null
 ) engine = innodb default charset = utf8 collate = utf8_unicode_ci;'''
 
         self.assertEqual(
@@ -940,7 +940,7 @@ add constraint abc_0_fk
 
         text = '''create table abc
 (
-    lat_x decimal(10, 8) not null
+    lat_x float(53) not null
 ) engine = innodb default charset = utf8 collate = utf8_unicode_ci;'''
 
         self.assertEqual(
@@ -962,7 +962,7 @@ add constraint abc_0_fk
     def test_longitude_column(self):
         text = '''create table abc
 (
-    longitude decimal(11, 8) default null
+    longitude float(53) default null
 ) engine = innodb default charset = utf8 collate = utf8_unicode_ci;'''
 
         self.assertEqual(
@@ -971,7 +971,7 @@ add constraint abc_0_fk
 
         text = '''create table abc
 (
-    long_x decimal(11, 8) not null
+    long_x float(53) not null
 ) engine = innodb default charset = utf8 collate = utf8_unicode_ci;'''
 
         self.assertEqual(

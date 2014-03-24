@@ -936,7 +936,7 @@ class Table(object):
                     'latitude column must be named "latitude" or start with '
                     + '"lat_"')
 
-        self.dec(name, not_null, 10, 8)
+        self.float(name, not_null, 53)
 
         return self
 
@@ -957,7 +957,7 @@ class Table(object):
                     'longitude column must be named "longitude" or start with '
                     + '"long_"')
 
-        self.dec(name, not_null, 11, 8)
+        self.float(name, not_null, 53)
 
         return self
 

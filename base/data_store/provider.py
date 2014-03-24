@@ -244,7 +244,7 @@ class DataStoreMySQL(RDBMSBase):
 
         binds = []
         for value in list(data.values()):
-            if value == 'current_timestamp':
+            if re.match('current_timestamp', str(value)) is not None:
                 binds.append(value)
             else:
                 binds.append('%s')
@@ -261,7 +261,7 @@ class DataStoreMySQL(RDBMSBase):
 
         values = []
         for value in data:
-            if value != 'current_timestamp':
+            if re.match('current_timestamp', str(value)) is None:
                 values.append(value)
 
         return values
@@ -289,6 +289,13 @@ class DataStoreMySQL(RDBMSBase):
 
         try:
             cursor.execute(sql, binds)
+        except mysql.connector.errors.IntegrityError as e:
+            self.rollback()
+            cursor.close()
+            if e.errno == 1062:
+                raise DataStoreDuplicateKeyException(e.msg)
+            else:
+                raise
         except mysql.connector.errors.ProgrammingError as e:
             self.rollback()
             cursor.close()

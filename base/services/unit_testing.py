@@ -49,7 +49,7 @@ class Manager(object):
                         test_case = matches.group(1) + '::'
 
                     method_name = re.sub(' \(.*?\..*?\)', '', line)
-                    if method_name is not None:
+                    if method_name is not None and method_name != line:
                         length = len(test_case) + len(method_name) + 4
                         if length > 79:
                             method_name = '...' + method_name[(length - 76):]

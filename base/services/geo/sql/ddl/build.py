@@ -27,9 +27,6 @@ def geo_build():
             .add(4, 'Southwest')
             .add(5, 'West'),
 
-        tinyAPI.RefTable(db, 'geo_ref_timezone')
-            .add(1, 'EDT'),
-
         tinyAPI.Table(db, 'geo_country')
             .serial()
             .vchar('name', 100, True)

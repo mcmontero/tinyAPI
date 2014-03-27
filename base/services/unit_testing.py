@@ -43,21 +43,24 @@ class Manager(object):
 
                 failed = False
                 for line in output.split("\n"):
-                    test_case = ''
-                    matches = re.search(' \(.*?\.(.*?)\)', line)
-                    if matches is not None:
-                        test_case = matches.group(1) + '::'
+                    if re.search('^test_', line) is not None:
+                        test_case = ''
+                        matches = re.search(' \(.*?\.(.*?)\)', line)
+                        if matches is not None:
+                            test_case = matches.group(1) + '::'
 
-                    method_name = re.sub(' \(.*?\..*?\)', '', line)
-                    if method_name is not None and method_name != line:
-                        length = len(test_case) + len(method_name) + 4
-                        if length > 79:
-                            method_name = '...' + method_name[(length - 76):]
+                        method_name = re.sub(' \(.*?\..*?\)', '', line)
+                        if method_name is not None and method_name != line:
+                            length = len(test_case) + len(method_name) + 4
+                            if length > 79:
+                                method_name = \
+                                    '...' + method_name[(length - 76):]
 
-                    if line == 'OK':
-                        print()
-                    elif test_case + method_name != '':
                         self.__cli.notice(test_case + method_name, 1)
+                    elif line == 'OK':
+                        self.__cli.notice('', 1)
+                    elif line != '':
+                        self.__cli.notice(line, 1)
 
                     matches = re.match('Ran (\d+) test', line)
                     if matches is not None:

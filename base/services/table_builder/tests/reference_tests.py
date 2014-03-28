@@ -34,6 +34,10 @@ class TableBuilderReferenceTestCase(unittest.TestCase):
         if self.__execute_tests is True:
             self.assertEqual('one', tinyAPI.refv('tinyAPI_ref_unit_test', 1))
 
+    def test_invalid_value(self):
+        if self.__execute_tests is True:
+            self.assertIsNone(tinyAPI.refv('tinyAPI_ref_unit_test', -1))
+
 # ----- Main ------------------------------------------------------------------
 
 if __name__ == '__main__':

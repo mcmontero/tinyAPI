@@ -44,4 +44,7 @@ def refv(ref_table_name, value=None):
         # Flip the keys and values so we can get the ID from the string.
         table = dict((v, k) for k, v in table.items())
 
-    return table[value]
+    try:
+        return table[value]
+    except KeyError:
+        return None

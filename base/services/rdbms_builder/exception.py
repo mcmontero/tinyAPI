@@ -1,4 +1,4 @@
-'''exception.py -- Defines named exceptions for RDBMS Builder.'''
+# ----- Info ------------------------------------------------------------------
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
@@ -6,10 +6,12 @@ __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
 from tinyAPI.base.exception import tinyAPIException
 
+__all__ = [
+    'RDBMSBuilderException'
+]
+
 # ----- Public Classes --------------------------------------------------------
 
 class RDBMSBuilderException(tinyAPIException):
     '''Named exception when issues with CLI arise.'''
     pass
-
-__all__ = ['RDBMSBuilderException']

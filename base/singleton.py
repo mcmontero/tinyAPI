@@ -1,6 +1,12 @@
-'''singleton.py --- Singleton meta-class implementation.'''
+# ----- Info ------------------------------------------------------------------
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'
+
+# ----- Imports ---------------------------------------------------------------
+
+__all__ = [
+    'Singleton'
+]
 
 # ----- Public Classes --------------------------------------------------------
 
@@ -13,5 +19,3 @@ class Singleton(type):
                                                                  **kwargs)
 
         return cls._instances[cls]
-
-__all__ = ['Singleton']

@@ -1,10 +1,11 @@
-'''cli.py -- Command line interface functionality for programs.'''
+# ----- Info ------------------------------------------------------------------
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
 # ----- Imports ---------------------------------------------------------------
 
 from .exception import CLIException
+
 import argparse
 import errno
 import datetime
@@ -12,6 +13,12 @@ import os
 import re
 import sys
 import time
+
+__all__ = [
+    'CLI',
+    'cli_main',
+    'CLIOutputRenderer'
+]
 
 # ----- Public Functions  -----------------------------------------------------
 
@@ -49,6 +56,7 @@ class CLI(object):
         # Now that PID locking has succeeded, enable the status.
         self.__enable_status = True
 
+
     def __del__(self):
         try:
             if self.__enable_status is True:
@@ -66,14 +74,17 @@ class CLI(object):
         except AttributeError:
             pass
 
+
     def error(self, message, indent=None):
         '''Outputs an error message.'''
         self.__status_id = self.STATUS_ERROR
         self.__print_message(message, '!', indent)
 
+
     def exit(self):
         '''Exits setting the return value based on the status of the CLI.'''
         exit(0 if self.__status_id == self.STATUS_OK else 1)
+
 
     def __get_active_pid(self):
         active_pid = None
@@ -87,14 +98,17 @@ class CLI(object):
 
         return active_pid
 
+
     def header(self, title):
         '''Displays the header of the CLI containing the name.'''
         print("\n" + CLIOutputRenderer().header(title))
         sys.stdout.flush()
 
+
     def notice(self, message, indent=None):
         '''Outputs a notice message.'''
         self.__print_message(message, '+', indent)
+
 
     def __pid_lock(self):
         params = []
@@ -139,6 +153,7 @@ class CLI(object):
         pid_file.write(str(os.getpid()))
         pid_file.close()
 
+
     def __pid_lock_failed(self):
         self.__enable_status = False;
 
@@ -153,6 +168,7 @@ class CLI(object):
         sys.stdout.flush()
         sys.exit(0);
 
+
     def __print_message(self, message, char, indent=None):
         if indent is not None:
             print((' ' * 4 *indent) + message)
@@ -161,8 +177,10 @@ class CLI(object):
 
         sys.stdout.flush()
 
+
     def set_status_error(self):
         self.__status_id = self.STATUS_ERROR
+
 
     def status(self):
         '''Prints a final message about the overall status of a CLI when it
@@ -184,6 +202,7 @@ class CLI(object):
                + ' in ' + str('{0:,}'.format(elapsed)) + "s!\n"))
         sys.stdout.flush()
 
+
     def time_marker(self, num_iterations=None):
         '''Outputs the time for each iteration of a CLI that runs in a loop
            continuously.'''
@@ -193,6 +212,7 @@ class CLI(object):
              + ' ['
              + str(datetime.datetime.now())
              + ']'))
+
 
     def warn(self, message, indent=None):
         '''Outputs a warning message.'''
@@ -209,5 +229,3 @@ class CLIOutputRenderer(object):
         body += ' ' * (width - 2 - len(body)) + "|\n"
 
         return enclosure + body + enclosure
-
-__all__ = ['CLI', 'cli_main', 'CLIOutputRenderer']

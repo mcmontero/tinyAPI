@@ -18,6 +18,7 @@ class TableBuilderReferenceTestCase(unittest.TestCase):
            ConfigManager().value('reference definition file') is not None:
             self.__execute_tests = True
 
+
     def test_getting_entire_table(self):
         if self.__execute_tests is True:
             table = tinyAPI.refv('tinyAPI_ref_unit_test')
@@ -26,13 +27,16 @@ class TableBuilderReferenceTestCase(unittest.TestCase):
             self.assertEqual('two', table[2])
             self.assertEqual('three', table[3])
 
+
     def test_encoding(self):
         if self.__execute_tests is True:
             self.assertEqual(1, tinyAPI.refv('tinyAPI_ref_unit_test', 'one'))
 
+
     def test_decoding(self):
         if self.__execute_tests is True:
             self.assertEqual('one', tinyAPI.refv('tinyAPI_ref_unit_test', 1))
+
 
     def test_invalid_value(self):
         if self.__execute_tests is True:

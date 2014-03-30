@@ -1,5 +1,4 @@
-'''data_armor.py -- Allows for the creation of secure, encrypted packets of
-   data.  It is highly recommended that you use a key length of 32 bytes.'''
+# ----- Info ------------------------------------------------------------------
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
@@ -8,10 +7,15 @@ __author__ = 'Michael Montero <mcmontero@gmail.com>'
 from Crypto import Random
 from Crypto.Cipher import AES
 from .exception import CryptoException
+
 import base64
 import hashlib
 import json
 import time
+
+__all__ = [
+    'DataArmor'
+]
 
 # ----- Public Classes --------------------------------------------------------
 
@@ -28,6 +32,7 @@ class DataArmor(object):
         self.__key = key
         self.__data = data
 
+
     def __decrypt(self, data):
         data = base64.b64decode(data.encode(), b'|_')
         iv = data[:AES.block_size]
@@ -35,12 +40,14 @@ class DataArmor(object):
 
         return self.__unpad(cipher.decrypt(data[AES.block_size:]))
 
+
     def __encrypt(self, data):
         data = self.__pad(data)
         iv = Random.new().read(AES.block_size)
         cipher = AES.new(self.__key, AES.MODE_CBC, iv)
 
         return base64.b64encode(iv + cipher.encrypt(data), b'|_')
+
 
     def lock(self):
         '''Secure the data.'''
@@ -52,9 +59,11 @@ class DataArmor(object):
 
         return self.__encrypt(data).decode() + '-' + sha
 
+
     def __pad(self, data):
         bs = AES.block_size
         return data + (bs - len(data) % bs) * chr(bs - len(data) % bs)
+
 
     def unlock(self, ttl=None):
         '''Decrypt the data and return the original payload.'''
@@ -82,7 +91,6 @@ class DataArmor(object):
 
         return json.loads(data)
 
+
     def __unpad(self, data):
         return data[:-ord(data[len(data) - 1:])]
-
-__all__ = ['DataArmor']

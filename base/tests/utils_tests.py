@@ -1,10 +1,11 @@
-'''utils_tests.py -- Unit tests for utilities.'''
+# ----- Info ------------------------------------------------------------------
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
 # ----- Import ----------------------------------------------------------------
 
 from tinyAPI.base.utils import find_dirs, find_files
+
 import tinyAPI
 import unittest
 

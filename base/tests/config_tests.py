@@ -1,4 +1,4 @@
-'''config_tests.py -- Unit tests for configuration functionality.'''
+# ----- Info ------------------------------------------------------------------
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
@@ -6,6 +6,7 @@ __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
 from tinyAPI.base.config import ConfigManager
 from tinyAPI.base.exception import ConfigurationException
+
 import tinyAPI
 import unittest
 

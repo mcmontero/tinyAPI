@@ -2,7 +2,6 @@
 
 # ----- Imports --------------------------------------------------------------
 
-from tinyAPI.base.config import ConfigManager
 from tinyAPI.base.services.cli import cli_main
 from tinyAPI.base.services.unit_testing import Manager
 
@@ -16,16 +15,14 @@ def main(cli):
     cli.header('Unit Tests')
 
     utm = Manager(cli)
-    paths = ConfigManager().value('application dirs')
-    for path in paths:
-        files = subprocess.check_output(
-                    "/usr/bin/find "
-                    + path
-                    + "/* -name \"*.py\" | /bin/grep \"/tests/\"; "
-                    + "exit 0",
-                    stderr=subprocess.STDOUT,
-                    shell=True).decode()
-        utm.execute(files.split("\n"))
+    files = subprocess.check_output(
+                "/usr/bin/find "
+                + os.getcwd()
+                + "/* -name \"*.py\" | /bin/grep \"/tests/\"; "
+                + "exit 0",
+                stderr=subprocess.STDOUT,
+                shell=True).decode()
+    utm.execute(files.split("\n"))
 
     utm.print_summary()
 

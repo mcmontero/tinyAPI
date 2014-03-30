@@ -1,10 +1,11 @@
-'''manager_tests.py -- Unit tests for the RDBMS Builder manager.'''
+# ----- Info ------------------------------------------------------------------
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
 # ----- Import ----------------------------------------------------------------
 
 from tinyAPI.base.services.rdbms_builder.manager import _RDBMSBuilderModuleSQL
+
 import tinyAPI
 import unittest
 
@@ -18,6 +19,7 @@ class RDBMSBuilderManagerTestCase(unittest.TestCase):
         self.assertEqual('abc', module.get_name())
         self.assertEqual('def', module.get_prefix())
 
+
     def test_builder_module_dml_files(self):
         module = _RDBMSBuilderModuleSQL('abc', 'def')
         module.add_dml_file('a')
@@ -28,11 +30,13 @@ class RDBMSBuilderManagerTestCase(unittest.TestCase):
         self.assertEqual('a', dml_files[0])
         self.assertEqual('b', dml_files[1])
 
+
     def test_builder_module_build_file(self):
         module = _RDBMSBuilderModuleSQL('abc', 'def')
         module.set_build_file('/a/b/c')
 
         self.assertEqual('/a/b/c', module.get_build_file())
+
 
     def test_adding_definition(self):
         module = _RDBMSBuilderModuleSQL('abc', 'def')
@@ -46,6 +50,7 @@ class RDBMSBuilderManagerTestCase(unittest.TestCase):
         self.assertEqual('c', statements[1][0])
         self.assertEqual('d', statements[1][1])
 
+
     def test_adding_index(self):
         module = _RDBMSBuilderModuleSQL('abc', 'def')
         module.add_index('a', 'b')
@@ -57,6 +62,7 @@ class RDBMSBuilderManagerTestCase(unittest.TestCase):
         self.assertEqual('b', indexes[0][1])
         self.assertEqual('c', indexes[1][0])
         self.assertEqual('d', indexes[1][1])
+
 
     def test_adding_insert(self):
         module = _RDBMSBuilderModuleSQL('abc', 'def')

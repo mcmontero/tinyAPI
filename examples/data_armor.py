@@ -1,9 +1,10 @@
-#!/usr/bin/env python3
+#!/usr/bin/env /usr/bin/python3
 
 # ----- Imports ---------------------------------------------------------------
 
 import time
 import tinyAPI
+
 from tinyAPI.base.services.cli import cli_main
 from tinyAPI.base.services.crypto import DataArmor
 

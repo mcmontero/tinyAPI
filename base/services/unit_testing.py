@@ -1,15 +1,19 @@
-'''unit_testing.py -- Provides functionality for putting standards and
-   consistency around executing unit tests.'''
+# ----- Info ------------------------------------------------------------------
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
 # ----- Imports ---------------------------------------------------------------
 
 from tinyAPI.base.context import Context
+
 import re
 import subprocess
 import sys
 import time
+
+__all__ = [
+    'Manager'
+]
 
 # ----- Public Classes  -------------------------------------------------------
 
@@ -22,9 +26,11 @@ class Manager(object):
         self.__total_run_time = 0
         self.__total_tests = 0
 
+
     def disable_stop_on_failure(self):
         self.__enable_stop_on_failure = False
         return self
+
 
     def execute(self, files=tuple()):
         for file in files:
@@ -74,6 +80,7 @@ class Manager(object):
 
                 self.__total_run_time += time.time() - file_run_time_start;
 
+
     def print_summary(self):
         self.__cli.notice('  Total number of tests executed: '
                           + str('{0:,}'.format(self.__total_tests)))
@@ -83,5 +90,3 @@ class Manager(object):
 # ----- Instructions ----------------------------------------------------------
 
 Context().set_unit_test()
-
-__all__ = ['Manager']

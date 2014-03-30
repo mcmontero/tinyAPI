@@ -1,5 +1,4 @@
-'''context.py -- Provides mechanism for an application to determine in which
-   environment it is running and what aspect of the application is executing.'''
+# ----- Info ------------------------------------------------------------------
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
@@ -7,7 +6,20 @@ __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
 from .exception import ContextException
 from tinyAPI.base.singleton import Singleton
+
 import os
+
+__all__ = [
+    'env_cli',
+    'env_local',
+    'env_not_prod',
+    'env_prod',
+    'env_qa',
+    'env_staging',
+    'env_unit_test',
+    'env_web',
+    'Context'
+]
 
 # ----- Private Functions -----------------------------------------------------
 
@@ -19,23 +31,30 @@ def __context_env_matches(env):
 def env_local():
     return __context_env_matches(Context.LOCAL)
 
+
 def env_staging():
     return __context_env_matches(Context.STAGING)
+
 
 def env_qa():
     return __context_env_matches(Context.QA)
 
+
 def env_prod():
     return __context_env_matches(Context.PRODUCTION)
+
 
 def env_not_prod():
     return not __context_env_matches(Context.PRODUCTION)
 
+
 def env_cli():
     return Context().is_cli()
 
+
 def env_web():
     return Context().is_web()
+
 
 def env_unit_test():
     return Context().is_unit_test()
@@ -53,6 +72,7 @@ class Context(metaclass=Singleton):
 
     def __init__(self):
         self.reset()
+
 
     def get_server_env(self):
         if self.__server_env is None:
@@ -75,14 +95,18 @@ class Context(metaclass=Singleton):
 
         return self.__server_env
 
+
     def is_cli(self):
         return self.__is_cli
+
 
     def is_unit_test(self):
         return self.__is_unit_test
 
+
     def is_web(self):
         return self.__is_web
+
 
     def reset(self):
         self.__server_env = None
@@ -93,17 +117,17 @@ class Context(metaclass=Singleton):
         if str(os.environ.get('ENV_UNIT_TEST')) == "1":
             self.__is_unit_test = True
 
+
     def set_cli(self):
         self.__is_cli = True
         return self
+
 
     def set_unit_test(self):
         self.__is_unit_test = True
         return self
 
+
     def set_web(self):
         self.__is_web = True
         return self
-
-__all__ = ['Context', 'env_cli', 'env_local', 'env_not_prod', 'env_prod',
-           'env_qa', 'env_staging', 'env_unit_test', 'env_web']

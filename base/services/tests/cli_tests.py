@@ -1,10 +1,11 @@
-'''cli_tests.py -- Unit tests for CLI.'''
+# ----- Info ------------------------------------------------------------------
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
 # ----- Import ----------------------------------------------------------------
 
 from tinyAPI.base.services.cli import CLIOutputRenderer
+
 import tinyAPI
 import unittest
 

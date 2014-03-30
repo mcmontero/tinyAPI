@@ -1,6 +1,7 @@
 # ----- Imports --------------------------------------------------------------
 
 from tinyAPI.base.config import ConfigManager
+
 import tinyAPI
 
 # ----- Instructions ---------------------------------------------------------

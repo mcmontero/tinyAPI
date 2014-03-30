@@ -1,4 +1,4 @@
-'''context_tests.py -- Unit tests for context functionality.'''
+# ----- Info ------------------------------------------------------------------
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
@@ -6,6 +6,7 @@ __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
 from tinyAPI.base.context import Context
 from tinyAPI.base.exception import ContextException
+
 import os
 import tinyAPI
 import unittest

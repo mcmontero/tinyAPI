@@ -1,4 +1,4 @@
-'''crypto_tests.py -- Unit tests for cryptographic functionality.'''
+# ----- Info ------------------------------------------------------------------
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
@@ -6,6 +6,7 @@ __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
 from tinyAPI.base.services.crypto import DataArmor
 from tinyAPI.base.services.exception import CryptoException
+
 import tinyAPI
 import unittest
 
@@ -24,6 +25,7 @@ class CryptoTestCase(unittest.TestCase):
                 'key must be of length 16, 24, or 32 bytes',
                 e.get_message())
 
+
     def test_encrypting_decrypting(self):
         key = '12345678901234567890123456789012'
         string = 'hello world!'
@@ -32,6 +34,7 @@ class CryptoTestCase(unittest.TestCase):
         self.assertIsNotNone(token)
 
         self.assertEqual(string, DataArmor(key, token).unlock())
+
 
     def test_modifying_token(self):
         key = '12345678901234567890123456789012'

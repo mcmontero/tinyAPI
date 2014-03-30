@@ -1,10 +1,15 @@
-'''exception.py -- Defines named exceptions for Data Store operations.'''
+# ----- Info ------------------------------------------------------------------
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
 # ----- Import ----------------------------------------------------------------
 
 from tinyAPI.base.exception import tinyAPIException
+
+__all__ = [
+    'DataStoreDuplicateKeyException',
+    'DataStoreException'
+]
 
 # ----- Public Classes --------------------------------------------------------
 
@@ -18,5 +23,3 @@ class DataStoreDuplicateKeyException(DataStoreException):
     '''Named exception identifying when a duplicate key is being added to a
        RDBMS.'''
     pass
-
-__all__ = ['DataStoreDuplicateKeyException', 'DataStoreException']

@@ -1,11 +1,16 @@
-'''reference.py -- Short cut for interacting with reference data.'''
+# ----- Info ------------------------------------------------------------------
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
 # ----- Imports ---------------------------------------------------------------
 
 import builtins
+
 from tinyAPI.base.config import ConfigManager
+
+__all__ = [
+    'refv'
+]
 
 # ----- Public Functions  -----------------------------------------------------
 

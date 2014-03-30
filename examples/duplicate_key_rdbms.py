@@ -1,8 +1,9 @@
-#!/usr/bin/env python3
+#!/usr/bin/env /usr/bin/python3
 
 # ----- Imports ---------------------------------------------------------------
 
 import tinyAPI
+
 from tinyAPI.base.services.cli import cli_main
 
 # ----- Main ------------------------------------------------------------------

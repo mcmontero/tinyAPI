@@ -1,7 +1,4 @@
-'''provider.py -- Data store providers are mechanism for talking to databases,
-   document stores, caching sub-systems, etc. that are configured into tinyAPI.
-   They are designed to be less verbose (and configuration driven where
-   possible) to make getting and setting data easy and portable.'''
+# ----- Info ------------------------------------------------------------------
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
@@ -13,9 +10,16 @@ from mysql.connector import errorcode
 from tinyAPI.base.config import ConfigManager
 from tinyAPI.base.data_store.memcache import Memcache
 from tinyAPI.base.singleton import Singleton
+
 import mysql.connector
 import re
 import tinyAPI.base.context as Context
+
+__all__ = [
+    'DataStoreMySQL',
+    'DataStoreProvider',
+    'RDBMSBase'
+]
 
 # ----- Private Classes -------------------------------------------------------
 
@@ -40,17 +44,21 @@ class RDBMSBase(__DataStoreBase):
         '''Manually commit the active transaction.'''
         raise NotImplementedError
 
+
     def count(self, sql, binds=tuple()):
         '''Given a count(*) query, only return the resultant count.'''
         return None
+
 
     def create(target, data=tuple(), return_insert_id=False):
         '''Create a new record in the RDBMS.'''
         return '' if return_insert_id else None
 
+
     def delete(target, where=tuple(), binds=tuple()):
         '''Delete a record from the RDBMS.'''
         return False
+
 
     def memcache(self, key, ttl=0):
         '''Specify that the result set should be cached in Memcache.'''
@@ -58,11 +66,13 @@ class RDBMSBase(__DataStoreBase):
         self._memcache_ttl = ttl
         return self
 
+
     def memcache_purge(self):
         '''If the data has been cached, purge it.'''
         if self._memcache_key is None:
             return
         Memcache().purge(self._memcache_key)
+
 
     def memcache_retrieve(self):
         '''If the data needs to be cached, cache it.'''
@@ -70,27 +80,33 @@ class RDBMSBase(__DataStoreBase):
             return None
         return Memcache().retrieve(self._memcache_key)
 
+
     def memcache_store(self, data):
         '''If there is data and it should be cached, cache it.'''
         if self._memcache_key is None:
             return
         Memcache.store(self._memcache_key, data, self._memcache_ttl)
 
+
     def nth(self, index, sql, binds=tuple()):
         '''Return the value at the Nth position of the result set.'''
         return None
+
 
     def one(self, sql, binds=tuple()):
         '''Return the first (and only the first) of the result set.'''
         return self.nth(0, sql, binds)
 
+
     def query(self, query, binds = []):
         '''Execute an arbitrary query and return all of the results.'''
         return None
 
+
     def rollback():
         '''Manually rollback the active transaction.'''
         raise NotImplementedError
+
 
     def select_db(self, connection, db):
         '''Select which connection and database schema to use.'''
@@ -100,6 +116,7 @@ class RDBMSBase(__DataStoreBase):
         self._connection_name = connection
         self._db_name = db
         return self
+
 
     def set_charset(charset):
         '''Set the character for the RDBMS.'''
@@ -115,6 +132,7 @@ class DataStoreMySQL(RDBMSBase):
 
         self.__mysql = None
 
+
     def commit(self):
         '''Commit the active transaction.'''
         if self.__mysql is None:
@@ -126,6 +144,7 @@ class DataStoreMySQL(RDBMSBase):
                 return
             else:
                 self.__mysql.commit()
+
 
     def __connect(self):
         '''Perform the tasks required for connecting to the database.'''
@@ -154,6 +173,7 @@ class DataStoreMySQL(RDBMSBase):
             database=self._db_name,
             charset=self._charset)
 
+
     def __convert_to_prepared(self, separator, data=tuple()):
         binds = self.__get_binds(data)
 
@@ -166,8 +186,10 @@ class DataStoreMySQL(RDBMSBase):
 
         return separator.join(clause)
 
+
     def count(self, sql, binds=tuple()):
         return list(self.nth(0, sql, binds).values())[0]
+
 
     def create(self, target, data=tuple(), return_insert_id=True):
         if len(data) == 0:
@@ -212,6 +234,7 @@ class DataStoreMySQL(RDBMSBase):
 
         return id
 
+
     def delete(self, target, data=tuple()):
         sql = 'delete from ' + target
 
@@ -230,6 +253,7 @@ class DataStoreMySQL(RDBMSBase):
 
         return True
 
+
     def __format_query_execution_error(self, sql, message, binds=tuple()):
         return ('execution of this query:\n\n'
                 + sql
@@ -237,6 +261,7 @@ class DataStoreMySQL(RDBMSBase):
                 + (repr(binds) if binds is not None else '')
                 + '\n\nproduced this error:\n\n'
                 + message)
+
 
     def __get_binds(self, data=tuple()):
         if len(data) == 0:
@@ -251,9 +276,11 @@ class DataStoreMySQL(RDBMSBase):
 
         return binds
 
+
     def __get_cursor(self):
         return self.__mysql.cursor(prepared=True,
                                    cursor_class=MySQLCursorDict)
+
 
     def __get_values(self, data=tuple()):
         if len(data) == 0:
@@ -266,6 +293,7 @@ class DataStoreMySQL(RDBMSBase):
 
         return values
 
+
     def nth(self, index, sql, binds=tuple()):
         records = self.query(sql, binds)
 
@@ -273,6 +301,7 @@ class DataStoreMySQL(RDBMSBase):
             return records[index]
         else:
             return None
+
 
     def query(self, sql, binds=tuple()):
         results_from_cache = self.memcache_retrieve()
@@ -323,6 +352,7 @@ class DataStoreMySQL(RDBMSBase):
 
         return results
 
+
     def rollback(self):
         '''Rolls back the active transaction.'''
         if self.__mysql is None:
@@ -350,5 +380,3 @@ class DataStoreProvider(metaclass=Singleton):
         else:
             raise DataStoreException(
                 'configured data store is not currently supported')
-
-__all__ = ['DataStoreMySQL', 'DataStoreProvider', 'RDBMSBase']

@@ -1,10 +1,15 @@
-'''exception.py -- Defines named exceptions for services.'''
+# ----- Info ------------------------------------------------------------------
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
 # ----- Imports ---------------------------------------------------------------
 
 from tinyAPI.base.exception import tinyAPIException
+
+__all__ = [
+    'CLIException',
+    'CryptoException'
+]
 
 # ----- Public Classes --------------------------------------------------------
 
@@ -16,5 +21,3 @@ class CLIException(tinyAPIException):
 class CryptoException(tinyAPIException):
     '''Named exception when issues with cryptography arise.'''
     pass
-
-__all__ = ['CLIException', 'CryptoException']

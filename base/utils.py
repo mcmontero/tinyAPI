@@ -1,10 +1,15 @@
-'''utils.py -- Helper functionality.'''
+# ----- Info ------------------------------------------------------------------
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
 # ----- Imports ---------------------------------------------------------------
 
 import subprocess
+
+__all__ = [
+    'find_dirs',
+    'find_files'
+]
 
 # ----- Public Functions ------------------------------------------------------
 
@@ -15,10 +20,11 @@ def find_dirs(path, pattern=None):
                + (' -name "' + pattern + '"' if pattern is not None else ''))
 
     results = subprocess.check_output(command, shell=True).decode()
-    if results == '' or results is None:
+    if not results:
         return []
     else:
         return results.rstrip().split("\n")
+
 
 def find_files(path, pattern=None):
     '''Finds files starting at the specified path and matching the specified
@@ -27,9 +33,7 @@ def find_files(path, pattern=None):
                + (' -name "' + pattern + '"' if pattern is not None else ''))
 
     results = subprocess.check_output(command, shell=True).decode()
-    if results == '' or results is None:
+    if not results:
         return []
     else:
         return results.rstrip().split("\n")
-
-__all__ = ['find_dirs', 'find_files']

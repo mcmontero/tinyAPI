@@ -1,5 +1,4 @@
-'''manager.py -- Manages building RDBMS schemas based on Table Builder build
-   files.'''
+# ----- Info ------------------------------------------------------------------
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
@@ -9,6 +8,7 @@ from .exception import RDBMSBuilderException
 from tinyAPI.base.config import ConfigManager
 from tinyAPI.base.data_store.exception import DataStoreDuplicateKeyException
 from tinyAPI.base.utils import find_dirs, find_files
+
 import hashlib
 import importlib.machinery
 import os
@@ -18,6 +18,10 @@ import sys
 import tempfile
 import time
 import tinyAPI
+
+__all__ = [
+    'Manager'
+]
 
 # ----- Protected Classes -----------------------------------------------------
 
@@ -33,42 +37,54 @@ class _RDBMSBuilderModuleSQL(object):
         self.__indexes = []
         self.__inserts = []
 
+
     def add_definition(self, db_name, statement):
         self.__definitions.append([db_name, statement])
         return self
+
 
     def add_dml_file(self, dml_file):
         self.__dml_files.append(dml_file)
         return self
 
+
     def add_index(self, db_name, statement):
         self.__indexes.append([db_name, statement])
         return self
+
 
     def add_insert(self, db_name, statement):
         self.__inserts.append([db_name, statement])
         return self
 
+
     def get_build_file(self):
         return self.__build_file
+
 
     def get_definitions(self):
         return self.__definitions
 
+
     def get_dml_files(self):
         return self.__dml_files
+
 
     def get_indexes(self):
         return self.__indexes
 
+
     def get_inserts(self):
         return self.__inserts
+
 
     def get_name(self):
         return self.__name
 
+
     def get_prefix(self):
         return self.__prefix
+
 
     def set_build_file(self, build_file):
         self.__build_file = build_file
@@ -97,6 +113,7 @@ class Manager(object):
         self.__foreign_keys = {}
         self.__unindexed_foreign_keys = []
 
+
     def __add_foreign_key_constraints(self):
         self.__notice("Adding foreign key constraints...")
 
@@ -119,6 +136,7 @@ class Manager(object):
                     self.__notice('(+) ' + matches.group(1), 1)
 
                     self.__num_rdbms_objects += 1
+
 
     def __assemble_all_modules(self):
         '''Finds all of the modules in the application and puts their
@@ -218,6 +236,7 @@ class Manager(object):
 
             self.__handle_module_dml(module, path)
 
+
     def __assign_dependencies(self, module, table):
         '''Record all of the dependencies between modules so the system can be
            rebuilt with dependencies in mind.'''
@@ -239,6 +258,7 @@ class Manager(object):
 
                 self.__dependents_map[self.__prefix_to_module[dependency]] \
                                 .append(module.get_name())
+
 
     def __build_dml(self, module):
         for file in module.get_dml_files():
@@ -263,6 +283,7 @@ class Manager(object):
                           2)
 
             self.__num_rdbms_routines += 1
+
 
     def __build_sql(self, module):
         statements = module.get_definitions()
@@ -300,6 +321,7 @@ class Manager(object):
         self.__display_insert_progress(module.get_inserts())
         self.__track_module_info(module, module.get_build_file())
 
+
     def __clean_up_rdbms_builder_files(self):
         self.__notice('Cleaning up RDBMS Builder files...');
 
@@ -307,6 +329,7 @@ class Manager(object):
             if re.match('tinyAPI_rdbms_builder_', file):
                 os.remove('/tmp/' + file)
                 self.__notice('(-) /tmp/' + file, 1)
+
 
     def __compile_build_list_by_changes(self):
         '''Mark for build modules that contain modified build or DML files.'''
@@ -326,10 +349,12 @@ class Manager(object):
                 self.__notice('(+) ' + module.get_name(), 1)
                 self.__compile_build_list_for_module(module.get_name())
 
+
     def __compile_build_list_for_all_modules(self):
         '''Force a build for all modules.'''
         for module_name in list(self.__modules.keys()):
             self.__compile_build_list_for_module(module_name)
+
 
     def __compile_build_list_for_module(self, module_name):
         '''Mark a module for building and determine which of its dependents
@@ -343,6 +368,7 @@ class Manager(object):
             for dependent in self.__dependents_map[module_name]:
                 if dependent not in self.__modules_to_build:
                     self.__compile_build_list_for_module(dependent)
+
 
     def __compile_dirty_module_list(self):
         self.__notice('Determining if there are dirty modules...')
@@ -365,6 +391,7 @@ class Manager(object):
             else:
                 self.__notice('(+) ' + record['name'], 1)
                 self.__compile_build_list_for_module(record['name'])
+
 
     def __compile_reference_definitions(self):
         '''Compile the reference tables created with RefTable() into variables
@@ -469,11 +496,13 @@ builtins._tinyapi_ref_unit_test = _tinyapi_ref_unit_test
         f.write(content.lstrip())
         f.close()
 
+
     def __data_store_not_supported(self):
         raise RDBMSBuilderException(
             'the RDBMS Builder does not currently support "'
             + ConfigManager.value('data store')
             + '"')
+
 
     def __determine_managed_schemas(self):
         '''The database may contain many schemas, some of which should be
@@ -488,6 +517,7 @@ builtins._tinyapi_ref_unit_test = _tinyapi_ref_unit_test
         self.__managed_schemas = ', '.join(schemas)
 
         self.__notice(self.__managed_schemas, 1)
+
 
     def __display_insert_progress(self, inserts=tuple()):
         if len(inserts) == 0:
@@ -510,6 +540,7 @@ builtins._tinyapi_ref_unit_test = _tinyapi_ref_unit_test
                 index = 0
 
         print(" ")
+
 
     def __drop_foreign_key_constraints(self):
         self.__notice('Dropping relevant foreign key constraints...')
@@ -538,6 +569,7 @@ builtins._tinyapi_ref_unit_test = _tinyapi_ref_unit_test
                     + constraint['table_name']
                     + ' drop foreign key '
                     + constraint['constraint_name'])
+
 
     def __drop_objects(self):
         self.__notice('Dropping objects that will be rebuilt...')
@@ -587,6 +619,7 @@ builtins._tinyapi_ref_unit_test = _tinyapi_ref_unit_test
                     + '.'
                     + routine['routine_name'])
 
+
     def __enhance_build_error(self, message):
         if ConfigManager.value('data store') != 'mysql':
             return ''
@@ -603,11 +636,13 @@ builtins._tinyapi_ref_unit_test = _tinyapi_ref_unit_test
         else:
             return ''
 
+
     def __error(self, message, indent=None):
         if self.__cli is None:
             return None
 
         self.__cli.error(message, indent)
+
 
     def execute(self):
         '''Causes the RDBMS Builder to perform all necessary tasks.'''
@@ -778,6 +813,7 @@ builtins._tinyapi_ref_unit_test = _tinyapi_ref_unit_test
                       + '{:,}'.format(self.__num_rdbms_objects),
                       1)
 
+
     def __execute_prebuild_scripts(self):
         self.__notice('Finding and executing pre-build files...')
 
@@ -800,6 +836,7 @@ builtins._tinyapi_ref_unit_test = _tinyapi_ref_unit_test
                         except subprocess.CalledProcessError as e:
                             raise RDBMSBuilderException(
                                     e.output.rstrip().decode())
+
 
     def __execute_statement(self, statement, db_name=None):
         file = tempfile.NamedTemporaryFile(dir='/tmp',
@@ -836,6 +873,7 @@ builtins._tinyapi_ref_unit_test = _tinyapi_ref_unit_test
 
         os.remove(file.name)
 
+
     def __file_has_been_modified(self, file):
         if ConfigManager.value('data store') != 'mysql':
             self.__data_store_not_supported()
@@ -850,6 +888,7 @@ builtins._tinyapi_ref_unit_test = _tinyapi_ref_unit_test
             [file])
 
         return len(records) == 0 or records[0]['sha1'] != sha1
+
 
     def __get_exec_sql_command(self):
         if self.__exec_sql_command is not None:
@@ -890,11 +929,13 @@ builtins._tinyapi_ref_unit_test = _tinyapi_ref_unit_test
         else:
             self.__data_store_not_supported()
 
+
     def __handle_module_dml(self, module, path):
         files = find_files(path, "*.sql")
         for file in files:
             if re.search('/rdbms_prebuild/', file) is None:
                 module.add_dml_file(file)
+
 
     def __notice(self, message, indent=None):
         if self.__cli is None:
@@ -902,12 +943,14 @@ builtins._tinyapi_ref_unit_test = _tinyapi_ref_unit_test
 
         self.__cli.notice(message, indent)
 
+
     def __rebuild_modules(self):
         self.__notice('Rebuilding all DDL...')
 
         for module_name in self.__modules_to_build.keys():
             self.__notice('building module ' + module_name, 1)
             self.__build_sql(self.__modules[module_name])
+
 
     def __recompile_dml(self):
         self.__notice('Recompiling all DML...')
@@ -919,12 +962,14 @@ builtins._tinyapi_ref_unit_test = _tinyapi_ref_unit_test
 
                 self.__build_dml(self.__modules[module_name])
 
+
     def set_connection_name(self, connection_name):
         '''Tell the RDBMS Builder which connection (configured in
            tinyAPI_config.py) to use for finding and building data
            structures.'''
         self.__connection_name = connection_name
         return self
+
 
     def __track_module_info(self, module, file):
         if ConfigManager.value('data store') != 'mysql':
@@ -954,6 +999,7 @@ builtins._tinyapi_ref_unit_test = _tinyapi_ref_unit_test
             [module.get_name()])
 
         tinyAPI.dsh().commit()
+
 
     def __verify_foreign_key_indexes(self):
         self.__notice('Verifying foreign key indexes...')
@@ -986,6 +1032,7 @@ builtins._tinyapi_ref_unit_test = _tinyapi_ref_unit_test
 
         if len(self.__unindexed_foreign_keys) > 0:
             raise RDBMSBuilderException('unindexed foreign keys (see above)')
+
 
     def __verify_rdbms_builder_objects(self):
         if ConfigManager.value('data store') != 'mysql':
@@ -1025,10 +1072,9 @@ flush privileges;'''
             + 'root using:\n'
             + build_instructions)
 
+
     def __warn(self, message, indent=None):
         if self.__cli is None:
             return None
 
         self.__cli.warn(message, indent)
-
-__all__ = ['Manager']

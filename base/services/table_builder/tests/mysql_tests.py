@@ -1,4 +1,4 @@
-'''mysql_tests.py -- Unit tests for MySQL Table Builder.'''
+# ----- Info ------------------------------------------------------------------
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
@@ -10,6 +10,7 @@ from tinyAPI.base.services.table_builder.mysql \
     import _MySQLDateTimeColumn, \
            _MySQLNumericColumn, \
            _MySQLStringColumn
+
 import tinyAPI
 import unittest
 
@@ -26,6 +27,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
             self.assertEqual('the column "def" already exists',
                              e.get_message())
 
+
     def test_numeric_column_bit(self):
         self.assertEqual(
             "abcdef bit unsigned zerofill not null "
@@ -39,6 +41,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
                 .unsigned()
                 .zero_fill()
                 .get_definition())
+
 
     def test_numeric_column_bint(self):
         self.assertEqual(
@@ -54,6 +57,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
                 .zero_fill()
                 .get_definition())
 
+
     def test_numeric_column_mint(self):
         self.assertEqual(
             "abcdef mediumint(13) unsigned zerofill not null "
@@ -67,6 +71,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
                 .unsigned()
                 .zero_fill()
                 .get_definition())
+
 
     def test_numeric_column_int(self):
         self.assertEqual(
@@ -82,6 +87,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
                 .zero_fill()
                 .get_definition())
 
+
     def test_numeric_column_sint(self):
         self.assertEqual(
             "abcdef smallint(13) unsigned zerofill not null "
@@ -95,6 +101,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
                 .unsigned()
                 .zero_fill()
                 .get_definition())
+
 
     def test_numeric_column_tint(self):
         self.assertEqual(
@@ -110,6 +117,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
                 .zero_fill()
                 .get_definition())
 
+
     def test_numeric_column_dec(self):
         self.assertEqual(
             "abcdef decimal(12, 34) unsigned zerofill not null "
@@ -123,6 +131,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
                 .unsigned()
                 .zero_fill()
                 .get_definition())
+
 
     def test_numeric_column_float(self):
         self.assertEqual(
@@ -138,6 +147,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
                 .zero_fill()
                 .get_definition())
 
+
     def test_table_engine_exceptions(self):
         try:
             tinyAPI.Table('db', 'abc').engine('def')
@@ -145,6 +155,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
             self.fail('Was able to set the engine to an invalid value.')
         except TableBuilderException as e:
             self.assertEqual('the engine "def" is invalid', e.get_message())
+
 
     def test_table_get_definition_exceptions(self):
         try:
@@ -157,6 +168,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
                 'the table cannot be defined because it has no columns',
                 e.get_message())
 
+
     def test_table_simple(self):
         text = '''create table abc
 (
@@ -168,6 +180,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
                             .engine('InnoDB')
                             .id('id', True, True)
                             .get_definition())
+
 
     def test_table_multi_numeric_columns(self):
         text = '''create table abc
@@ -185,6 +198,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
                             .float('ghi', False, 12)
                             .get_definition())
 
+
     def test_table_calling_set_attribute(self):
         text = '''create table abc
 (
@@ -197,6 +211,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
                             .int('def')
                             .int('ghi', False, None, True, True)
                             .get_definition())
+
 
     def test_table_helper_attribute_methods(self):
         text = '''create table abc
@@ -218,6 +233,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
                                 .defv(123)
                             .get_definition())
 
+
     def test_table_active_column_is_primary_key(self):
         text = '''create table abc
 (
@@ -230,6 +246,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
                                 .pk()
                             .get_definition())
 
+
     def test_temporary_table(self):
         text = '''create temporary table abc
 (
@@ -241,6 +258,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
                             .temp()
                             .id('id', True, True)
                             .get_definition())
+
 
     def test_table_composite_primary_key_exceptions(self):
         try:
@@ -257,6 +275,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
                 'column "ghi" cannot be used in primary key because it has not '
                 + 'been defined', e.get_message())
 
+
     def test_table_composite_primary_key(self):
         text = '''create table abc
 (
@@ -272,6 +291,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
                             .pk(['def', 'ghi'])
                             .get_definition())
 
+
     def test_table_composite_unique_key_exceptions(self):
         try:
             tinyAPI.Table('db', 'abc') \
@@ -286,6 +306,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
             self.assertEqual(
                 'column "ghi" cannot be used in unique key because it has not '
                 + 'been defined', e.get_message())
+
 
     def test_table_one_composite_unique_key(self):
         text = '''create table abc
@@ -303,6 +324,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
                             .int('jkl')
                             .uk(['def', 'ghi'])
                             .get_definition())
+
 
     def test_table_multiple_composite_unique_keys(self):
         text = '''create table abc
@@ -323,6 +345,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
                             .uk(['ghi', 'jkl'])
                             .get_definition())
 
+
     def test_date_time_column_type_exception(self):
         try:
             _MySQLDateTimeColumn('abc').date_time_type(-1)
@@ -332,6 +355,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
         except TableBuilderException as e:
             self.assertEqual('the type ID provided was invalid',
                              e.get_message())
+
 
     def test_date_time_column_date(self):
         self.assertEqual(
@@ -343,6 +367,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
                 .unique()
                 .get_definition())
 
+
     def test_date_time_column_datetime(self):
         self.assertEqual(
             "abcdef datetime not null unique default \'1\'",
@@ -352,6 +377,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
                 .not_null()
                 .unique()
                 .get_definition())
+
 
     def test_date_time_column_timestamp(self):
         self.assertEqual(
@@ -363,6 +389,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
                 .unique()
                 .get_definition())
 
+
     def test_date_time_column_time(self):
         self.assertEqual(
             "abcdef time not null unique default \'1\'",
@@ -372,6 +399,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
                 .not_null()
                 .unique()
                 .get_definition())
+
 
     def test_date_time_column_year_2(self):
         self.assertEqual(
@@ -383,6 +411,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
                 .unique()
                 .get_definition())
 
+
     def test_date_time_column_year_4(self):
         self.assertEqual(
             "abcdef year(4) not null unique default \'1\'",
@@ -392,6 +421,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
                 .not_null()
                 .unique()
                 .get_definition())
+
 
     def test_table_date_columns_year_2(self):
         text = '''create table abc
@@ -412,6 +442,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
                             .yr('pqr', True, 2)
                             .get_definition())
 
+
     def test_table_date_columns_year_4(self):
         text = '''create table abc
 (
@@ -431,6 +462,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
                             .yr('pqr', True, 4)
                             .get_definition())
 
+
     def test_table_created(self):
         text = '''create table abc
 (
@@ -444,6 +476,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
                             .created()
                             .get_definition())
 
+
     def test_table_updated(self):
         text = '''create table abc
 (
@@ -456,6 +489,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
                             .id('id', True, True)
                             .updated()
                             .get_definition())
+
 
     def test_string_validate_type_id_exceptions(self):
         try:
@@ -503,6 +537,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
             self.assertEqual('the type ID provided was invalid',
                              e.get_message())
 
+
     def test_string_blob_type_exceptions(self):
         for type_id in [_MySQLStringColumn.TYPE_TINYBLOB,
                         _MySQLStringColumn.TYPE_MEDIUMBLOB,
@@ -516,6 +551,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
                 self.assertEqual(
                     'you can only specify the length if the column is blob',
                     e.get_message())
+
 
     def test_string_text_type_exceptions(self):
         for type_id in [_MySQLStringColumn.TYPE_TINYTEXT,
@@ -531,6 +567,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
                     'you can only specify the length if the column is text',
                     e.get_message())
 
+
     def test_string_binary_binary(self):
         self.assertEqual(
             "abc binary(15) character set def collate ghi default null",
@@ -539,6 +576,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
                 .charset('def')
                 .collation('ghi')
                 .get_definition())
+
 
     def test_string_binary_varbinary(self):
         self.assertEqual(
@@ -549,6 +587,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
                 .collation('ghi')
                 .get_definition())
 
+
     def test_string_blob_tinyblob(self):
         self.assertEqual(
             "abc tinyblob character set def collate ghi default null",
@@ -557,6 +596,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
                 .charset('def')
                 .collation('ghi')
                 .get_definition())
+
 
     def test_string_blob_blob(self):
         self.assertEqual(
@@ -567,6 +607,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
                 .collation('ghi')
                 .get_definition())
 
+
     def test_string_blob_mediumblob(self):
         self.assertEqual(
             "abc mediumblob character set def collate ghi default null",
@@ -575,6 +616,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
                 .charset('def')
                 .collation('ghi')
                 .get_definition())
+
 
     def test_string_blob_longblob(self):
         self.assertEqual(
@@ -585,6 +627,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
                 .collation('ghi')
                 .get_definition())
 
+
     def test_string_char_char(self):
         self.assertEqual(
             "abc char(15) character set def collate ghi default null",
@@ -593,6 +636,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
                 .charset('def')
                 .collation('ghi')
                 .get_definition())
+
 
     def test_string_char_varchar(self):
         self.assertEqual(
@@ -603,6 +647,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
                 .collation('ghi')
                 .get_definition())
 
+
     def test_string_list_enum(self):
         self.assertEqual(
             "abc enum('x', 'y') character set def collate ghi default null",
@@ -612,6 +657,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
                 .collation('ghi')
                 .get_definition())
 
+
     def test_string_list_set(self):
         self.assertEqual(
             "abc set('x', 'y') character set def collate ghi default null",
@@ -620,6 +666,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
                 .charset('def')
                 .collation('ghi')
                 .get_definition())
+
 
     def test_string_types_in_table(self):
         text = '''create table abc
@@ -658,6 +705,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
                             .set('qrs', ['c', 'd'], True)
                             .get_definition())
 
+
     def test_ref_table_exceptions(self):
         try:
             tinyAPI.RefTable('db', 'abc');
@@ -685,6 +733,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
         except TableBuilderException as e:
             self.assertEqual('the display order "1" is already defined',
                              e.get_message())
+
 
     def test_ref_table(self):
         table_definition = '''create table abc_ref_def
@@ -745,6 +794,7 @@ values
 
         self.assertEqual(insert_statements, actual)
 
+
     def test_table_ai_active_column_is_set_exceptions(self):
         try:
             tinyAPI.Table('db', 'abc').ai()
@@ -755,6 +805,7 @@ values
             self.assertEqual(
                 'call to "ai" invalid until column is defined',
                 e.get_message())
+
 
     def test_table_defv_active_column_is_set_exceptions(self):
         try:
@@ -767,6 +818,7 @@ values
                 'call to "defv" invalid until column is defined',
                 e.get_message())
 
+
     def test_table_pk_active_column_is_set_exceptions(self):
         try:
             tinyAPI.Table('db', 'abc').pk()
@@ -777,6 +829,7 @@ values
             self.assertEqual(
                 'call to "pk" invalid until column is defined',
                 e.get_message())
+
 
     def test_table_uk_active_column_is_set_exceptions(self):
         try:
@@ -789,6 +842,7 @@ values
                 'call to "uk" invalid until column is defined',
                 e.get_message())
 
+
     def test_table_fk_active_column_is_set_exceptions(self):
         try:
             tinyAPI.Table('db', 'abc').fk('def')
@@ -800,6 +854,7 @@ values
                 'call to "fk" invalid until column is defined',
                 e.get_message())
 
+
     def test_table_idx_active_column_is_set_exceptions(self):
         try:
             tinyAPI.Table('db', 'abc').idx()
@@ -810,6 +865,7 @@ values
             self.assertEqual(
                 'call to "idx" invalid until column is defined',
                 e.get_message())
+
 
     def test_table_foreign_key_and_dependencies_active_column(self):
         text = '''create table abc
@@ -837,6 +893,7 @@ add constraint abc_0_fk
         self.assertEqual(1, len(deps))
         self.assertTrue('def' in deps)
 
+
     def test_foreign_key_full_definition(self):
         text = '''   alter table abc
 add constraint abc_0_fk
@@ -852,6 +909,7 @@ add constraint abc_0_fk
         self.assertEqual(1, len(fks))
         self.assertEqual(text, fks[0])
 
+
     def test_table_foreign_key_exceptions(self):
         try:
             tinyAPI.Table('db', 'abc').fk('def', True, ['ghi'])
@@ -862,6 +920,7 @@ add constraint abc_0_fk
             self.assertEqual(
                 'column "ghi" cannot be used in foreign key because it has '
                 + 'not been defined', e.get_message())
+
 
     def test_table_index_exceptions(self):
         try:
@@ -884,6 +943,7 @@ add constraint abc_0_fk
                 'columns can only be modified using "asc" or "desc"',
                 e.get_message())
 
+
     def test_table_getting_index_definitions(self):
         table = tinyAPI.Table('db', 'abc') \
                     .int('col_a') \
@@ -901,6 +961,7 @@ add constraint abc_0_fk
             + "             (col_a asc, col_b desc)",
             indexes[1])
 
+
     def test_text_type_with_no_length(self):
         self.assertEqual(
             'abc text character set utf8 collate utf8_unicode_ci default null',
@@ -908,13 +969,16 @@ add constraint abc_0_fk
                 .text_type(_MySQLStringColumn.TYPE_TEXT)
                 .get_definition())
 
+
     def test_getting_db_name_from_table(self):
         self.assertEqual('db',
                          tinyAPI.Table('db', 'abc_ref_def').get_db_name())
 
+
     def test_getting_db_name_from_ref_table(self):
         self.assertEqual('db',
                          tinyAPI.RefTable('db', 'abc_ref_def').get_db_name())
+
 
     def test_latitude_column_exceptions(self):
         try:
@@ -927,6 +991,7 @@ add constraint abc_0_fk
                 'latitude column must be named "latitude" or start with '
                 + '"lat_"',
                 e.get_message())
+
 
     def test_latitude_column(self):
         text = '''create table abc
@@ -947,6 +1012,7 @@ add constraint abc_0_fk
             text,
             tinyAPI.Table('db', 'abc').lat('lat_x', True).get_definition())
 
+
     def test_longitude_column_exceptions(self):
         try:
             tinyAPI.Table('db', 'abc').long('invalid')
@@ -958,6 +1024,7 @@ add constraint abc_0_fk
                 'longitude column must be named "longitude" or start with '
                 + '"long_"',
                 e.get_message())
+
 
     def test_longitude_column(self):
         text = '''create table abc
@@ -978,6 +1045,7 @@ add constraint abc_0_fk
             text,
             tinyAPI.Table('db', 'abc').long('long_x', True).get_definition())
 
+
     def test_email_column_exceptions(self):
         try:
             tinyAPI.Table('db', 'abc').email('invalid')
@@ -989,6 +1057,7 @@ add constraint abc_0_fk
                 'email column must be named "email_address" or start with '
                 + '"em_"',
                 e.get_message())
+
 
     def test_email_column(self):
         text = '''create table abc

@@ -1,5 +1,4 @@
-'''provider_mysql_tests.py -- Unit tests for the data provider when MySQL is
-   in user.'''
+# ----- Info ------------------------------------------------------------------
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
@@ -29,9 +28,11 @@ class ProviderMySQLTestCase(unittest.TestCase):
                         value integer not null
                    )''')
 
+
     def tearDown(self):
         if self.__execute_tests is True:
             tinyAPI.dsh().query('delete from unit_test_table')
+
 
     def test_adding_records_to_table(self):
         if self.__execute_tests is True:
@@ -50,6 +51,7 @@ class ProviderMySQLTestCase(unittest.TestCase):
                             where value = %s''',
                         [i]))
 
+
     def test_getting_nth_record_from_table(self):
         if self.__execute_tests is True:
             for i in range(0, 5):
@@ -60,6 +62,7 @@ class ProviderMySQLTestCase(unittest.TestCase):
 
             results = tinyAPI.dsh().nth(3, 'select value from unit_test_table')
             self.assertEqual(3, results['value'])
+
 
     def test_deleting_from_table(self):
         if self.__execute_tests is True:

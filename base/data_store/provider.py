@@ -148,10 +148,10 @@ class DataStoreMySQL(RDBMSBase):
 
     def __connect(self):
         '''Perform the tasks required for connecting to the database.'''
-        if self.__mysql is not None:
+        if self.__mysql:
             return
 
-        if self._connection_name is None:
+        if not self._connection_name:
             raise DataStoreException(
                 'cannot connect to MySQL because a connection name has not '
                 + 'been provided')
@@ -161,7 +161,7 @@ class DataStoreMySQL(RDBMSBase):
                 raise DataStoreException(
                     'the MySQL connection name you provided is invalid')
 
-        if self._db_name is None:
+        if not self._db_name:
             raise DataStoreException(
                 'cannot connection to MySQL because no database name was '
                 + 'selected')
@@ -225,6 +225,10 @@ class DataStoreMySQL(RDBMSBase):
             raise DataStoreException(
                     self.__format_query_execution_error(
                                 sql, e.msg, binds))
+        except:
+            self.rollback()
+            cursor.close()
+            raise
 
         id = None
         if return_insert_id:
@@ -278,8 +282,9 @@ class DataStoreMySQL(RDBMSBase):
 
 
     def __get_cursor(self):
-        return self.__mysql.cursor(prepared=True,
-                                   cursor_class=MySQLCursorDict)
+        return self.__mysql.cursor(
+                prepared=True,
+                cursor_class=MySQLCursorDict)
 
 
     def __get_values(self, data=tuple()):
@@ -331,6 +336,10 @@ class DataStoreMySQL(RDBMSBase):
             raise DataStoreException(
                     self.__format_query_execution_error(
                                 sql, e.msg, binds))
+        except:
+            self.rollback()
+            cursor.close()
+            raise
 
         if is_select:
             results = []
@@ -341,10 +350,6 @@ class DataStoreMySQL(RDBMSBase):
                 results = results[0]
 
             self.memcache_store(results)
-
-            # This is less a formal commit and more ending the current
-            # transaction so the cursor and connection are flushed.
-            self.commit()
         else:
             results = True
 

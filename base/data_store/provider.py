@@ -40,7 +40,12 @@ class RDBMSBase(__DataStoreBase):
     '''Defines a data store that handles interactions with a RDBMS (MySQL,
        PostgreSQL, etc.).'''
 
-    def commit():
+    def close(self):
+        '''Manually close the database connection.'''
+        raise NotImplementedError
+
+
+    def commit(self):
         '''Manually commit the active transaction.'''
         raise NotImplementedError
 
@@ -133,11 +138,18 @@ class DataStoreMySQL(RDBMSBase):
         self.__mysql = None
 
 
+    def close(self):
+        '''Close the active database connection.'''
+        if self.__mysql:
+            self.__mysql.close()
+            self.__mysql = None
+
+
     def commit(self):
         '''Commit the active transaction.'''
         if self.__mysql is None:
             raise DataStoreException(
-                'transaction cannot be committed becase a database connection '
+                'transaction cannot be committed because a database connection '
                 + 'has not been established yet')
         else:
             if Context.env_unit_test():
@@ -172,6 +184,11 @@ class DataStoreMySQL(RDBMSBase):
             host=connection_data[self._connection_name][0],
             database=self._db_name,
             charset=self._charset)
+
+
+    def connection_id(self):
+        self.__connect()
+        return self.__mysql.connection_id
 
 
     def __convert_to_prepared(self, separator, data=tuple()):
@@ -362,7 +379,7 @@ class DataStoreMySQL(RDBMSBase):
         '''Rolls back the active transaction.'''
         if self.__mysql is None:
             raise DataStoreException(
-                'transaction cannot be rolled back becase a database '
+                'transaction cannot be rolled back because a database '
                 + 'connection has not been established yet')
         else:
             self.__mysql.rollback()

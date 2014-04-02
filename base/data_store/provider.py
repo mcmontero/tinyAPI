@@ -359,12 +359,7 @@ class DataStoreMySQL(RDBMSBase):
             raise
 
         if is_select:
-            results = []
-            for result in cursor:
-                results.append(result)
-
-            if results.count(self) == 1:
-                results = results[0]
+            results = cursor.fetchall()
 
             self.memcache_store(results)
         else:

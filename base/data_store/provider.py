@@ -16,10 +16,39 @@ import re
 import tinyAPI.base.context as Context
 
 __all__ = [
+    'assert_is_dsh',
+    'auto_tx_start',
+    'auto_tx_stop_commit',
+    'auto_tx_stop_rollback',
     'DataStoreMySQL',
     'DataStoreProvider',
     'RDBMSBase'
 ]
+
+# ----- Public Functions ------------------------------------------------------
+
+def assert_is_dsh(dsh):
+    if not isinstance(dsh, __DataStoreBase):
+        raise DataStoreException(
+            'provided value is not instance of __DataStoreBase')
+
+
+def autonomous_tx_start(connection, db):
+    dsh = DataStoreMySQL()
+    dsh.select_db(connection, db)
+    return dsh
+
+
+def autonomous_tx_stop_commit(dsh):
+    assert_is_dsh(dsh)
+    dsh.rollback()
+    dsh.close()
+
+
+def autonomous_tx_stop_rollback(dsh):
+    assert_is_dsh(dsh)
+    dsh.rollback()
+    dsh.close()
 
 # ----- Private Classes -------------------------------------------------------
 

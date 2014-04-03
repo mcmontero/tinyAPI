@@ -41,7 +41,7 @@ def autonomous_tx_start(connection, db):
 
 def autonomous_tx_stop_commit(dsh):
     assert_is_dsh(dsh)
-    dsh.rollback()
+    dsh.commit()
     dsh.close()
 
 

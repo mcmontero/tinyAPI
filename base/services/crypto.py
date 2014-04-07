@@ -79,7 +79,12 @@ class DataArmor(object):
 
         parts = data.split(chr(2))
         data = parts[0]
-        timestamp = parts[1]
+
+        try:
+            timestamp = parts[1]
+        except IndexError:
+            raise CryptoException(
+                'could not find timestamp; encryption key was likely incorrect')
 
         if hashlib.sha224(
             data.encode('utf8') + timestamp.encode('utf8')).hexdigest() != sha:

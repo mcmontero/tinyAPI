@@ -165,13 +165,22 @@ class DataStoreMySQL(RDBMSBase):
         super(DataStoreMySQL, self).__init__()
 
         self.__mysql = None
+        self.__cursor = None
 
 
     def close(self):
         '''Close the active database connection.'''
+        self.__close_cursor()
+
         if self.__mysql:
             self.__mysql.close()
             self.__mysql = None
+
+
+    def __close_cursor(self):
+        if self.__cursor is not None:
+            self.__cursor.close()
+            self.__cursor = None
 
 
     def commit(self):
@@ -260,27 +269,27 @@ class DataStoreMySQL(RDBMSBase):
             cursor.execute(sql, vals)
         except mysql.connector.errors.IntegrityError as e:
             self.rollback()
-            cursor.close()
+            self.__close_cursor()
             if e.errno == 1062:
                 raise DataStoreDuplicateKeyException(e.msg)
             else:
                 raise
         except mysql.connector.errors.ProgrammingError as e:
             self.rollback()
-            cursor.close()
+            self.__close_cursor()
             raise DataStoreException(
                     self.__format_query_execution_error(
                                 sql, e.msg, binds))
         except:
             self.rollback()
-            cursor.close()
+            self.__close_cursor()
             raise
 
         id = None
         if return_insert_id:
             id = cursor.getlastrowid()
 
-        cursor.close()
+        self.__close_cursor()
 
         return id
 
@@ -297,7 +306,7 @@ class DataStoreMySQL(RDBMSBase):
 
         cursor = self.__get_cursor()
         cursor.execute(sql, binds)
-        cursor.close()
+        self.__close_cursor()
 
         self.memcache_purge()
 
@@ -328,9 +337,15 @@ class DataStoreMySQL(RDBMSBase):
 
 
     def __get_cursor(self):
-        return self.__mysql.cursor(
+        if self.__cursor is not None:
+            return self.__cursor
+
+        self.__cursor = \
+            self.__mysql.cursor(
                 prepared=True,
                 cursor_class=MySQLCursorDict)
+
+        return self.__cursor
 
 
     def __get_values(self, data=tuple()):
@@ -371,20 +386,20 @@ class DataStoreMySQL(RDBMSBase):
             cursor.execute(sql, binds)
         except mysql.connector.errors.IntegrityError as e:
             self.rollback()
-            cursor.close()
+            self.__close_cursor()
             if e.errno == 1062:
                 raise DataStoreDuplicateKeyException(e.msg)
             else:
                 raise
         except mysql.connector.errors.ProgrammingError as e:
             self.rollback()
-            cursor.close()
+            self.__close_cursor()
             raise DataStoreException(
                     self.__format_query_execution_error(
                                 sql, e.msg, binds))
         except:
             self.rollback()
-            cursor.close()
+            self.__close_cursor()
             raise
 
         if is_select:
@@ -394,7 +409,7 @@ class DataStoreMySQL(RDBMSBase):
         else:
             results = True
 
-        cursor.close()
+        self.__close_cursor()
 
         return results
 

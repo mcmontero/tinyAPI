@@ -20,10 +20,17 @@ __all__ = [
     'CLIOutputRenderer'
 ]
 
+# ----- Definitions -----------------------------------------------------------
+
+CLI_STOP_SIGNAL_FILE = '/tmp/APP_STOP_CLI'
+
 # ----- Public Functions  -----------------------------------------------------
 
 def cli_main(function, args=None):
     '''Executes the "main" CLI function passing in the configured arguments.'''
+    if os.path.isfile(CLI_STOP_SIGNAL_FILE):
+        raise CLIException( 'CLI execution has been stopped')
+
     cli = CLI(args)
     try:
         function(cli)
@@ -176,6 +183,12 @@ class CLI(object):
             print(char + ' ' + message)
 
         sys.stdout.flush()
+
+
+    def process_signals(self):
+        if os.path.isfile(CLI_STOP_SIGNAL_FILE):
+            self.notice('CLI execution has been stopped!')
+            self.exit()
 
 
     def set_status_error(self):

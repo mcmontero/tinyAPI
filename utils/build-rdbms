@@ -38,4 +38,4 @@ def main(cli):
 
 # ----- Instructions ---------------------------------------------------------
 
-cli_main(main, args)
+cli_main(main, args, False)

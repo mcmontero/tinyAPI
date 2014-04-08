@@ -26,9 +26,9 @@ CLI_STOP_SIGNAL_FILE = '/tmp/APP_STOP_CLI'
 
 # ----- Public Functions  -----------------------------------------------------
 
-def cli_main(function, args=None):
+def cli_main(function, args=None, stop_on_signal=True):
     '''Executes the "main" CLI function passing in the configured arguments.'''
-    if os.path.isfile(CLI_STOP_SIGNAL_FILE):
+    if stop_on_signal and os.path.isfile(CLI_STOP_SIGNAL_FILE):
         raise CLIException( 'CLI execution has been stopped')
 
     cli = CLI(args)

@@ -1,0 +1,3 @@
+#!/bin/bash
+
+/bin/rm -f /tmp/APP_STOP_CLI

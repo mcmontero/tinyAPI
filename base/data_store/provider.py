@@ -9,7 +9,6 @@ from .mysql import MySQLCursorDict
 from mysql.connector import errorcode
 from tinyAPI.base.config import ConfigManager
 from tinyAPI.base.data_store.memcache import Memcache
-from tinyAPI.base.singleton import Singleton
 
 import mysql.connector
 import re
@@ -424,7 +423,7 @@ class DataStoreMySQL(RDBMSBase):
             self.__mysql.rollback()
 
 
-class DataStoreProvider(metaclass=Singleton):
+class DataStoreProvider(object):
     '''Defines the main mechanism for retrieving a handle to a configured data
        store.'''
 
@@ -432,9 +431,7 @@ class DataStoreProvider(metaclass=Singleton):
         '''Get the active data store handle against which to execute
            operations.'''
         if ConfigManager.value('data store') == 'mysql':
-            try:
-                self.__dsh
-            except AttributeError:
+            if not hasattr(self, '__dsh'):
                 self.__dsh = DataStoreMySQL()
 
             return self.__dsh

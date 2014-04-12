@@ -86,6 +86,7 @@ class CLI(object):
         '''Outputs an error message.'''
         self.__status_id = self.STATUS_ERROR
         self.__print_message(message, '!', indent)
+        self.process_signals()
 
 
     def exit(self):
@@ -115,6 +116,7 @@ class CLI(object):
     def notice(self, message, indent=None):
         '''Outputs a notice message.'''
         self.__print_message(message, '+', indent)
+        self.process_signals()
 
 
     def __pid_lock(self):
@@ -187,12 +189,20 @@ class CLI(object):
 
     def process_signals(self):
         if os.path.isfile(CLI_STOP_SIGNAL_FILE):
-            self.notice('CLI execution has been stopped!')
+            self.__status_id = self.STATUS_ERROR
+            self.__print_message('CLI execution has been stopped!', '!')
             self.exit()
 
 
     def set_status_error(self):
         self.__status_id = self.STATUS_ERROR
+
+
+    def sleep(self, num_seconds):
+        self.process_signals()
+        self.notice('Sleeping (' + str(num_seconds) + ')...')
+        time.sleep(num_seconds)
+        return self
 
 
     def status(self):
@@ -216,9 +226,17 @@ class CLI(object):
         sys.stdout.flush()
 
 
-    def time_marker(self, num_iterations=None):
+    def time_marker(self, num_iterations=None, max_iterations=None):
         '''Outputs the time for each iteration of a CLI that runs in a loop
            continuously.'''
+        self.process_signals()
+
+        if num_iterations and \
+           max_iterations and \
+           num_iterations > max_iterations:
+            self.notice('Exiting to recover resources...')
+            self.exit()
+
         self.notice(
             ('----- Marker '
              + (str(num_iterations) if num_iterations is not None else '')
@@ -226,10 +244,13 @@ class CLI(object):
              + str(datetime.datetime.now())
              + ']'))
 
+        return num_iterations + 1
+
 
     def warn(self, message, indent=None):
         '''Outputs a warning message.'''
         self.__print_message(message, '*', indent)
+        self.process_signals()
 
 
 class CLIOutputRenderer(object):

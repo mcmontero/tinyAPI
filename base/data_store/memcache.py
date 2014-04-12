@@ -5,7 +5,6 @@ __author__ = 'Michael Montero <mcmontero@gmail.com>'
 # ----- Imports ---------------------------------------------------------------
 
 from tinyAPI.base.config import ConfigManager
-from tinyAPI.base.singleton import Singleton
 
 import memcache
 
@@ -15,7 +14,7 @@ __all__ = [
 
 # ----- Public Classes --------------------------------------------------------
 
-class Memcache(metaclass=Singleton):
+class Memcache(object):
     '''Manages interactions with configured Memcached servers.'''
 
     def __init__(self):

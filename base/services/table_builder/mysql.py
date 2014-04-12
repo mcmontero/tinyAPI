@@ -981,7 +981,7 @@ class Table(object):
         if len(args) != len(self.__columns):
             raise TableBuilderException(
                 'this table has ' + str(len(self.__columns)) + ' column(s) but '
-                + 'your insert data only has ' + len(args))
+                + 'your insert data only has ' + str(len(args)))
 
         self.__rows.append(args)
         return self

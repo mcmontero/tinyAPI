@@ -32,6 +32,9 @@ def cli_main(function, args=None, stop_on_signal=True):
         raise CLIException( 'CLI execution has been stopped')
 
     cli = CLI(args)
+    if not stop_on_signal:
+        cli.dont_stop_on_signal()
+
     try:
         function(cli)
     except:
@@ -58,6 +61,7 @@ class CLI(object):
         self.__pid_lock_file = None
         self.__started = int(time.time())
         self.__status_id = self.STATUS_OK
+        self.__stop_on_signal = True
 
         self.__pid_lock()
         # Now that PID locking has succeeded, enable the status.
@@ -80,6 +84,11 @@ class CLI(object):
                         raise
         except AttributeError:
             pass
+
+
+    def dont_stop_on_signal(self):
+        self.__stop_on_signal = False
+        return self
 
 
     def error(self, message, indent=None):
@@ -188,7 +197,7 @@ class CLI(object):
 
 
     def process_signals(self):
-        if os.path.isfile(CLI_STOP_SIGNAL_FILE):
+        if self.__stop_on_signal and os.path.isfile(CLI_STOP_SIGNAL_FILE):
             self.__status_id = self.STATUS_ERROR
             self.__print_message('CLI execution has been stopped!', '!')
             self.exit()

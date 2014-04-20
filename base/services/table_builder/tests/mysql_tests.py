@@ -590,7 +590,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
 
     def test_string_blob_tinyblob(self):
         self.assertEqual(
-            "abc tinyblob character set def collate ghi default null",
+            "abc tinyblob default null",
             _MySQLStringColumn('abc')
                 .binary_type(_MySQLStringColumn.TYPE_TINYBLOB)
                 .charset('def')
@@ -600,7 +600,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
 
     def test_string_blob_blob(self):
         self.assertEqual(
-            "abc blob(15) character set def collate ghi default null",
+            "abc blob(15) default null",
             _MySQLStringColumn('abc')
                 .binary_type(_MySQLStringColumn.TYPE_BLOB, 15)
                 .charset('def')
@@ -610,7 +610,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
 
     def test_string_blob_mediumblob(self):
         self.assertEqual(
-            "abc mediumblob character set def collate ghi default null",
+            "abc mediumblob default null",
             _MySQLStringColumn('abc')
                 .binary_type(_MySQLStringColumn.TYPE_MEDIUMBLOB)
                 .charset('def')
@@ -620,7 +620,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
 
     def test_string_blob_longblob(self):
         self.assertEqual(
-            "abc longblob character set def collate ghi default null",
+            "abc longblob default null",
             _MySQLStringColumn('abc')
                 .binary_type(_MySQLStringColumn.TYPE_LONGBLOB)
                 .charset('def')
@@ -675,10 +675,10 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
     ghi varchar(16) character set utf8 collate utf8_unicode_ci not null,
     jkl binary(17) character set utf8 collate utf8_unicode_ci not null,
     mno varbinary(18) character set utf8 collate utf8_unicode_ci not null,
-    pqr tinyblob character set utf8 collate utf8_unicode_ci not null,
-    stu blob(19) character set utf8 collate utf8_unicode_ci not null,
-    vwx mediumblob character set utf8 collate utf8_unicode_ci not null,
-    yza longblob character set utf8 collate utf8_unicode_ci not null,
+    pqr tinyblob not null,
+    stu blob(19) not null,
+    vwx mediumblob not null,
+    yza longblob not null,
     bcd tinytext character set utf8 collate utf8_unicode_ci not null,
     efg text(20) character set utf8 collate utf8_unicode_ci not null,
     hij mediumtext character set utf8 collate utf8_unicode_ci not null,

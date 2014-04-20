@@ -355,11 +355,15 @@ class _MySQLStringColumn(__MySQLColumn):
                                          + self.__type_id
                                          + '"')
 
-        if self.__charset is not None:
-            terms.append('character set ' + self.__charset)
+        if self.__type_id not in [self.TYPE_TINYBLOB,
+                                  self.TYPE_BLOB,
+                                  self.TYPE_MEDIUMBLOB,
+                                  self.TYPE_LONGBLOB]:
+            if self.__charset is not None:
+                terms.append('character set ' + self.__charset)
 
-        if self.__collation is not None:
-            terms.append('collate ' + self.__collation)
+            if self.__collation is not None:
+                terms.append('collate ' + self.__collation)
 
         if self._not_null is True:
             terms.append('not null')

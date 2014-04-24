@@ -435,9 +435,9 @@ builtins.TINYAPI_UNIT_TEST_TWO = 2
 builtins.TINYAPI_UNIT_TEST_THREE = 3
 def _tinyapi_ref_unit_test():
     return {
-        1: 'one',
-        2: 'two',
-        3: 'three'
+        1: "one",
+        2: "two",
+        3: "three"
     }
 builtins._tinyapi_ref_unit_test = _tinyapi_ref_unit_test
 
@@ -476,9 +476,9 @@ builtins._tinyapi_ref_unit_test = _tinyapi_ref_unit_test
 
                 values.append('       '
                               + str(item['id'])
-                              + ": '"
+                              + ': "'
                               + item['value']
-                              + "'")
+                              + '"')
 
             content += ("def _"
                         + reference_table['table_name']

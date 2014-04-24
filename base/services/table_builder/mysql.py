@@ -1333,7 +1333,7 @@ class RefTable(Table):
             display_order = self.__display_order
             self.__display_order += 1
 
-        self.ins(id, value, display_order)
+        self.ins(id, re.sub("'", "''", value), display_order)
 
         self.__ids[id] = True
         self.__display_orders[display_order] = True

@@ -21,3 +21,7 @@ class CLIException(tinyAPIException):
 class CryptoException(tinyAPIException):
     '''Named exception when issues with cryptography arise.'''
     pass
+
+class MarshallerException(tinyAPIException):
+    '''Named exception when issues with the data marshaller arise.'''
+    pass

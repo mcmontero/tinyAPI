@@ -914,7 +914,7 @@ class Table(object):
                 else:
                     vals.append("    '" + str(val) + "'")
 
-            statement += ',\n'.join(vals) + '\n);'
+            statement += ',\n'.join(vals) + '\n);\ncommit;'
             rows.append(statement)
 
         return rows

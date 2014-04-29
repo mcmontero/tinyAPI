@@ -755,6 +755,7 @@ values
     'one',
     '1'
 );
+commit;
 insert into abc_ref_def
 (
     id,
@@ -767,6 +768,7 @@ values
     'two',
     '2'
 );
+commit;
 insert into abc_ref_def
 (
     id,
@@ -779,6 +781,7 @@ values
     'three',
     '3'
 );
+commit;
 '''
 
         ref_table = tinyAPI.RefTable('db', 'abc_ref_def') \

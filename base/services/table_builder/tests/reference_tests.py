@@ -1,8 +1,8 @@
-'''reference_tests.py -- Unit tests for the reference definition function.'''
+# ----- Info ------------------------------------------------------------------
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
-# ----- Import ----------------------------------------------------------------
+# ----- Imports ---------------------------------------------------------------
 
 from tinyAPI.base.config import ConfigManager
 import tinyAPI

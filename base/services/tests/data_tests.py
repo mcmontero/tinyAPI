@@ -2,7 +2,7 @@
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
-# ----- Import ----------------------------------------------------------------
+# ----- Imports ---------------------------------------------------------------
 
 from tinyAPI.base.services.data import Marshaller
 from tinyAPI.base.services.exception import MarshallerException

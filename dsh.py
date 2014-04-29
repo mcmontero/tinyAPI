@@ -6,7 +6,6 @@ __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
 from tinyAPI.base.data_store.provider import DataStoreProvider
 
-import random
 import threading
 
 __all__ = [

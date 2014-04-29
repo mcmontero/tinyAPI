@@ -2,7 +2,7 @@
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
-# ----- Import ----------------------------------------------------------------
+# ----- Imports ---------------------------------------------------------------
 
 from .exception import ContextException
 from tinyAPI.base.singleton import Singleton

@@ -1,6 +1,6 @@
 #!/usr/bin/env /usr/bin/python3
 
-# ----- Imports --------------------------------------------------------------
+# ----- Imports ---------------------------------------------------------------
 
 import argparse
 import tinyAPI
@@ -8,7 +8,7 @@ import tinyAPI
 from tinyAPI.base.services.cli import cli_main
 from tinyAPI.base.services.rdbms_builder.manager import Manager
 
-# ----- Configuration --------------------------------------------------------
+# ----- Configuration ---------------------------------------------------------
 
 args = argparse.ArgumentParser(
     description='Based on build.py files, construct all necessary RDBMS data '
@@ -27,7 +27,7 @@ args.add_argument(
     action='store_true')
 args.set_defaults(all=False)
 
-# ----- Main -----------------------------------------------------------------
+# ----- Main ------------------------------------------------------------------
 
 def main(cli):
     '''The main program for executing the RDBMS Builder.'''
@@ -36,6 +36,6 @@ def main(cli):
 
     Manager(cli).set_connection_name(cli.args.connection_name).execute()
 
-# ----- Instructions ---------------------------------------------------------
+# ----- Instructions ----------------------------------------------------------
 
 cli_main(main, args, False)

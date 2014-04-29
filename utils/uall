@@ -1,6 +1,6 @@
 #!/usr/bin/env /usr/bin/python3
 
-# ----- Imports --------------------------------------------------------------
+# ----- Imports ---------------------------------------------------------------
 
 from tinyAPI.base.config import ConfigManager
 from tinyAPI.base.services.cli import cli_main
@@ -10,7 +10,7 @@ import os
 import subprocess
 import tinyAPI
 
-# ----- Main -----------------------------------------------------------------
+# ----- Main ------------------------------------------------------------------
 
 def main(cli):
     cli.header('Unit Tests')
@@ -29,6 +29,6 @@ def main(cli):
 
     utm.print_summary()
 
-# ----- Instructions ---------------------------------------------------------
+# ----- Instructions ----------------------------------------------------------
 
 cli_main(main)

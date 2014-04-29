@@ -6,7 +6,6 @@ __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
 from .exception import DataStoreException, DataStoreDuplicateKeyException
 from .mysql import MySQLCursorDict
-from mysql.connector import errorcode
 from tinyAPI.base.config import ConfigManager
 from tinyAPI.base.data_store.memcache import Memcache
 

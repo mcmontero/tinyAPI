@@ -2,7 +2,7 @@
 
 __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
-# ----- Import ----------------------------------------------------------------
+# ----- Imports ---------------------------------------------------------------
 
 from .exception import RDBMSBuilderException
 from tinyAPI.base.config import ConfigManager
@@ -16,7 +16,6 @@ import re
 import subprocess
 import sys
 import tempfile
-import time
 import tinyAPI
 
 __all__ = [

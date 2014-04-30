@@ -13,6 +13,7 @@ import os
 import re
 import sys
 import time
+import tinyAPI
 
 __all__ = [
     'CLI',
@@ -39,6 +40,9 @@ def cli_main(function, args=None, stop_on_signal=True):
         function(cli)
     except:
         cli.set_status_error()
+        tinyAPI.dsh().rollback(True)
+        tinyAPI.dsh().close()
+
         raise
 
 # ----- Public Classes  -------------------------------------------------------

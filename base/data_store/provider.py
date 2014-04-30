@@ -181,12 +181,13 @@ class DataStoreMySQL(RDBMSBase):
             self.__cursor = None
 
 
-    def commit(self):
+    def commit(self, ignore_exceptions=False):
         '''Commit the active transaction.'''
         if self.__mysql is None:
-            raise DataStoreException(
-                'transaction cannot be committed because a database connection '
-                + 'has not been established yet')
+            if not ignore_exceptions:
+                raise DataStoreException(
+                    'transaction cannot be committed because a database '
+                    + 'connection has not been established yet')
         else:
             if Context.env_unit_test():
                 return
@@ -412,12 +413,13 @@ class DataStoreMySQL(RDBMSBase):
         return results
 
 
-    def rollback(self):
+    def rollback(self, ignore_exceptions=False):
         '''Rolls back the active transaction.'''
         if self.__mysql is None:
-            raise DataStoreException(
-                'transaction cannot be rolled back because a database '
-                + 'connection has not been established yet')
+            if not ignore_exceptions:
+                raise DataStoreException(
+                    'transaction cannot be rolled back because a database '
+                    + 'connection has not been established yet')
         else:
             self.__mysql.rollback()
 

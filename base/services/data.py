@@ -9,7 +9,8 @@ from .exception import MarshallerException
 import re
 
 __all__ = [
-    'Marshaller'
+    'Marshaller',
+    'Validator'
 ]
 
 # ----- Public Classes --------------------------------------------------------
@@ -50,3 +51,32 @@ class Marshaller(object):
         self.data = {}
         for object in self.__objects:
             self.data[object] = {}
+
+
+class Validator(object):
+    '''Provides functionality for validating various types of data.'''
+
+    def email_is_valid(self, em_address):
+        try:
+            name, domain = em_address.split('@')
+        except ValueError:
+            return False
+
+        if len(name) == 0 or \
+           len(domain) == 0 or \
+           not re.search('^[A-Za-z0-9\._%+-]+$', name):
+            return False
+
+        domain_parts = domain.split('.')
+        if len(domain_parts) < 2:
+            return False
+
+        for domain_part in domain_parts:
+            if not re.search('^[A-Za-z0-9-_]+$', domain_part):
+                return False
+
+        # Attempt to validate the top level domain - .com, .org, .net, etc.
+        if not re.search('^[A-Za-z]{2,6}$', domain_parts[-1]):
+            return False
+
+        return True

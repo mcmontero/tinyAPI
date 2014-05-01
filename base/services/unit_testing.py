@@ -93,8 +93,8 @@ class Manager(object):
 
 
 class TransactionalDataStoreTestCase(unittest.TestCase):
-    '''Provides a test case for transactional databases that rolls back
-       database changes after each unit test.'''
+    '''Provides a test case for transactional data stores that rolls back
+       changes after each unit test.'''
 
     def setUp(self):
         default_schema = ConfigManager.value('default schema')

@@ -1,0 +1,73 @@
+#!/usr/bin/env /usr/bin/python3
+
+# ----- Imports ---------------------------------------------------------------
+
+from tinyAPI.base.config import ConfigManager
+from tinyAPI.base.services.cli import cli_main
+from tinyAPI.base.services.schema_differ.exception import SchemaDifferException
+from tinyAPI.base.services.schema_differ.mysql import SchemaDiffer
+
+import argparse
+import tinyAPI
+
+# ----- Configuration ---------------------------------------------------------
+
+args = argparse.ArgumentParser(
+    description='Computes the differences between two schemas and reports '
+                + 'what DDL statements to execute to make the target a '
+                + 'replica of the source.')
+args.add_argument(
+    'source_connection_name',
+    help='The connection name configured in tinyAPI_config.py identifying the '
+         + 'source database.')
+args.add_argument(
+    'source_db_name',
+    help='The database name for the source.')
+args.add_argument(
+    'target_connection_name',
+    help='The connection name configured in tinyAPI_config.py identifying the '
+         + 'target database.')
+args.add_argument(
+    'target_db_name',
+    help='The database name for the target.')
+
+# ----- Main ------------------------------------------------------------------
+
+def main(cli):
+    '''The main program for executing the Schema Differ.'''
+
+    cli.header('Schema Differ')
+    cli.notice('Diffing the following schemas:')
+    cli.notice('source = '
+               + cli.args.source_connection_name
+               + '::'
+               + cli.args.source_db_name,
+               1)
+    cli.notice('target = '
+               + cli.args.target_connection_name
+               + '::'
+               + cli.args.target_db_name,
+               1)
+
+    if ConfigManager.value('data store') == 'mysql':
+        _schema_differ_execute_for_mysql(cli)
+    else:
+        raise SchemaDifferException(
+            'the schema differ does not currently support "'
+            + ConfigManager.value('data store')
+            + '"')
+
+# ----- Private Functions -----------------------------------------------------
+
+def _schema_differ_execute_for_mysql(cli):
+    SchemaDiffer(
+        cli.args.source_connection_name,
+        cli.args.source_db_name,
+        cli.args.target_connection_name,
+        cli.args.target_db_name) \
+            .set_cli(cli) \
+            .execute()
+
+# ----- Instructions ----------------------------------------------------------
+
+cli_main(main, args)

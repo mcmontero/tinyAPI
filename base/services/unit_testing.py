@@ -4,15 +4,19 @@ __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
 # ----- Imports ---------------------------------------------------------------
 
+from tinyAPI.base.config import ConfigManager
 from tinyAPI.base.context import Context
 
 import re
 import subprocess
 import sys
 import time
+import tinyAPI
+import unittest
 
 __all__ = [
-    'Manager'
+    'Manager',
+    'TransactionalDataStoreTestCase'
 ]
 
 # ----- Public Classes  -------------------------------------------------------
@@ -86,6 +90,33 @@ class Manager(object):
                           + str('{0:,}'.format(self.__total_tests)))
         self.__cli.notice('Total elapsed time for all tests: '
                           + str(self.__total_run_time))
+
+
+class TransactionalDataStoreTestCase(unittest.TestCase):
+    '''Provides a test case for transactional databases that rolls back
+       database changes after each unit test.'''
+
+    def setUp(self):
+        default_schema = ConfigManager.value('default schema')
+        default_connection = ConfigManager.value('default unit test connection')
+        if default_schema and default_connection:
+            tinyAPI.dsh().select_db(default_connection, default_schema)
+
+        self.maxDiff = None
+        self.set_up()
+
+
+    def set_up(self):
+        pass
+
+
+    def tearDown(self):
+        self.tear_down()
+        tinyAPI.dsh().rollback(True)
+
+
+    def tear_down(self):
+        pass
 
 # ----- Instructions ----------------------------------------------------------
 

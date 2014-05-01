@@ -27,6 +27,12 @@ values = {
     'default schema': None,
 
     ##
+    # The default data store connection to use when executing unit tests
+    # and using the TransactionalDataStoreTestCase.
+    ##
+    'default unit test connection': None,
+
+    ##
     # An array of Memcached servers to use for caching.  The array should be
     # in the following format:
     #

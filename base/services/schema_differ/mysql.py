@@ -133,32 +133,17 @@ class SchemaDiffer(object):
                     'could not find column "' + name + '" in the list of '
                     + 'target columns')
 
+            if data['column_key'] != 'UNI' and \
+               target[name]['column_key'] == 'UNI':
+                self.__notice('(-) ' + name + ' (uniqueness)', 1)
+
+                self.__column_uniqueness_to_drop.append(name)
+
             for key, value in data.items():
-                remove_uniqueness = False
-
-                if key == 'column_key' and \
-                   value != 'UNI' and \
-                   target[name][key] == 'UNI':
-                    # This is special case handling when the unique key is
-                    # being removed from a column.  MySQL requires you to drop
-                    # the underlying unique index as opposed to modifying the
-                    # uniqueness off of the table.
-                    self.__notice('(-) ' + name + ' (uniqueness)', 1)
-
-                    self.__column_uniqueness_to_drop.append(name)
-                    remove_uniqueness = True
-
-                if target[name][key] != value:
-                    if key == 'column_key' and remove_uniqueness:
-                        # We've handled this above in the special case for
-                        # removing uniqueness.  See the comments there.  There
-                        # is nothing to do here since the necessary changes
-                        # were recorded above.
-                        pass
-                    else:
-                        self.__notice('(=) ' + name + ' (' + key + ')', 1)
-                        self.__columns_to_modify[name] = data
-                        break
+                if target[name][key] != value and key != 'column_key':
+                    self.__notice('(=) ' + name + ' (' + key + ')', 1)
+                    self.__columns_to_modify[name] = data
+                    break
 
 
     def __compute_foreign_key_differences(self):
@@ -362,14 +347,14 @@ class SchemaDiffer(object):
 
         source_data = {}
         for table in source_tables:
+            source_data[table] = {}
+
             records = self.__query_source(
                 '''select id,
                           value,
                           display_order
                      from ''' + self.__source_db_name + '.' + table + '''
                     order by id asc''')
-
-            source_data[table] = {}
 
             for record in records:
                 source_data[table][record['id']] = [
@@ -379,14 +364,14 @@ class SchemaDiffer(object):
 
         target_data = {}
         for table in target_tables:
+            target_data[table] = {}
+
             records = self.__query_target(
                 '''select id,
                           value,
                           display_order
                      from ''' + self.__target_db_name + '.' + table + '''
                     order by id asc''')
-
-            target_data[table] = {}
 
             for record in records:
                 target_data[table][record['id']] = [
@@ -424,7 +409,7 @@ class SchemaDiffer(object):
             for id, values in data.items():
                 if table not in source_data or \
                    id not in source_data[table]:
-                    self.__notice('(-) ' + table + '#' + id, 1)
+                    self.__notice('(-) ' + table + '#' + str(id), 1)
 
                     self.__ref_data_to_remove.append([
                         table,
@@ -589,7 +574,7 @@ class SchemaDiffer(object):
         self.__compute_index_differences()
         self.__compute_unique_key_differences()
 
-        if not self.__there_are_differences():
+        if not self.there_are_differences():
             self.__notice('Both schemas are the same!')
             exit(0)
 
@@ -597,6 +582,8 @@ class SchemaDiffer(object):
 
         self.__target.close()
         self.__source.close()
+
+        return self
 
 
     def __flatten_tables(self, tables=tuple()):
@@ -636,6 +623,74 @@ class SchemaDiffer(object):
             terms.append('not null')
 
         return terms
+
+
+    def get_column_uniqueness_to_drop(self):
+        return self.__column_uniqueness_to_drop
+
+
+    def get_columns_to_create(self):
+        return self.__columns_to_create
+
+
+    def get_columns_to_drop(self):
+        return self.__columns_to_drop
+
+
+    def get_columns_to_modify(self):
+        return self.__columns_to_modify
+
+
+    def get_foreign_keys_to_create(self):
+        return self.__foreign_keys_to_create
+
+
+    def get_foreign_keys_to_drop(self):
+        return self.__foreign_keys_to_drop
+
+
+    def get_indexes_to_create(self):
+        return self.__indexes_to_create
+
+
+    def get_indexes_to_drop(self):
+        return self.__indexes_to_drop
+
+
+    def get_ref_data_to_add(self):
+        return self.__ref_data_to_add
+
+
+    def get_ref_data_to_modify(self):
+        return self.__ref_data_to_modify
+
+
+    def get_ref_data_to_remove(self):
+        return self.__ref_data_to_remove
+
+
+    def get_ref_tables_to_create(self):
+        return self.__ref_tables_to_create
+
+
+    def get_ref_tables_to_drop(self):
+        return self.__ref_tables_to_drop
+
+
+    def get_tables_to_create(self):
+        return self.__tables_to_create
+
+
+    def get_tables_to_drop(self):
+        return self.__tables_to_drop
+
+
+    def get_unique_keys_to_create(self):
+        return self.__unique_keys_to_create
+
+
+    def get_unique_keys_to_drop(self):
+        return self.__unique_keys_to_drop
 
 
     def __ksort(self, data):
@@ -721,7 +776,7 @@ class SchemaDiffer(object):
         return self
 
 
-    def __there_are_differences(self):
+    def there_are_differences(self):
         return self.__ref_tables_to_create or \
                self.__ref_tables_to_drop or \
                self.__tables_to_create or \
@@ -995,20 +1050,20 @@ class SchemaDiffer(object):
                       +  '(\n'
                       +  '    ' + str(data[1]) + ',\n'
                       +  "    '" + re.sub("'", "''", data[2]) + "',\n"
-                      +  '    ' + str(data[3]) + ',\n'
+                      +  '    ' + str(data[3]) + '\n'
                       +  ');\n'
                       +  'commit;\n\n')
 
         for data in self.__ref_data_to_modify:
             contents += ('update ' + data[0] + '\n'
                       +  "   set value = '" + data[2] + "',\n"
-                      +  "       display_order = " + data[3] + "\n"
-                      +  " where id = " + data[1] + ";\n"
+                      +  "       display_order = " + str(data[3]) + "\n"
+                      +  " where id = " + str(data[1]) + ";\n"
                       +  "commit;\n\n")
 
         for data in self.__ref_data_to_remove:
             contents += 'delete from ' + data[0] + '\n' \
-                      + '      where id = ' + data[1] + ';\n' \
+                      + '      where id = ' + str(data[1]) + ';\n' \
                       + 'commit;\n\n'
 
         self.__write_file(file_name, contents)

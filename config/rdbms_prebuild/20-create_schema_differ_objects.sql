@@ -105,6 +105,7 @@ values
     'abc',
     1
 );
+commit;
 
 insert into schema_differ_source.schema_differ_ref_modify
 (
@@ -118,6 +119,7 @@ values
     'def',
     2
 );
+commit;
 
 /*
 +------------------------------------------------------------+
@@ -209,6 +211,7 @@ values
     'xyz',
     2
 );
+commit;
 
 insert into schema_differ_target.schema_differ_ref_modify
 (
@@ -222,3 +225,4 @@ values
     'def',
    3
 );
+commit;

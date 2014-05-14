@@ -5,15 +5,18 @@ __author__ = 'Michael Montero <mcmontero@gmail.com>'
 # ----- Imports ---------------------------------------------------------------
 
 from .exception import CLIException
+from tinyAPI.base.config import ConfigManager
 
 import argparse
 import errno
 import datetime
+import logging
 import os
 import re
 import sys
 import time
 import tinyAPI
+import traceback
 
 __all__ = [
     'CLI',
@@ -38,7 +41,9 @@ def cli_main(function, args=None, stop_on_signal=True):
 
     try:
         function(cli)
-    except:
+    except Exception as e:
+        _handle_cli_exception_logging(e)
+
         cli.set_status_error()
         tinyAPI.dsh().rollback(True)
         tinyAPI.dsh().close()
@@ -276,3 +281,12 @@ class CLIOutputRenderer(object):
         body += ' ' * (width - 2 - len(body)) + "|\n"
 
         return enclosure + body + enclosure
+
+# ----- Private Functions  ----------------------------------------------------
+
+def _handle_cli_exception_logging(e):
+    log_file = ConfigManager().value('cli log file')
+    if log_file:
+        logging.basicConfig(filename = log_file)
+        logging.critical(traceback.format_exc())
+        logging.shutdown()

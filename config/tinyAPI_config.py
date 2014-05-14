@@ -10,6 +10,13 @@ values = {
     'application dirs': ['/opt/tinyAPI'],
 
     ##
+    # The full path to a log file to which to log uncaught exceptions that
+    # occur during the execution of a CLI script.  If set to None, no logging
+    # will occur.
+    ##
+    'cli log file': None,
+
+    ##
     # Defines the underlying data store into which all entities are stored.
     #
     # Supported values include:

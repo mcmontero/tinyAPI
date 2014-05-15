@@ -267,22 +267,14 @@ class DataStoreMySQL(RDBMSBase):
         try:
             cursor.execute(sql, vals)
         except mysql.connector.errors.IntegrityError as e:
-            self.rollback()
-            self.__close_cursor()
             if e.errno == 1062:
                 raise DataStoreDuplicateKeyException(e.msg)
             else:
                 raise
         except mysql.connector.errors.ProgrammingError as e:
-            self.rollback()
-            self.__close_cursor()
             raise DataStoreException(
                     self.__format_query_execution_error(
                                 sql, e.msg, binds))
-        except:
-            self.rollback()
-            self.__close_cursor()
-            raise
 
         id = None
         if return_insert_id:
@@ -384,22 +376,14 @@ class DataStoreMySQL(RDBMSBase):
         try:
             cursor.execute(sql, binds)
         except mysql.connector.errors.IntegrityError as e:
-            self.rollback()
-            self.__close_cursor()
             if e.errno == 1062:
                 raise DataStoreDuplicateKeyException(e.msg)
             else:
                 raise
         except mysql.connector.errors.ProgrammingError as e:
-            self.rollback()
-            self.__close_cursor()
             raise DataStoreException(
                     self.__format_query_execution_error(
                                 sql, e.msg, binds))
-        except:
-            self.rollback()
-            self.__close_cursor()
-            raise
 
         if is_select:
             results = cursor.fetchall()

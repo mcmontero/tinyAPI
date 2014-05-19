@@ -215,12 +215,20 @@ class DataStoreMySQL(RDBMSBase):
                 'cannot connection to MySQL because no database name was '
                 + 'selected')
 
-        self.__mysql = mysql.connector.connect(
-            user=connection_data[self._connection_name][1],
-            password=connection_data[self._connection_name][2],
-            host=connection_data[self._connection_name][0],
-            database=self._db_name,
-            charset=self._charset)
+        config = {
+            'user': connection_data[self._connection_name][1],
+            'password': connection_data[self._connection_name][2],
+            'host': connection_data[self._connection_name][0],
+            'database': self._db_name,
+            'charset': self._charset
+        }
+
+        connection_pool = ConfigManager.value('connection pool')
+        if not Context.env_cli() and connection_pool:
+            config['pool_name'] = connection_pool['name']
+            config['pool_size'] = connection_pool['size']
+
+        self.__mysql = mysql.connector.connect(**config)
 
 
     def connection_id(self):

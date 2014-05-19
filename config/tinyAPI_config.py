@@ -17,6 +17,17 @@ values = {
     'cli log file': None,
 
     ##
+    # Provides the necessary parameters for configuring a data store connection
+    # pool.  For MySQL, this option should be configured as:
+    #
+    #   {
+    #       'name': '[Connection Pool Name]',
+    #       'size': '[Number of Connections]'
+    #   }
+    ##
+    'connection pool': None,
+
+    ##
     # Defines the underlying data store into which all entities are stored.
     #
     # Supported values include:

@@ -6,6 +6,7 @@ __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
 from .exception import CLIException
 from tinyAPI.base.config import ConfigManager
+from tinyAPI.base.context import Context
 
 import argparse
 import errno
@@ -33,7 +34,9 @@ CLI_STOP_SIGNAL_FILE = '/tmp/APP_STOP_CLI'
 def cli_main(function, args=None, stop_on_signal=True):
     '''Executes the "main" CLI function passing in the configured arguments.'''
     if stop_on_signal and os.path.isfile(CLI_STOP_SIGNAL_FILE):
-        raise CLIException( 'CLI execution has been stopped')
+        raise CLIException('CLI execution has been stopped')
+
+    Context().set_cli()
 
     cli = CLI(args)
     if not stop_on_signal:

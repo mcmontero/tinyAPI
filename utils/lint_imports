@@ -28,11 +28,14 @@ def main(cli):
                     stderr=subprocess.STDOUT,
                     shell=True).decode().split('\n')
         for file in files:
+            print(file)
             if len(file) == 0 or re.search('__init__\.py$', file):
                 continue
 
             with open(file) as f:
                 contents = f.read()
+
+            contents = re.sub('import \*', 'import ___all___', contents)
 
             matches = _from_module_import_symbol(contents)
             for match in matches:
@@ -65,10 +68,14 @@ def _from_module_import_symbol(contents):
                          re.M | re.I | re.S)
     results = []
     for match in matches:
-        symbols = re.findall('from .*? import (.*?)$',
+        symbols = re.findall('from (.*?) import (.*?)$',
                              re.sub('[ ]+', ' ', match),
                              re.M | re.I | re.S)
-        for term in symbols:
+        for terms in symbols:
+            term = terms[1]
+            if terms[1] == '___all___':
+                term = terms[0]
+
             term = term.split(', ')
             results.extend(term)
 
@@ -85,8 +92,9 @@ def _import_module_as_symbol(contents):
             symbols = re.findall('import (.*?)$',
                                  re.sub('[ ]+', ' ', match))
             for term in symbols:
-                term = term.split(', ')
-                results.extend(term)
+                if term != '___all___':
+                    term = term.split(', ')
+                    results.extend(term)
         else:
             results.extend(symbols)
 

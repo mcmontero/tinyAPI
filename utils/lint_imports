@@ -28,7 +28,6 @@ def main(cli):
                     stderr=subprocess.STDOUT,
                     shell=True).decode().split('\n')
         for file in files:
-            print(file)
             if len(file) == 0 or re.search('__init__\.py$', file):
                 continue
 

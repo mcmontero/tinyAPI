@@ -208,6 +208,32 @@ class ProviderMySQLTestCase(unittest.TestCase):
         provider.autonomous_tx_stop_commit(dsh_1)
         provider.autonomous_tx_stop_rollback(dsh_2)
 
+
+    def test_row_count(self):
+        tinyAPI.dsh().query(
+            '''insert into unit_test_table(
+                  id,
+                  value)
+               values(
+                  1000,
+                  123)''')
+        self.assertEqual(1, tinyAPI.dsh().get_row_count())
+
+        tinyAPI.dsh().query(
+            '''update unit_test_table
+                  set value = 456
+                where id = 1''')
+        self.assertEqual(0, tinyAPI.dsh().get_row_count())
+
+        tinyAPI.dsh().query(
+            '''update unit_test_table
+                  set value = 456
+                where id = 1000''')
+        self.assertEqual(1, tinyAPI.dsh().get_row_count())
+
+        tinyAPI.dsh().delete('unit_test_table', {'id': 1000})
+        self.assertEqual(1, tinyAPI.dsh().get_row_count())
+
 # ----- Main ------------------------------------------------------------------
 
 if __name__ == '__main__':

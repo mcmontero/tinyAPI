@@ -603,14 +603,14 @@ class SchemaDiffer(object):
         if column_data['extra'] == 'auto_increment':
             terms.append('auto_increment')
 
-        if column_data['column_key'] == 'UNI':
-            terms.append('unique')
-
         if column_data['character_set_name']:
             terms.append('character set ' + column_data['character_set_name'])
 
         if column_data['collation_name']:
             terms.append('collate ' + column_data['collation_name'])
+
+        if column_data['column_key'] == 'UNI':
+            terms.append('unique')
 
         if column_data['column_default']:
             terms.append('default '

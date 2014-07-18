@@ -233,7 +233,7 @@ class Manager(object):
                     self.__unindexed_foreign_keys + \
                     object.get_unindexed_foreign_keys()
 
-            self.__handle_module_dml(module, path)
+            self.__handle_module_dml(module)
 
 
     def __assign_dependencies(self, module, table):
@@ -262,7 +262,7 @@ class Manager(object):
     def __build_dml(self, module):
         for file in module.get_dml_files():
             with open(file, 'rb') as f:
-                self.__execute_statement(f.read())
+                self.__execute_statement(f.read().decode())
 
             self.__track_module_info(module, file)
 
@@ -278,7 +278,8 @@ class Manager(object):
             self.__notice('(+) '
                           + routine['routine_type'].lower()
                           + ' '
-                          + routine['routine_name'],
+                          + routine['routine_name']
+                          + '()',
                           2)
 
             self.__num_rdbms_routines += 1
@@ -929,8 +930,11 @@ builtins._tinyapi_ref_unit_test = _tinyapi_ref_unit_test
             self.__data_store_not_supported()
 
 
-    def __handle_module_dml(self, module, path):
-        files = find_files(path, "*.sql")
+    def __handle_module_dml(self, module):
+        files = \
+            find_files(
+                '/'.join(module.get_build_file().split('/')[0:-2]),
+                "*.sql")
         for file in files:
             if re.search('/rdbms_prebuild/', file) is None:
                 module.add_dml_file(file)

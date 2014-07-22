@@ -165,7 +165,7 @@ class DataStoreMySQL(RDBMSBase):
         self.__mysql = None
         self.__cursor = None
         self.__row_count = None
-
+        self.__in_transaction = True
 
     def close(self):
         '''Close the active database connection.'''
@@ -189,11 +189,12 @@ class DataStoreMySQL(RDBMSBase):
                 raise DataStoreException(
                     'transaction cannot be committed because a database '
                     + 'connection has not been established yet')
-        else:
+        elif self.__in_transaction:
             if Context.env_unit_test():
                 return
             else:
                 self.__mysql.commit()
+                self.__in_transaction = False
 
 
     def __connect(self):
@@ -285,6 +286,7 @@ class DataStoreMySQL(RDBMSBase):
                     self.__format_query_execution_error(
                                 sql, e.msg, binds))
 
+        self.__in_transaction = True
         self.__row_count = cursor.rowcount
 
         id = None
@@ -307,8 +309,12 @@ class DataStoreMySQL(RDBMSBase):
         self.__connect()
 
         cursor = self.__get_cursor()
+
         cursor.execute(sql, binds)
+
+        self.__in_transaction = True
         self.__row_count = cursor.rowcount
+
         self.__close_cursor()
 
         self.memcache_purge()
@@ -401,6 +407,9 @@ class DataStoreMySQL(RDBMSBase):
                     self.__format_query_execution_error(
                                 sql, e.msg, binds))
 
+        if not is_select:
+            self.__in_transaction = True
+
         self.__row_count = cursor.rowcount
 
         if is_select:
@@ -422,8 +431,9 @@ class DataStoreMySQL(RDBMSBase):
                 raise DataStoreException(
                     'transaction cannot be rolled back because a database '
                     + 'connection has not been established yet')
-        else:
+        elif self.__in_transaction:
             self.__mysql.rollback()
+            self.__in_transaction = False
 
 
 class DataStoreProvider(object):

@@ -43,9 +43,9 @@ def autonomous_tx_stop_commit(dsh):
     dsh.close()
 
 
-def autonomous_tx_stop_rollback(dsh):
+def autonomous_tx_stop_rollback(dsh, ignore_exceptions=False):
     assert_is_dsh(dsh)
-    dsh.rollback()
+    dsh.rollback(ignore_exceptions)
     dsh.close()
 
 # ----- Private Classes -------------------------------------------------------

@@ -37,9 +37,9 @@ def autonomous_tx_start(connection, db):
     return dsh
 
 
-def autonomous_tx_stop_commit(dsh):
+def autonomous_tx_stop_commit(dsh, ignore_exceptions=False):
     assert_is_dsh(dsh)
-    dsh.commit()
+    dsh.commit(ignore_exceptions)
     dsh.close()
 
 

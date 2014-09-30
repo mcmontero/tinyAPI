@@ -5,7 +5,6 @@ __author__ = 'Michael Montero <mcmontero@gmail.com>'
 # ----- Imports ---------------------------------------------------------------
 
 from .exception import DataStoreException, DataStoreDuplicateKeyException
-from .mysql import MySQLCursorDict
 from tinyAPI.base.config import ConfigManager
 from tinyAPI.base.data_store.memcache import Memcache
 
@@ -349,7 +348,7 @@ class DataStoreMySQL(RDBMSBase):
         self.__cursor = \
             self.__mysql.cursor(
                 prepared=True,
-                cursor_class=MySQLCursorDict)
+                cursor_class=mysql.connector.cursor.MySQLCursorDict)
 
         return self.__cursor
 

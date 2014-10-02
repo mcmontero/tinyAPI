@@ -177,7 +177,13 @@ class DataStoreMySQL(RDBMSBase):
 
     def __close_cursor(self):
         if self.__cursor is not None:
-            self.__cursor.close()
+            try:
+                self.__cursor.close()
+            except mysql.connector.errors.InternalError as e:
+                if e.msg == 'Unread result found.':
+                    self.__cursor.fetchall()
+                    self.__cursor.close()
+
             self.__cursor = None
 
 

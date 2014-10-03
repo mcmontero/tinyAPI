@@ -243,7 +243,16 @@ class DataStoreMySQL(RDBMSBase):
             config['pool_name'] = connection_pool['name']
             config['pool_size'] = connection_pool['size']
 
-        self.__mysql = mysql.connector.connect(**config)
+        for spin_count in range(3):
+            try:
+                self.__mysql = mysql.connector.connect(**config)
+                break
+            except mysql.connector.errors.InterfaceError as e:
+                # Can't connect to MySQL server.
+                if e.errno != 2003 or spin_count >= 2:
+                    raise
+
+                time.sleep(1 / 2000000.0)
 
 
     def connection_id(self):

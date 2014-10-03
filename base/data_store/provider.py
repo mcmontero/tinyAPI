@@ -187,7 +187,8 @@ class DataStoreMySQL(RDBMSBase):
                     except mysql.connector.errors.InterfaceError as e:
                         # Lost connection to MySQL server during query.
                         if e.errno == 2013:
-                            self.close()
+                            self.__mysql.close()
+                            self.__mysql = None
                         else:
                             raise
                 else:

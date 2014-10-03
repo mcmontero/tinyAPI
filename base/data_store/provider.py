@@ -181,8 +181,17 @@ class DataStoreMySQL(RDBMSBase):
                 self.__cursor.close()
             except mysql.connector.errors.InternalError as e:
                 if e.msg == 'Unread result found.':
-                    self.__cursor.fetchall()
-                    self.__cursor.close()
+                    try:
+                        self.__cursor.fetchall()
+                        self.__cursor.close()
+                    except mysql.connector.errors.InterfaceError as e:
+                        # Lost connection to MySQL server during query.
+                        if e.errno == 2013:
+                            self.close()
+                        else:
+                            raise
+                else:
+                    raise
 
             self.__cursor = None
 

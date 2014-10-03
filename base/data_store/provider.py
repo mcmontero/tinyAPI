@@ -10,6 +10,7 @@ from tinyAPI.base.data_store.memcache import Memcache
 
 import mysql.connector
 import re
+import time
 import tinyAPI.base.context as Context
 
 __all__ = [

@@ -1074,6 +1074,30 @@ add constraint abc_0_fk
                 .email('em_address', True)\
                 .get_definition())
 
+
+    def test_view_exceptions(self):
+        try:
+            tinyAPI.View('db', 'abc').get_definition()
+
+            self.fail('Was able to get the definition for a view even though '
+                      + 'no base table was provided.')
+        except TableBuilderException as e:
+            self.assertEqual(
+                'a base table was not configured for the view "abc"',
+                e.get_message())
+
+
+    def test_view(self):
+        text = '''create view abc
+         as select *
+              from def'''
+
+        self.assertEqual(
+            text,
+            tinyAPI.View('db', 'abc')
+                .tbl('def')
+                .get_definition())
+
 # ----- Main ------------------------------------------------------------------
 
 if __name__ == '__main__':

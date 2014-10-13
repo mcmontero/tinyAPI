@@ -212,26 +212,27 @@ class Manager(object):
                 if isinstance(object, tinyAPI.Table):
                     self.__assign_dependencies(module, object)
 
-                indexes = object.get_index_definitions()
-                for index in indexes:
-                    module.add_index(object.get_db_name(), index)
+                if isinstance(object, tinyAPI.Table):
+                    indexes = object.get_index_definitions()
+                    for index in indexes:
+                        module.add_index(object.get_db_name(), index)
 
-                inserts = object.get_insert_statements()
-                if inserts is not None:
-                    for insert in inserts:
-                        module.add_insert(object.get_db_name(), insert)
+                    inserts = object.get_insert_statements()
+                    if inserts is not None:
+                        for insert in inserts:
+                            module.add_insert(object.get_db_name(), insert)
 
-                fks = object.get_foreign_key_definitions()
-                for fk in fks:
-                    if module.get_name() not in self.__foreign_keys:
-                        self.__foreign_keys[module.get_name()] = []
+                    fks = object.get_foreign_key_definitions()
+                    for fk in fks:
+                        if module.get_name() not in self.__foreign_keys:
+                            self.__foreign_keys[module.get_name()] = []
 
-                    self.__foreign_keys[module.get_name()].append([
-                            object.get_db_name(), fk + ';'])
+                        self.__foreign_keys[module.get_name()].append([
+                                object.get_db_name(), fk + ';'])
 
-                self.__unindexed_foreign_keys = \
-                    self.__unindexed_foreign_keys + \
-                    object.get_unindexed_foreign_keys()
+                    self.__unindexed_foreign_keys = \
+                        self.__unindexed_foreign_keys + \
+                        object.get_unindexed_foreign_keys()
 
             self.__handle_module_dml(module)
 
@@ -292,6 +293,11 @@ class Manager(object):
                 matches = re.search('^create table (.*?)$',
                                     statement[1],
                                     re.M | re.S | re.I)
+                if matches is None:
+                    matches = re.search('^create view (.*?)$',
+                                        statement[1],
+                                        re.M | re.S | re.I)
+
                 if matches is not None:
                     self.__notice('(+) '
                                   + statement[0]

@@ -1345,3 +1345,33 @@ class RefTable(Table):
         if not re.match('^\w+_ref_', name):
             raise TableBuilderException(
                 'the name of the reference table must contain "_ref_"')
+
+
+class View(object):
+    '''Implements a view of a table.'''
+
+    def __init__(self, db_name, name):
+        self.db_name = db_name
+        self.name = name
+        self.base_table_name = None
+
+
+    def get_db_name(self):
+        return self.db_name
+
+
+    def get_definition(self):
+        if self.base_table_name is None:
+            raise TableBuilderException(
+                'a base table was not configured for the view "'
+                + self.name
+                + '"')
+
+        return ('create view ' + self.name + '\n'
+                + '         as select *\n'
+                + '              from ' + self.base_table_name)
+
+
+    def tbl(self, name):
+        self.base_table_name = name
+        return self

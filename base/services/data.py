@@ -4,53 +4,54 @@ __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
 # ----- Imports ---------------------------------------------------------------
 
-from .exception import MarshallerException
+from .exception import SerializerException
 
 import re
 
 __all__ = [
-    'Marshaller',
+    'Serializer',
     'Validator'
 ]
 
 # ----- Public Classes --------------------------------------------------------
 
-class Marshaller(object):
-    '''A generic data marshaller that can convert formatted SQL results into
-       their JSON representation.'''
-
-    def __init__(self):
-        self.__objects = []
-        self.reset()
-
+class Serializer(object):
+    '''Serializes formatted SQL results for transportation via REST API.'''
 
     def add_object(self, name):
-        self.__objects.append(name)
         return self
 
 
-    def format(self, record):
-        self.reset()
+    def __add_object(self, key, value, path, elem, objects=tuple()):
+        if objects[0] not in elem:
+            elem[objects[0]] = {}
+
+        path += '__' + objects[0] + '__'
+
+        if len(objects) == 1:
+            var = re.sub(path, '', key)
+            if len(var) == 0:
+                raise SerializerException(
+                    'could not format to JSON for key "' + key + '"')
+
+            elem[objects[0]][var] = value
+
+            return
+
+        self.__add_object(key, value, path, elem[objects[0]], objects[1:])
+
+
+    def to_json(self, record=tuple()):
+        self.data = {}
 
         for key, value in record.items():
-            matches = re.search('^__(.*?)__(.*?)$', key)
-            if not matches:
+            objects = re.findall('__([A-Za-z0-9_]+?)__', key)
+            if len(objects) == 0:
                 self.data[key] = value
             else:
-                if matches.group(1) not in self.__objects:
-                    raise MarshallerException(
-                        'object named "'
-                        + matches.group(1)
-                        + '" was found but not added')
+                self.__add_object(key, value, '', self.data, objects)
 
-                self.data[matches.group(1)][matches.group(2)] = value
         return self.data
-
-
-    def reset(self):
-        self.data = {}
-        for object in self.__objects:
-            self.data[object] = {}
 
 
 class Validator(object):

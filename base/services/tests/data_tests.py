@@ -4,9 +4,9 @@ __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
 # ----- Imports ---------------------------------------------------------------
 
-from tinyAPI.base.services.data import Marshaller
+from tinyAPI.base.services.data import Serializer
 from tinyAPI.base.services.data import Validator
-from tinyAPI.base.services.exception import MarshallerException
+from tinyAPI.base.services.exception import SerializerException
 
 import tinyAPI
 import unittest
@@ -15,33 +15,45 @@ import unittest
 
 class DataTestCase(unittest.TestCase):
 
-    def test_marshaller_exceptions(self):
+    def test_serializer_errors(self):
         try:
-            Marshaller().add_object('b').format({'__a__one': 1})
-        except MarshallerException as e:
-            self.assertEqual(
-                'object named "a" was found but not added',
-                e.get_message())
+            Serializer().to_json({'__abc__': 123})
+
+            self.fail('Was able to format a record to JSON even though no '
+                      + 'variable was defined.')
+        except SerializerException as e:
+            self.assertEqual('could not format to JSON for key "__abc__"',
+                             e.get_message())
 
 
-    def test_marshaller(self):
-        marshaller = Marshaller().add_object('a').add_object('b')
+    def test_serializer_simple(self):
+        data = Serializer().to_json({'abc': 123})
+        self.assertTrue('abc' in data)
+        self.assertEqual(123, data['abc'])
 
-        record = {
-            '__a__one': 1,
-            '__b__two': 2,
-            'three': 3
-        }
 
-        marshaller.format(record)
-        self.assertTrue('a' in marshaller.data)
-        self.assertTrue('b' in marshaller.data)
-        self.assertTrue('three' in marshaller.data)
-        self.assertTrue('one' in marshaller.data['a'])
-        self.assertTrue('two' in marshaller.data['b'])
-        self.assertEqual(1, marshaller.data['a']['one'])
-        self.assertEqual(2, marshaller.data['b']['two'])
-        self.assertEqual(3, marshaller.data['three'])
+    def test_serializer_single(self):
+        data = Serializer().to_json({'__one__two': 123})
+        self.assertTrue('one' in data)
+        self.assertTrue('two' in data['one'])
+        self.assertEqual(123, data['one']['two'])
+
+
+    def test_serializer_double(self):
+        data = Serializer().to_json({'__one____two__three': 123})
+        self.assertTrue('one' in data)
+        self.assertTrue('two' in data['one'])
+        self.assertTrue('three' in data['one']['two'])
+        self.assertEqual(123, data['one']['two']['three'])
+
+
+    def test_serializer_triple(self):
+        data = Serializer().to_json({'__one____two____three__four': 123})
+        self.assertTrue('one' in data)
+        self.assertTrue('two' in data['one'])
+        self.assertTrue('three' in data['one']['two'])
+        self.assertTrue('four' in data['one']['two']['three'])
+        self.assertEqual(123, data['one']['two']['three']['four'])
 
 
     def test_non_valid_email_addresses(self):

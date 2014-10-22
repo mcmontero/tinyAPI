@@ -23,6 +23,6 @@ class CryptoException(tinyAPIException):
     pass
 
 
-class MarshallerException(tinyAPIException):
-    '''Named exception when issues with the data marshaller arise.'''
+class SerializerException(tinyAPIException):
+    '''Named exception when issues with the data serializer arise.'''
     pass

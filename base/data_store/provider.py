@@ -104,13 +104,18 @@ class RDBMSBase(__DataStoreBase):
         if self._memcache_key is None:
             return
         Memcache().purge(self._memcache_key)
+        self.__reset_memcache()
 
 
     def memcache_retrieve(self):
         '''If the data needs to be cached, cache it.'''
         if self._memcache_key is None:
             return None
-        return Memcache().retrieve(self._memcache_key)
+
+        results = Memcache().retrieve(self._memcache_key)
+        self.__reset_memcache()
+
+        return results
 
 
     def memcache_store(self, data):
@@ -118,6 +123,7 @@ class RDBMSBase(__DataStoreBase):
         if self._memcache_key is None:
             return
         Memcache.store(self._memcache_key, data, self._memcache_ttl)
+        self.__reset_memcache()
 
 
     def nth(self, index, sql, binds=tuple()):
@@ -133,6 +139,11 @@ class RDBMSBase(__DataStoreBase):
     def query(self, query, binds = []):
         '''Execute an arbitrary query and return all of the results.'''
         return None
+
+
+    def __reset_memcache(self):
+        self._memcache_key = None
+        self._memcache_ttl = None
 
 
     def rollback():

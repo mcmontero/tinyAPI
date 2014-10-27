@@ -104,18 +104,13 @@ class RDBMSBase(__DataStoreBase):
         if self._memcache_key is None:
             return
         Memcache().purge(self._memcache_key)
-        self.__reset_memcache()
 
 
     def memcache_retrieve(self):
         '''If the data needs to be cached, cache it.'''
         if self._memcache_key is None:
             return None
-
-        results = Memcache().retrieve(self._memcache_key)
-        self.__reset_memcache()
-
-        return results
+        return Memcache().retrieve(self._memcache_key)
 
 
     def memcache_store(self, data):
@@ -123,7 +118,6 @@ class RDBMSBase(__DataStoreBase):
         if self._memcache_key is None:
             return
         Memcache.store(self._memcache_key, data, self._memcache_ttl)
-        self.__reset_memcache()
 
 
     def nth(self, index, sql, binds=tuple()):
@@ -141,7 +135,7 @@ class RDBMSBase(__DataStoreBase):
         return None
 
 
-    def __reset_memcache(self):
+    def _reset_memcache(self):
         self._memcache_key = None
         self._memcache_ttl = None
 
@@ -348,9 +342,10 @@ class DataStoreMySQL(RDBMSBase):
 
         self.__row_count = cursor.rowcount
 
-        self.__close_cursor()
-
         self.memcache_purge()
+
+        self.__close_cursor()
+        self._reset_memcache()
 
         return True
 
@@ -418,6 +413,7 @@ class DataStoreMySQL(RDBMSBase):
     def query(self, sql, binds=tuple()):
         results_from_cache = self.memcache_retrieve()
         if results_from_cache is not None:
+            self._reset_memcache()
             return results_from_cache
 
         self.__connect()
@@ -450,6 +446,7 @@ class DataStoreMySQL(RDBMSBase):
             results = True
 
         self.__close_cursor()
+        self._reset_memcache()
 
         return results
 

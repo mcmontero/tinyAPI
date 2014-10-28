@@ -73,7 +73,7 @@ class SchemaDiffer(object):
                       extra
                  from columns
                 where table_schema = %s
-                  and table_name not like '%\_ref\_%'"""
+                  and table_name not like '%%\_ref\_%%'"""
         if self.__table_create_drop_list:
             query += ' and table_name not in (' \
                      + self.__table_create_drop_list \
@@ -162,7 +162,7 @@ class SchemaDiffer(object):
                    on c.constraint_schema = k.constraint_schema
                   and k.constraint_name = k.constraint_name
                 where k.constraint_schema = %s
-                  and k.constraint_name like '%\_fk'"""
+                  and k.constraint_name like '%%\_fk'"""
         if self.__table_create_drop_list:
             query += ' and k.table_name not in (' \
                      + self.__table_create_drop_list \
@@ -229,7 +229,7 @@ class SchemaDiffer(object):
                       column_name
                  from statistics
                 where index_schema = %s
-                  and index_name like '%\_idx'"""
+                  and index_name like '%%\_idx'"""
         if self.__table_create_drop_list:
             query += ' and table_name not in (' \
                      + self.__table_create_drop_list \
@@ -328,7 +328,7 @@ class SchemaDiffer(object):
             """select table_name
                  from tables
                 where table_schema = %s
-                  and table_name like '%\_ref\_%'"""
+                  and table_name like '%%\_ref\_%%'"""
         if self.__ref_table_drop_list:
             query += ' and table_name not in (' \
                      + self.__ref_table_drop_list \
@@ -426,7 +426,7 @@ class SchemaDiffer(object):
             """select table_name
                  from tables
                 where table_schema = %s
-                  and table_name like '%\_ref\_%'"""
+                  and table_name like '%%\_ref\_%%'"""
 
         source_tables = \
             self.__flatten_tables(
@@ -464,7 +464,7 @@ class SchemaDiffer(object):
             """select table_name
                  from tables
                 where table_schema = %s
-                  and table_name not like '%\_ref\_%'"""
+                  and table_name not like '%%\_ref\_%%'"""
 
         source_tables = \
             self.__flatten_tables(
@@ -502,7 +502,7 @@ class SchemaDiffer(object):
                       ordinal_position
                  from key_column_usage
                 where table_schema = %s
-                  and constraint_name like '%\_uk'"""
+                  and constraint_name like '%%\_uk'"""
         if self.__table_create_drop_list:
             query += ' and table_name not in (' \
                      + self.__table_create_drop_list \

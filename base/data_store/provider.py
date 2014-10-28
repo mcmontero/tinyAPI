@@ -8,7 +8,7 @@ from .exception import DataStoreException, DataStoreDuplicateKeyException
 from tinyAPI.base.config import ConfigManager
 from tinyAPI.base.data_store.memcache import Memcache
 
-import mysql.connector
+import pymysql
 import re
 import time
 import tinyAPI.base.context as Context
@@ -183,23 +183,7 @@ class DataStoreMySQL(RDBMSBase):
 
     def __close_cursor(self):
         if self.__cursor is not None:
-            try:
-                self.__cursor.close()
-            except mysql.connector.errors.InternalError as e:
-                if e.msg == 'Unread result found.':
-                    try:
-                        self.__cursor.fetchall()
-                        self.__cursor.close()
-                    except mysql.connector.errors.InterfaceError as e:
-                        # Lost connection to MySQL server during query.
-                        if e.errno == 2013:
-                            self.__mysql.close()
-                            self.__mysql = None
-                        else:
-                            raise
-                else:
-                    raise
-
+            self.__cursor.close()
             self.__cursor = None
 
 
@@ -239,32 +223,19 @@ class DataStoreMySQL(RDBMSBase):
 
         config = {
             'user': connection_data[self._connection_name][1],
-            'password': connection_data[self._connection_name][2],
+            'passwd': connection_data[self._connection_name][2],
             'host': connection_data[self._connection_name][0],
             'database': self._db_name,
-            'charset': self._charset
+            'charset': self._charset,
+            'autocommit': False
         }
 
-        connection_pool = ConfigManager.value('connection pool')
-        if not Context.env_cli() and connection_pool:
-            config['pool_name'] = connection_pool['name']
-            config['pool_size'] = connection_pool['size']
-
-        for spin_count in range(3):
-            try:
-                self.__mysql = mysql.connector.connect(**config)
-                break
-            except mysql.connector.errors.InterfaceError as e:
-                # Can't connect to MySQL server.
-                if e.errno != 2003 or spin_count >= 2:
-                    raise
-
-                time.sleep(1 / 2000000.0)
+        self.__mysql = pymysql.connect(**config)
 
 
     def connection_id(self):
         self.__connect()
-        return self.__mysql.connection_id
+        return self.__mysql.thread_id()
 
 
     def __convert_to_prepared(self, separator, data=tuple()):
@@ -305,21 +276,25 @@ class DataStoreMySQL(RDBMSBase):
 
         try:
             cursor.execute(sql, vals)
-        except mysql.connector.errors.IntegrityError as e:
-            if e.errno == 1062:
-                raise DataStoreDuplicateKeyException(e.msg)
+        except pymysql.err.IntegrityError as e:
+            errno, message = e.args
+
+            if errno == 1062:
+                raise DataStoreDuplicateKeyException(message)
             else:
                 raise
-        except mysql.connector.errors.ProgrammingError as e:
+        except pymysql.err.ProgrammingError as e:
+            errno, message = e.args
+
             raise DataStoreException(
                     self.__format_query_execution_error(
-                                sql, e.msg, binds))
+                                sql, message, binds))
 
         self.__row_count = cursor.rowcount
 
         id = None
         if return_insert_id:
-            id = cursor.getlastrowid()
+            id = cursor.lastrowid
 
         self.__close_cursor()
 
@@ -377,10 +352,7 @@ class DataStoreMySQL(RDBMSBase):
         if self.__cursor is not None:
             return self.__cursor
 
-        self.__cursor = \
-            self.__mysql.cursor(
-                prepared=True,
-                cursor_class=mysql.connector.cursor.MySQLCursorDict)
+        self.__cursor = self.__mysql.cursor(pymysql.cursors.DictCursor)
 
         return self.__cursor
 
@@ -426,20 +398,26 @@ class DataStoreMySQL(RDBMSBase):
 
         try:
             cursor.execute(sql, binds)
-        except mysql.connector.errors.IntegrityError as e:
-            if e.errno == 1062:
-                raise DataStoreDuplicateKeyException(e.msg)
+        except pymysql.err.IntegrityError as e:
+            errno, message = e.args
+
+            if errno == 1062:
+                raise DataStoreDuplicateKeyException(message)
             else:
                 raise
-        except mysql.connector.errors.ProgrammingError as e:
+        except pymysql.err.ProgrammingError as e:
+            errno, message = e.args
+
             raise DataStoreException(
                     self.__format_query_execution_error(
-                                sql, e.msg, binds))
+                                sql, message, binds))
 
         self.__row_count = cursor.rowcount
 
         if is_select:
             results = cursor.fetchall()
+            if results == ():
+                results = []
 
             self.memcache_store(results)
         else:

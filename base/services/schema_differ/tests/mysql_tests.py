@@ -17,7 +17,7 @@ class SchemaDifferMySQLTestCase(unittest.TestCase):
         super(SchemaDifferMySQLTestCase, self).__init__(*args, **kwargs)
 
         self.__differ = SchemaDiffer('local', 'schema_differ_source',
-                                   'local', 'schema_differ_target') \
+                                     'local', 'schema_differ_target') \
                             .dont_write_upgrade_scripts() \
                             .execute()
 

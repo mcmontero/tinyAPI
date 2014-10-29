@@ -23,6 +23,12 @@ class Memcache(object):
                 ConfigManager.value('memcached servers'), debug=0)
 
 
+    def close(self):
+        '''Closes all connections to Memcached servers.'''
+        self.__handle.disconnect_all()
+        self.__handle = None
+
+
     def purge(self, key):
         '''Removes the value stored at the specified key from the cache. '''
         self.__handle.delete(key)
@@ -34,6 +40,6 @@ class Memcache(object):
         return value if value else None
 
 
-    def store(key, data, ttl=0):
+    def store(self, key, data, ttl=0):
         '''Stores the data at the specified key in the cache.'''
-        Memcache().__handle.set(key, data, ttl)
+        self.__handle.set(key, data, ttl)

@@ -58,6 +58,7 @@ class __DataStoreBase(object):
         self._connection_name = None
         self._charset = 'utf8'
         self._db_name = None
+        self._memcache = None
         self._memcache_key = None
         self._memcache_ttl = None
 
@@ -101,23 +102,29 @@ class RDBMSBase(__DataStoreBase):
 
     def memcache_purge(self):
         '''If the data has been cached, purge it.'''
-        if self._memcache_key is None:
+        if self._memcache_key is None or Context.env_unit_test():
             return
-        Memcache().purge(self._memcache_key)
+
+        self._memcache = Memcache()
+        self._memcache.purge(self._memcache_key)
 
 
     def memcache_retrieve(self):
         '''If the data needs to be cached, cache it.'''
-        if self._memcache_key is None:
+        if self._memcache_key is None or Context.env_unit_test():
             return None
-        return Memcache().retrieve(self._memcache_key)
+
+        self._memcache = Memcache()
+        return self._memcache.retrieve(self._memcache_key)
 
 
     def memcache_store(self, data):
         '''If there is data and it should be cached, cache it.'''
-        if self._memcache_key is None:
+        if self._memcache_key is None or Context.env_unit_test():
             return
-        Memcache.store(self._memcache_key, data, self._memcache_ttl)
+
+        self._memcache = Memcache()
+        self._memcache.store(self._memcache_key, data, self._memcache_ttl)
 
 
     def nth(self, index, sql, binds=tuple()):
@@ -179,6 +186,10 @@ class DataStoreMySQL(RDBMSBase):
         if self.__mysql:
             self.__mysql.close()
             self.__mysql = None
+
+        if self._memcache is not None:
+            self._memcache.close()
+            self._memcache = None
 
 
     def __close_cursor(self):

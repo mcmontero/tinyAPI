@@ -273,7 +273,7 @@ class Manager(object):
                  from information_schema.routines
                 where routine_name like '"""
                 + module.get_prefix()
-                + "\_%'")
+                + "\_%%'")
 
         for routine in routines:
             self.__notice('(+) '
@@ -416,7 +416,7 @@ class Manager(object):
                       table_name
                  from tables
                 where table_schema in (""" + self.__managed_schemas + """)
-                  and table_name like '%\_ref\_%'
+                  and table_name like '%%\_ref\_%%'
                 order by table_name asc""")
 
         content = """

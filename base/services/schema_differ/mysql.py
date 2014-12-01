@@ -160,6 +160,7 @@ class SchemaDiffer(object):
                  from key_column_usage k
                  left outer join referential_constraints c
                    on c.constraint_schema = k.constraint_schema
+                  and c.constraint_name = k.constraint_name
                   and k.constraint_name = k.constraint_name
                 where k.constraint_schema = %s
                   and k.constraint_name like '%%\_fk'"""

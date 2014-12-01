@@ -18,10 +18,6 @@ __all__ = [
 class Serializer(object):
     '''Serializes formatted SQL results for transportation via REST API.'''
 
-    def add_object(self, name):
-        return self
-
-
     def __add_object(self, key, value, path, elem, objects=tuple()):
         if objects[0] not in elem:
             elem[objects[0]] = {}

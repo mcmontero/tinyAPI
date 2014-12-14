@@ -105,7 +105,8 @@ class RDBMSBase(__DataStoreBase):
         if self._memcache_key is None or Context.env_unit_test():
             return
 
-        self._memcache = Memcache()
+        if self._memcache is None:
+            self._memcache = Memcache()
         self._memcache.purge(self._memcache_key)
 
 
@@ -114,7 +115,8 @@ class RDBMSBase(__DataStoreBase):
         if self._memcache_key is None or Context.env_unit_test():
             return None
 
-        self._memcache = Memcache()
+        if self._memcache is None:
+            self._memcache = Memcache()
         return self._memcache.retrieve(self._memcache_key)
 
 
@@ -123,7 +125,8 @@ class RDBMSBase(__DataStoreBase):
         if self._memcache_key is None or Context.env_unit_test():
             return
 
-        self._memcache = Memcache()
+        if self._memcache is None:
+            self._memcache = Memcache()
         self._memcache.store(self._memcache_key, data, self._memcache_ttl)
 
 

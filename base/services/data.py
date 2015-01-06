@@ -38,6 +38,9 @@ class Serializer(object):
 
 
     def to_json(self, record=tuple()):
+        if record is None:
+            return None
+
         self.data = {}
 
         for key, value in record.items():

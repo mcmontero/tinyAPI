@@ -92,6 +92,10 @@ class DataTestCase(unittest.TestCase):
         for em_address in valid:
             self.assertTrue(Validator().email_is_valid(em_address))
 
+
+    def test_serializer_to_json_none(self):
+        self.assertIsNone(Serializer().to_json(None))
+
 # ----- Main ------------------------------------------------------------------
 
 if __name__ == '__main__':

@@ -46,7 +46,7 @@ class Manager(object):
 
                 output = subprocess.check_output(
                             "export ENV_UNIT_TEST=1 ; "
-                            + "/usr/bin/python3 " + file + " -v ; "
+                            + sys.executable + " " + file + " -v ; "
                             + "exit 0",
                             stderr=subprocess.STDOUT,
                             shell=True).decode();

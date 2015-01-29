@@ -135,9 +135,17 @@ class RDBMSBase(__DataStoreBase):
         return None
 
 
-    def one(self, sql, binds=tuple()):
+    def one(self, sql, binds=tuple(), obj=None):
         '''Return the first (and only the first) of the result set.'''
-        return self.nth(0, sql, binds)
+        record = self.nth(0, sql, binds)
+        if obj is None:
+            return record
+
+        if record is None:
+            raise RuntimeError('no data is present to assign to object')
+
+        for key, value in record.items():
+            setattr(obj, key, value)
 
 
     def query(self, query, binds = []):

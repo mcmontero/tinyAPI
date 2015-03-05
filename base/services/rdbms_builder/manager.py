@@ -684,7 +684,7 @@ builtins._tinyapi_ref_unit_test = _tinyapi_ref_unit_test
         # | Step 4                                                           |
         # |                                                                  |
         # | Execute any SQL files that are intended to be loaded before the  |
-        # | the build.                                                       |
+        # | build.                                                           |
         # +------------------------------------------------------------------+
 
         if self.__cli is not None and self.__cli.args.all is True:
@@ -801,6 +801,16 @@ builtins._tinyapi_ref_unit_test = _tinyapi_ref_unit_test
         # +------------------------------------------------------------------+
         # | Step 16                                                          |
         # |                                                                  |
+        # | Execute any SQL files that are intended to be loaded after the   |
+        # | build.                                                           |
+        # +------------------------------------------------------------------+
+
+        if self.__cli is not None and self.__cli.args.all is True:
+            self.__execute_postbuild_scripts()
+
+        # +------------------------------------------------------------------+
+        # | Step 17                                                          |
+        # |                                                                  |
         # | Report interesting stats about the build.                        |
         # +------------------------------------------------------------------+
 
@@ -818,6 +828,29 @@ builtins._tinyapi_ref_unit_test = _tinyapi_ref_unit_test
         self.__notice('total # objects: '
                       + '{:,}'.format(self.__num_rdbms_objects),
                       1)
+
+
+    def __execute_postbuild_scripts(self):
+        self.__notice('Finding and executing post-build files...')
+
+        for path in ConfigManager.value('application dirs'):
+            dirs = find_dirs(path + '/*', 'rdbms_postbuild')
+            for dir in dirs:
+                self.__notice(dir, 1)
+                files = os.listdir(dir)
+                files.sort()
+                for file in files:
+                    if os.access(dir + '/' + file, os.X_OK):
+                        self.__notice(file, 2)
+
+                        try:
+                            subprocess.check_output(
+                                dir + '/' + file,
+                                stderr=subprocess.STDOUT,
+                                shell=True)
+                        except subprocess.CalledProcessError as e:
+                            raise RDBMSBuilderException(
+                                    e.output.rstrip().decode())
 
 
     def __execute_prebuild_scripts(self):

@@ -909,6 +909,8 @@ class Table(object):
             for val in row:
                 if val == 'current_timestamp':
                     vals.append('    current_timestamp')
+                elif re.match('current_date', str(val)):
+                    vals.append(val)
                 elif val is None:
                     vals.append('    null')
                 else:

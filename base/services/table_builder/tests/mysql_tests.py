@@ -1098,6 +1098,19 @@ add constraint abc_0_fk
                 .tbl('def')
                 .get_definition())
 
+
+    def test_money_column(self):
+        text = '''create table abc
+(
+    def float(53) not null
+) engine = innodb default charset = utf8 collate = utf8_unicode_ci;'''
+
+        self.assertEqual(
+            text,
+            tinyAPI.Table('db', 'abc')
+                .money('def', True)
+                .get_definition())
+
 # ----- Main ------------------------------------------------------------------
 
 if __name__ == '__main__':

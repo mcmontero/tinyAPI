@@ -783,6 +783,12 @@ class Table(object):
         return self
 
 
+    def money(self, name, not_null=False):
+        '''Define a column suitable for storing monetary values.'''
+        self.float(name, not_null, 53)
+        return self
+
+
     def get_db_name(self):
         '''Return the database name for this table.'''
         return self.__db_name

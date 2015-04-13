@@ -9,6 +9,7 @@ from tinyAPI.base.config import ConfigManager
 from tinyAPI.base.data_store.exception import DataStoreDuplicateKeyException
 from tinyAPI.base.utils import find_dirs, find_files
 
+import codecs
 import hashlib
 import importlib.machinery
 import os
@@ -162,7 +163,7 @@ class Manager(object):
                     if matches is not None:
                         module_name = matches.group(1).split('/')[-1]
 
-                        with open(file) as f:
+                        with codecs.open(file, 'r', 'utf-8') as f:
                             contents = f.read()
 
                         if contents != '':

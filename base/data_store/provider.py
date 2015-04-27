@@ -276,7 +276,11 @@ class DataStoreMySQL(RDBMSBase):
 
 
     def count(self, sql, binds=tuple()):
-        return list(self.nth(0, sql, binds).values())[0]
+        record = self.nth(0, sql, binds)
+        if record is None:
+            return None
+
+        return list(record.values())[0]
 
 
     def create(self, target, data=tuple(), return_insert_id=True):

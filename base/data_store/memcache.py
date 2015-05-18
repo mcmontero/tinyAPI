@@ -40,6 +40,12 @@ class Memcache(object):
         return value if value else None
 
 
+    def retrieve_multi(self, keys):
+        '''Retrieves the data stored for a number of keys from the cache.'''
+        values = self.__handle.get_multi(keys)
+        return values if values else None
+
+
     def store(self, key, data, ttl=0):
         '''Stores the data at the specified key in the cache.'''
         self.__handle.set(key, data, ttl)

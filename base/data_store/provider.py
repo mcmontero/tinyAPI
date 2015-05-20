@@ -63,6 +63,7 @@ class __DataStoreBase(object):
         self._memcache = None
         self._memcache_key = None
         self._memcache_ttl = None
+        self._cached_data = {}
 
 # ----- Public Classes --------------------------------------------------------
 
@@ -117,9 +118,16 @@ class RDBMSBase(__DataStoreBase):
         if self._memcache_key is None or Context.env_unit_test():
             return None
 
-        if self._memcache is None:
-            self._memcache = Memcache()
-        return self._memcache.retrieve(self._memcache_key)
+        data = self._cached_data.get(self._memcache_key, None)
+        if data is None:
+            if self._memcache is None:
+                self._memcache = Memcache()
+
+            data = self._memcache.retrieve(self._memcache_key)
+            if data is not None:
+                self._cached_data[self._memcache_key] = data
+
+        return data
 
 
     def memcache_store(self, data):
@@ -203,6 +211,7 @@ class DataStoreMySQL(RDBMSBase):
         if self._memcache is not None:
             self._memcache.close()
             self._memcache = None
+            self._cached_data = {}
 
 
     def __close_cursor(self):

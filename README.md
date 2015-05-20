@@ -26,6 +26,8 @@ PYTHON CONFIGURATION
 
     - pip3 install python3-memcached
 
+    - pip3 install mock
+
     - Create a module called
 
         tinyAPI_config.py

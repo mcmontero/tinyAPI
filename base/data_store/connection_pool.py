@@ -20,7 +20,8 @@ __all__ = [
 
 # ----- Thread Local Data -----------------------------------------------------
 
-_connection_pools = threading.local()
+_thread_local_data = threading.local()
+_thread_local_data.connection_pools = {}
 
 # ----- Public Classes --------------------------------------------------------
 
@@ -111,8 +112,8 @@ class DataStoreConnectionPool(object):
 
     @staticmethod
     def get(name):
-        return (_connection_pools[name]
-                    if name in _connection_pools else
+        return (_thread_local_data.connection_pools[name]
+                    if name in _thread_local_data.connection_pools else
                 None)
 
 
@@ -234,7 +235,7 @@ class DataStoreConnectionPool(object):
         if is_default is True:
             self.name = 'default'
 
-        _connection_pools[self.name] = self
+        _thread_local_data.connection_pools[self.name] = self
 
         self.__started = True
 

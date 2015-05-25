@@ -7,6 +7,8 @@ __author__ = 'Michael Montero <mcmontero@gmail.com>'
 from tinyAPI.base.config import ConfigManager
 from tinyAPI.base.data_store.provider import DataStoreMySQL
 
+import logging
+import random
 import re
 import time
 import tinyAPI
@@ -28,6 +30,8 @@ class _DataStorePooledMySQLConnection(object):
         self.__handle = handle
         self.__active_since = None
         self.__inactive_since = time.time()
+        self.requests = 0
+        self.hits = 0
         self.timeout = None
         self.connected = False
 
@@ -40,6 +44,7 @@ class _DataStorePooledMySQLConnection(object):
             raise RuntimeError(
                 'cannot get handle because it is already active')
 
+        self.requests += 1
         self.__maintain_connection()
 
         self.__active_since = time.time()
@@ -61,6 +66,8 @@ class _DataStorePooledMySQLConnection(object):
                 self.__handle.close()
                 self.__handle.connect()
                 self.connected = True
+            else:
+                self.hits += 1
 
 
     def release(self):
@@ -81,6 +88,10 @@ class DataStoreConnectionPool(object):
         self.__started = False
         self.__pool = {}
         self.__avail = []
+        self.__timeout = None
+        self.__log_file = None
+        self.__requests = 0
+        self.__hits = 0
         self.name = None
         self.connection_name = None
         self.database_name = None
@@ -116,6 +127,37 @@ class DataStoreConnectionPool(object):
 
         del self.__avail[0]
 
+        if tinyAPI.env_unit_test() is False and \
+           self.__log_file is not None and \
+           random.randint(1, 20) == 1:
+            logging.basicConfig(filename = self.__log_file)
+
+            lines = [
+                "----- tinyAPI Connection Pool Stats (start) -----------------"
+            ]
+
+            if self.__timeout <= 120:
+                lines.append("MySQL wait_timeout value is too log!")
+
+            requests = 0
+            hits = 0
+            for index, pooled_connection in self.__pool.items():
+                requests += pooled_connection.requests
+                hits += pooled_connection.hits
+
+            if requests > 0:
+                lines.append(
+                    "Pool hit ratio: " + str((hits / requests) * 100) + "%")
+            else:
+                lines.append(
+                    "Pool hit ratio is not available yet.")
+
+            lines.append(
+                "----- tinyAPI Connection Pool Stats (stop) ------------------")
+
+            logging.critical("\n".join(lines))
+            logging.shutdown()
+
         return self.__pool[index].get()
 
 
@@ -130,6 +172,11 @@ class DataStoreConnectionPool(object):
 
         self.__pool[conn.pool_index].release()
         self.__avail.append(conn.pool_index)
+        return self
+
+
+    def set_log_file(self, log_file):
+        self.__log_file = log_file
         return self
 
 
@@ -150,7 +197,6 @@ class DataStoreConnectionPool(object):
         self.database_name = database_name
         self.size = size
 
-        timeout = None
         if ConfigManager.value('data store') == 'mysql':
             for i in range(self.size):
                 self.__pool[i] = \
@@ -170,12 +216,12 @@ class DataStoreConnectionPool(object):
                 raise RuntimeError(
                     'cannot determine wait timeout value for MySQL')
 
-            timeout = int(record['Value'])
+            self.__timeout = int(record['Value'])
 
             self.release_dsh(dsh)
 
             for index, pooled_connection in self.__pool.items():
-                pooled_connection.set_timeout(timeout)
+                pooled_connection.set_timeout(self.__timeout)
         else:
             raise NotImplementedError()
 

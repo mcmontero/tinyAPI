@@ -145,6 +145,10 @@ class DataStoreConnectionPool(object):
                 requests += pooled_connection.requests
                 hits += pooled_connection.hits
 
+                lines.append('Connection #' + str(index) + ': '
+                             + 'requests = ' str(requests) + ', '
+                             + 'hits = ' str(hits))
+
             if requests > 0:
                 lines.append(
                     "Pool hit ratio: " + str((hits / requests) * 100) + "%")

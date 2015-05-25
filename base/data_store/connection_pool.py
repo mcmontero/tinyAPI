@@ -145,9 +145,10 @@ class DataStoreConnectionPool(object):
                 requests += pooled_connection.requests
                 hits += pooled_connection.hits
 
-                lines.append('Connection #' + str(index) + ': '
-                             + 'requests = ' str(requests) + ', '
-                             + 'hits = ' str(hits))
+                lines.append(
+                    'Connection #'+ str(index) + ': '
+                    + 'requests = ' + '{0:,}'.format(requests) + ', '
+                    + 'hits = ' + '{0:,}'.format(hits))
 
             if requests > 0:
                 lines.append(

@@ -10,6 +10,7 @@ from tinyAPI.base.data_store.provider import DataStoreMySQL
 import logging
 import random
 import re
+import threading
 import time
 import tinyAPI
 
@@ -19,7 +20,7 @@ __all__ = [
 
 # ----- Thread Local Data -----------------------------------------------------
 
-_connection_pools = {}
+_connection_pools = threading.local()
 
 # ----- Public Classes --------------------------------------------------------
 

@@ -129,14 +129,14 @@ class DataStoreConnectionPool(object):
 
         if tinyAPI.env_unit_test() is False and \
            self.__log_file is not None and \
-           random.randint(1, 20) == 1:
+           random.randint(1, 50) == 1:
             logging.basicConfig(filename = self.__log_file)
 
             lines = [
-                "----- tinyAPI Connection Pool Stats (start) -----------------"
+                "\n----- tinyAPI Connection Pool Stats (start) ----------------"
             ]
 
-            if self.__timeout <= 120:
+            if self.__timeout is not None and self.__timeout <= 120:
                 lines.append("MySQL wait_timeout value is too log!")
 
             requests = 0
@@ -153,7 +153,7 @@ class DataStoreConnectionPool(object):
                     "Pool hit ratio is not available yet.")
 
             lines.append(
-                "----- tinyAPI Connection Pool Stats (stop) ------------------")
+                "----- tinyAPI Connection Pool Stats (stop) -----------------")
 
             logging.critical("\n".join(lines))
             logging.shutdown()

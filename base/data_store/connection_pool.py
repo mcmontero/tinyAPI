@@ -122,12 +122,16 @@ class DataStoreConnectionPool(object):
             raise RuntimeError(
                 'no connections available; consider resizing pool')
 
+        self.__semaphore.acquire()
+
         if tinyAPI.env_unit_test() is True:
             index = 0
         else:
             index = self.__avail[0]
 
         del self.__avail[0]
+
+        self.__semaphore.release()
 
         if tinyAPI.env_unit_test() is False and \
            self.__log_file is not None and \
@@ -199,6 +203,7 @@ class DataStoreConnectionPool(object):
         if size <= 0:
             raise RuntimeError('size must be greater than or equal to 1')
 
+        self.__semaphore = threading.BoundedSemaphore(size)
         self.name = name
         self.connection_name = connection_name
         self.database_name = database_name

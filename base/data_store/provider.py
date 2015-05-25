@@ -64,6 +64,8 @@ class __DataStoreBase(object):
         self._memcache_key = None
         self._memcache_ttl = None
         self._cached_data = {}
+        self.is_pooled = False
+        self.pool_index = None
 
 # ----- Public Classes --------------------------------------------------------
 
@@ -205,12 +207,14 @@ class DataStoreMySQL(RDBMSBase):
         self.__close_cursor()
 
         if self.__mysql:
-            self.__mysql.close()
-            self.__mysql = None
+            if self.is_pooled is False:
+                self.__mysql.close()
+                self.__mysql = None
 
         if self._memcache is not None:
-            self._memcache.close()
-            self._memcache = None
+            if self.is_pooled is False:
+                self._memcache.close()
+                self._memcache = None
             self._cached_data = {}
 
 
@@ -234,7 +238,7 @@ class DataStoreMySQL(RDBMSBase):
                 self.__mysql.commit()
 
 
-    def __connect(self):
+    def connect(self):
         '''Perform the tasks required for connecting to the database.'''
         if self.__mysql:
             return
@@ -267,7 +271,7 @@ class DataStoreMySQL(RDBMSBase):
 
 
     def connection_id(self):
-        self.__connect()
+        self.connect()
         return self.__mysql.thread_id()
 
 
@@ -307,7 +311,7 @@ class DataStoreMySQL(RDBMSBase):
         sql += ', '.join(binds)
         sql += ')'
 
-        self.__connect()
+        self.connect()
 
         cursor = self.__get_cursor()
 
@@ -348,7 +352,7 @@ class DataStoreMySQL(RDBMSBase):
             sql += ' where ' + self.__convert_to_prepared(', ', data)
             binds = list(data.values())
 
-        self.__connect()
+        self.connect()
 
         cursor = self.__get_cursor()
 
@@ -427,7 +431,7 @@ class DataStoreMySQL(RDBMSBase):
             self._reset_memcache()
             return results_from_cache
 
-        self.__connect()
+        self.connect()
 
         is_select = False
         if re.match('^\(?select ', sql) or re.match('^show ', sql):

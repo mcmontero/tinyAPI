@@ -66,7 +66,7 @@ class __DataStoreBase(object):
         self._memcache_key = None
         self._memcache_ttl = None
         self._cached_data = {}
-        self._wait_timeout = 3600
+        self._wait_timeout = None
         self._inactive_since = time.time()
 
         self.persistent = True
@@ -202,6 +202,11 @@ class RDBMSBase(__DataStoreBase):
         return self
 
 
+    def set_wait_timeout(self, wait_timeout):
+        self._wait_timeout = wait_timeout
+        return self
+
+
 class DataStoreMySQL(RDBMSBase):
     '''Manages interactions with configured MySQL servers.'''
 
@@ -255,7 +260,7 @@ class DataStoreMySQL(RDBMSBase):
         '''Perform the tasks required for connecting to the database.'''
         if self.__mysql:
             if self.persistent:
-                if self._wait_timeout is not None and \
+                if self._wait_timeout is None or \
                    time.time() - self._inactive_since >= self._wait_timeout - 3:
                     self.__mysql.ping(True)
             return
@@ -507,31 +512,14 @@ class DataStoreProvider(object):
     '''Defines the main mechanism for retrieving a handle to a configured data
        store.'''
 
-    __persistent_connections = {}
-
-    def __init__(self):
-        self.pid = os.getpid()
-
-
-    def get_data_store_handle(self, persistent=False):
+    def get_data_store_handle(self):
         '''Get the active data store handle against which to execute
            operations.'''
         if ConfigManager.value('data store') == 'mysql':
             if not hasattr(self, '__dsh'):
-                if persistent is True:
-                    if self.pid not in self.__persistent_connections:
-                        self.__persistent_connections[self.pid] = \
-                            self.__get_new_connection()
-
-                    self.__dsh = self.__persistent_connections[self.pid]
-                else:
-                    self.__dsh = self.__get_new_connection()
+                self.__dsh = DataStoreMySQL()
 
             return self.__dsh
         else:
             raise DataStoreException(
                 'configured data store is not currently supported')
-
-
-    def __get_new_connection(self):
-        return DataStoreMySQL()

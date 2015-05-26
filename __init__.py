@@ -1,5 +1,6 @@
 # ----- Imports ---------------------------------------------------------------
 
+from .dsh import set_dsh
 from .dsh import dsh
 from importlib.machinery import SourceFileLoader
 from tinyAPI.base.config import ConfigManager

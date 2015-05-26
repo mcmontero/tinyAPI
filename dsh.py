@@ -24,3 +24,7 @@ def dsh():
         _thread_local_data.dsh = DataStoreProvider().get_data_store_handle()
 
     return _thread_local_data.dsh
+
+
+def set_dsh(handle):
+    _thread_local_data.dsh = handle

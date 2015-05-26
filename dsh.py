@@ -9,11 +9,16 @@ from tinyAPI.base.data_store.persistent_connections \
 from tinyAPI.base.data_store.provider \
     import DataStoreProvider
 
+import threading
 import tinyAPI
 
 __all__ = [
     'dsh'
 ]
+
+# ----- Thread Local Data -----------------------------------------------------
+
+_thread_local_data = threading.local()
 
 # ----- Public Functions  -----------------------------------------------------
 
@@ -22,4 +27,8 @@ def dsh():
     if tinyAPI.env_cli() is False:
         return DataStorePersistentConnections().get()
     else:
-        return DataStoreProvider().get_data_store_handle()
+        if not hasattr(_thread_local_data, 'dsh'):
+            _thread_local_data.dsh = \
+                DataStoreProvider().get_data_store_handle()
+
+        return _thread_local_data.dsh

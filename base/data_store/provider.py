@@ -545,6 +545,9 @@ class DataStoreProvider(object):
             if Context.env_unit_test() is False and random.randint(1, 50) == 1:
                 log_file = ConfigManager.value('app log file')
                 if log_file is not None:
+                    requests = _thread_local_data.dsh.requests
+                    hits = _thread_local_data.dsh.hits
+
                     lines = [
                         '\n----- Persistent Connection Stats (start) ---------'
                         + '---------------------------------------',

@@ -66,7 +66,7 @@ class __DataStoreBase(object):
         self._memcache_key = None
         self._memcache_ttl = None
         self._cached_data = {}
-        self._wait_timeout = None
+        self._wait_timeout = 3600
         self._inactive_since = time.time()
 
         self.persistent = True
@@ -225,8 +225,9 @@ class DataStoreMySQL(RDBMSBase):
                 self.__mysql = None
 
         if self._memcache is not None:
-            self._memcache.close()
-            self._memcache = None
+            if self.persistent is False:
+                self._memcache.close()
+                self._memcache = None
             self._cached_data = {}
 
 
@@ -285,12 +286,6 @@ class DataStoreMySQL(RDBMSBase):
 
         self.__mysql = pymysql.connect(**config)
 
-        record = self.one("show variables like 'wait_timeout'")
-        if record is None:
-            raise RuntimeError('could not determine wait_timeout for MySQL')
-        self.rollback()
-
-        self._wait_timeout = int(record['Value'])
 
 
     def connection_id(self):

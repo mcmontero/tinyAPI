@@ -548,13 +548,18 @@ class DataStoreProvider(object):
                     requests = _thread_local_data.dsh.requests
                     hits = _thread_local_data.dsh.hits
 
+                    try:
+                        hit_ratio = str((hits / requests) * 100) + '%'
+                    except ZeroDivisionError:
+                        hit_ratio = 'NA'
+
                     lines = [
                         '\n----- Persistent Connection Stats (start) ---------'
                         + '---------------------------------------',
                         'PID #' + str(self.pid),
                         'Requests: ' + '{0:,}'.format(requests),
                         'Hits: ' + '{0:,}'.format(hits),
-                        'Hit Ratio: ' + str((hits / requests) * 100),
+                        'Hit Ratio: ' + hit_ratio,
                         '----- Persistent Connection Stats (stop) ------------'
                         + '-----------------------------------'
                     ]

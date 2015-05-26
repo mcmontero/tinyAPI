@@ -544,7 +544,7 @@ class DataStoreProvider(object):
 
             if Context.env_unit_test() is False and \
                Context.env_cli() is False and \
-               random.randint(1, 500) == 1:
+               random.randint(1, 2000) == 1:
                 log_file = ConfigManager.value('app log file')
                 if log_file is not None:
                     requests = _thread_local_data.dsh.requests
@@ -556,14 +556,12 @@ class DataStoreProvider(object):
                         hit_ratio = 'NA'
 
                     lines = [
-                        '\n----- Persistent Connection Stats (start) ---------'
-                        + '-------------------',
+                        '\n----- Persistent Connection Stats (start) -----',
                         'PID #' + str(self.pid),
                         'Requests: ' + '{0:,}'.format(requests),
                         'Hits: ' + '{0:,}'.format(hits),
                         'Hit Ratio: ' + hit_ratio,
-                        '----- Persistent Connection Stats (stop) ------------'
-                        + '-----------------'
+                        '----- Persistent Connection Stats (stop) ------'
                     ]
 
                     logging.basicConfig(filename = log_file)

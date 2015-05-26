@@ -552,9 +552,9 @@ class DataStoreProvider(object):
                         '\n----- Persistent Connection Stats (start) ---------'
                         + '---------------------------------------',
                         'PID #' + str(self.pid),
-                        'Requests: ' + '{0:,}'.format(self.requests),
-                        'Hits: ' + '{0:,}'.format(self.hits),
-                        'Hit Ratio: ' + str((self.hits / self.requests) * 100),
+                        'Requests: ' + '{0:,}'.format(requests),
+                        'Hits: ' + '{0:,}'.format(hits),
+                        'Hit Ratio: ' + str((hits / requests) * 100),
                         '----- Persistent Connection Stats (stop) ------------'
                         + '-----------------------------------'
                     ]

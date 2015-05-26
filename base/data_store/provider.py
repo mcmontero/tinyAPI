@@ -64,8 +64,6 @@ class __DataStoreBase(object):
         self._memcache_key = None
         self._memcache_ttl = None
         self._cached_data = {}
-        self.is_pooled = False
-        self.pool_index = None
 
 # ----- Public Classes --------------------------------------------------------
 
@@ -205,17 +203,14 @@ class DataStoreMySQL(RDBMSBase):
     def close(self):
         '''Close the active database connection.'''
         self.__close_cursor()
-        self._inactive_since = time.time()
 
         if self.__mysql:
-            if self.is_pooled is False:
-                self.__mysql.close()
-                self.__mysql = None
+            self.__mysql.close()
+            self.__mysql = None
 
         if self._memcache is not None:
-            if self.is_pooled is False:
-                self._memcache.close()
-                self._memcache = None
+            self._memcache.close()
+            self._memcache = None
             self._cached_data = {}
 
 

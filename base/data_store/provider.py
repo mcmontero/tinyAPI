@@ -225,9 +225,8 @@ class DataStoreMySQL(RDBMSBase):
                 self.__mysql = None
 
         if self._memcache is not None:
-            if self.persistent is False:
-                self._memcache.close()
-                self._memcache = None
+            self._memcache.close()
+            self._memcache = None
             self._cached_data = {}
 
 

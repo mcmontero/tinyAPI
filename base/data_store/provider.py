@@ -10,8 +10,10 @@ from .exception import DataStoreForeignKeyException
 from tinyAPI.base.config import ConfigManager
 from tinyAPI.base.data_store.memcache import Memcache
 
+import logging
 import os
 import pymysql
+import random
 import re
 import threading
 import time
@@ -72,6 +74,8 @@ class __DataStoreBase(object):
         self._cached_data = {}
         self._ping_interval = 300
         self._inactive_since = time.time()
+        self.requests = 0
+        self.hits = 0
 
         self.persistent = True
         if Context.env_cli() is True:
@@ -257,11 +261,16 @@ class DataStoreMySQL(RDBMSBase):
 
     def connect(self):
         '''Perform the tasks required for connecting to the database.'''
+        if self.persistent is True:
+            self.requests += 1
+
         if self.__mysql:
-            if self.persistent:
+            if self.persistent is True:
                 if time.time() - self._inactive_since >= \
                    self._ping_interval - 3:
                     self.__mysql.ping(True)
+                else:
+                    self.hits += 1
             return
 
         if not self._connection_name:
@@ -532,6 +541,24 @@ class DataStoreProvider(object):
                 else:
                     _thread_local_data.dsh = \
                         DataStoreMySQL().set_persistent(False)
+
+            if Context.env_unit_test() is False and random.randint(1, 50) == 1:
+                log_file = ConfigManager.value('app log file')
+                if log_file is not None:
+                    lines = [
+                        '\n----- Persistent Connection Stats (start) ---------'
+                        + '---------------------------------------',
+                        'PID #' + str(self.pid),
+                        'Requests: ' + '{0:,}'.format(self.requests),
+                        'Hits: ' + '{0:,}'.format(self.hits),
+                        'Hit Ratio: ' + str((self.hits / self.requests) * 100),
+                        '----- Persistent Connection Stats (stop) ------------'
+                        + '-----------------------------------'
+                    ]
+
+                    logging.basicConfig(filename = log_file)
+                    logging.critical('\n'.join(lines))
+                    logging.shutdown()
 
             return _thread_local_data.dsh
         else:

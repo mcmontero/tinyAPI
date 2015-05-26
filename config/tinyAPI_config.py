@@ -5,6 +5,12 @@
 values = {
 
     ##
+    # The full path to a log file to which to log application messages
+    # specifically being written by tinyAPI.
+    ##
+    'app log file': None,
+
+    ##
     # Defines in which paths tinyAPI and your application live.
     ##
     'application dirs': ['/opt/tinyAPI'],

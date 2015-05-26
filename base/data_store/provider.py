@@ -555,13 +555,13 @@ class DataStoreProvider(object):
 
                     lines = [
                         '\n----- Persistent Connection Stats (start) ---------'
-                        + '---------------------------------------',
+                        + '-------------------',
                         'PID #' + str(self.pid),
                         'Requests: ' + '{0:,}'.format(requests),
                         'Hits: ' + '{0:,}'.format(hits),
                         'Hit Ratio: ' + hit_ratio,
                         '----- Persistent Connection Stats (stop) ------------'
-                        + '-----------------------------------'
+                        + '-----------------'
                     ]
 
                     logging.basicConfig(filename = log_file)

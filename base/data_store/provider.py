@@ -35,7 +35,7 @@ def assert_is_dsh(dsh):
 
 def autonomous_tx_start(connection, db):
     dsh = DataStoreMySQL()
-    dsh.persistent(False).select_db(connection, db)
+    dsh.select_db(connection, db)
     return dsh
 
 
@@ -64,12 +64,8 @@ class __DataStoreBase(object):
         self._memcache_key = None
         self._memcache_ttl = None
         self._cached_data = {}
-        self._wait_timeout = None
-        self._inactive_since = time.time()
-
-        self._persistent = True
-        if Context.env_cli() is True:
-            self._persistent = False
+        self.is_pooled = False
+        self.pool_index = None
 
 # ----- Public Classes --------------------------------------------------------
 
@@ -212,12 +208,12 @@ class DataStoreMySQL(RDBMSBase):
         self._inactive_since = time.time()
 
         if self.__mysql:
-            if self._persistent is False:
+            if self.is_pooled is False:
                 self.__mysql.close()
                 self.__mysql = None
 
         if self._memcache is not None:
-            if self._persistent is False:
+            if self.is_pooled is False:
                 self._memcache.close()
                 self._memcache = None
             self._cached_data = {}
@@ -246,11 +242,6 @@ class DataStoreMySQL(RDBMSBase):
     def connect(self):
         '''Perform the tasks required for connecting to the database.'''
         if self.__mysql:
-            if self._persistent is True:
-                if self._wait_timeout is not None and \
-                   (time.time() - self._inactive_since) >= \
-                   (self._wait_timeout - 3):
-                    self.__mysql.ping(True)
             return
 
         if not self._connection_name:
@@ -278,15 +269,6 @@ class DataStoreMySQL(RDBMSBase):
         }
 
         self.__mysql = pymysql.connect(**config)
-
-        if self._wait_timeout is None:
-            record = self.one("show variables like 'wait_timeout'")
-            if record is None:
-                raise RuntimeError(
-                    'cannot determine wait timeout value for MySQL')
-
-            self._wait_timeout = int(record['Value'])
-            self.rollback()
 
 
     def connection_id(self):
@@ -442,11 +424,6 @@ class DataStoreMySQL(RDBMSBase):
             return records[index]
         else:
             return None
-
-
-    def persistent(self, persistent):
-        self._persistent = persistent
-        return self
 
 
     def query(self, sql, binds=tuple()):

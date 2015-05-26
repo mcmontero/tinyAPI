@@ -544,7 +544,7 @@ class DataStoreProvider(object):
 
             if Context.env_unit_test() is False and \
                Context.env_cli() is False and \
-               random.randint(1, 2000) == 1:
+               random.randint(1, 10000) == 1:
                 log_file = ConfigManager.value('app log file')
                 if log_file is not None:
                     requests = _thread_local_data.dsh.requests

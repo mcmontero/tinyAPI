@@ -66,6 +66,8 @@ class __DataStoreBase(object):
         self._memcache_key = None
         self._memcache_ttl = None
         self._cached_data = {}
+        self._wait_timeout = None
+        self._inactive_since = time.time()
 
         self.persistent = True
         if tinyAPI.env_cli() is True:
@@ -215,6 +217,8 @@ class DataStoreMySQL(RDBMSBase):
         '''Close the active database connection.'''
         self.__close_cursor()
 
+        self._inactive_since = time.time()
+
         if self.__mysql:
             if self.persistent is False:
                 self.__mysql.close()
@@ -251,7 +255,9 @@ class DataStoreMySQL(RDBMSBase):
         '''Perform the tasks required for connecting to the database.'''
         if self.__mysql:
             if self.persistent:
-                self.__mysql.ping(True)
+                if self._wait_timeout is not None and \
+                   time.time() - self._inactive_since >= self._wait_timeout - 3:
+                    self.__mysql.ping(True)
             return
 
         if not self._connection_name:
@@ -279,6 +285,13 @@ class DataStoreMySQL(RDBMSBase):
         }
 
         self.__mysql = pymysql.connect(**config)
+
+        record = self.one("show variables like 'wait_timeout'")
+        if record is None:
+            raise RuntimeError('could not determine wait_timeout for MySQL')
+        self.rollback()
+
+        self._wait_timeout = int(record['Value'])
 
 
     def connection_id(self):

@@ -60,7 +60,6 @@ class DataStorePersistentConnections(object):
                 self.__connections[self.__pid] = \
                     DataStoreMySQL() \
                         .set_wait_timeout(self.__wait_timeout)
-
             else:
                 raise NotImplementedError()
 

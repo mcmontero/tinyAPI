@@ -9,15 +9,17 @@ from tinyAPI.base.data_store.persistent_connections \
 from tinyAPI.base.data_store.provider \
     import DataStoreProvider
 
+import tinyAPI
+
 __all__ = [
     'dsh'
 ]
 
 # ----- Public Functions  -----------------------------------------------------
 
-def dsh(persistent=True):
+def dsh():
     '''Returns a usable handle to the configured data store.'''
-    if persistent:
+    if tinyAPI.env_cli() is False:
         return DataStorePersistentConnections().get()
     else:
         return DataStoreProvider().get_data_store_handle()

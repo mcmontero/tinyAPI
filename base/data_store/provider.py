@@ -10,9 +10,11 @@ from .exception import DataStoreForeignKeyException
 from tinyAPI.base.config import ConfigManager
 from tinyAPI.base.data_store.memcache import Memcache
 
+import os
 import pymysql
 import re
 import time
+import tinyAPI
 import tinyAPI.base.context as Context
 
 __all__ = [
@@ -35,7 +37,7 @@ def assert_is_dsh(dsh):
 
 def autonomous_tx_start(connection, db):
     dsh = DataStoreMySQL()
-    dsh.select_db(connection, db)
+    dsh.set_persistent(False).select_db(connection, db)
     return dsh
 
 
@@ -64,6 +66,10 @@ class __DataStoreBase(object):
         self._memcache_key = None
         self._memcache_ttl = None
         self._cached_data = {}
+
+        self.persistent = True
+        if tinyAPI.env_cli() is True:
+            self.persistent = False
 
 # ----- Public Classes --------------------------------------------------------
 
@@ -168,7 +174,7 @@ class RDBMSBase(__DataStoreBase):
         self._memcache_ttl = None
 
 
-    def rollback():
+    def rollback(self):
         '''Manually rollback the active transaction.'''
         raise NotImplementedError
 
@@ -183,9 +189,14 @@ class RDBMSBase(__DataStoreBase):
         return self
 
 
-    def set_charset(charset):
+    def set_charset(self, charset):
         '''Set the character for the RDBMS.'''
         self._charset = charset
+        return self
+
+
+    def set_persistent(self, persistent):
+        self.persistent = persistent
         return self
 
 
@@ -205,12 +216,14 @@ class DataStoreMySQL(RDBMSBase):
         self.__close_cursor()
 
         if self.__mysql:
-            self.__mysql.close()
-            self.__mysql = None
+            if self.persistent is False:
+                self.__mysql.close()
+                self.__mysql = None
 
         if self._memcache is not None:
-            self._memcache.close()
-            self._memcache = None
+            if self.persistent is False:
+                self._memcache.close()
+                self._memcache = None
             self._cached_data = {}
 
 
@@ -237,6 +250,8 @@ class DataStoreMySQL(RDBMSBase):
     def connect(self):
         '''Perform the tasks required for connecting to the database.'''
         if self.__mysql:
+            if self.persistent:
+                self.__mysql.ping(True)
             return
 
         if not self._connection_name:
@@ -485,14 +500,31 @@ class DataStoreProvider(object):
     '''Defines the main mechanism for retrieving a handle to a configured data
        store.'''
 
-    def get_data_store_handle(self):
+    __persistent_connections = {}
+
+    def __init__(self):
+        self.pid = os.getpid()
+
+
+    def get_data_store_handle(self, persistent=False):
         '''Get the active data store handle against which to execute
            operations.'''
         if ConfigManager.value('data store') == 'mysql':
             if not hasattr(self, '__dsh'):
-                self.__dsh = DataStoreMySQL()
+                if persistent is True:
+                    if self.pid not in self.__persistent_connections:
+                        self.__persistent_connections[self.pid] = \
+                            self.__get_new_connection()
+
+                    self.__dsh = self.__persistent_connections[self.pid]
+                else:
+                    self.__dsh = self.__get_new_connection()
 
             return self.__dsh
         else:
             raise DataStoreException(
                 'configured data store is not currently supported')
+
+
+    def __get_new_connection(self):
+        return DataStoreMySQL()

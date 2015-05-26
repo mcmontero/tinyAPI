@@ -13,6 +13,7 @@ from tinyAPI.base.data_store.memcache import Memcache
 import os
 import pymysql
 import re
+import threading
 import time
 import tinyAPI.base.context as Context
 
@@ -25,6 +26,10 @@ __all__ = [
     'DataStoreProvider',
     'RDBMSBase'
 ]
+
+# ----- Thread Local Data -----------------------------------------------------
+
+_thread_local_data = threading.local()
 
 # ----- Public Functions ------------------------------------------------------
 
@@ -516,17 +521,19 @@ class DataStoreProvider(object):
         '''Get the active data store handle against which to execute
            operations.'''
         if ConfigManager.value('data store') == 'mysql':
-            if not hasattr(self, '__dsh'):
+            if not hasattr(_thread_local_data, 'dsh'):
                 if persistent is True:
                     if self.pid not in self.__persistent_connections:
                         self.__persistent_connections[self.pid] = \
                             DataStoreMySQL()
 
-                    self.__dsh = self.__persistent_connections[self.pid]
+                    _thread_local_data.dsh = \
+                        self.__persistent_connections[self.pid]
                 else:
-                    self.__dsh = DataStoreMySQL().set_persistent(False)
+                    _thread_local_data.dsh = \
+                        DataStoreMySQL().set_persistent(False)
 
-            return self.__dsh
+            return _thread_local_data.dsh
         else:
             raise DataStoreException(
                 'configured data store is not currently supported')

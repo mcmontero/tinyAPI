@@ -6,6 +6,7 @@ __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
 from tinyAPI.base.data_store.provider import DataStoreProvider
 
+import os
 import tinyAPI
 
 __all__ = [
@@ -14,10 +15,23 @@ __all__ = [
 
 # ----- Public Classes --------------------------------------------------------
 
+def get_connection():
+    return DataStorePersistentConnections().get_connection()
+
+
 class DataStorePersistentConnections(object):
     '''Configures the system for persistent connections.'''
 
-    def __init__(self):
-        self.__dsh = DataStoreProvider().get_data_store_handle()
-        tinyAPI.set_dsh(self.__dsh)
+    __connections = {}
 
+    def __init__(self):
+        self.pid = os.getpid()
+        if self.pid not in self.__connections:
+            self.__connections[self.pid] = \
+                DataStoreProvider().get_data_store_handle()
+            self.__connections[self.pid].select_db('master', 'core')
+            self.__connections[self.pid].one('select 1 from dual')
+
+
+    def get_connection(self):
+        return self.__connections[self.pid]

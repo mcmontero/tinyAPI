@@ -64,8 +64,7 @@ class __DataStoreBase(object):
         self._memcache_key = None
         self._memcache_ttl = None
         self._cached_data = {}
-        self.is_pooled = False
-        self.pool_index = None
+        self._persistent = True
 
 # ----- Public Classes --------------------------------------------------------
 
@@ -207,12 +206,12 @@ class DataStoreMySQL(RDBMSBase):
         self.__close_cursor()
 
         if self.__mysql:
-            if self.is_pooled is False:
+            if self._persistent is False:
                 self.__mysql.close()
                 self.__mysql = None
 
         if self._memcache is not None:
-            if self.is_pooled is False:
+            if self._persistent is False:
                 self._memcache.close()
                 self._memcache = None
             self._cached_data = {}
@@ -241,6 +240,8 @@ class DataStoreMySQL(RDBMSBase):
     def connect(self):
         '''Perform the tasks required for connecting to the database.'''
         if self.__mysql:
+            if self._persistent is True:
+                self.__mysql.ping(True)
             return
 
         if not self._connection_name:

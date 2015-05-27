@@ -256,6 +256,7 @@ class DataStoreMySQL(RDBMSBase):
             if Context.env_unit_test():
                 return
             else:
+                self.connect()
                 self.__mysql.commit()
 
 
@@ -513,6 +514,7 @@ class DataStoreMySQL(RDBMSBase):
                     'transaction cannot be rolled back because a database '
                     + 'connection has not been established yet')
         else:
+            self.connect()
             self.__mysql.rollback()
 
 

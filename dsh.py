@@ -14,7 +14,7 @@ __all__ = [
 
 # ----- Public Functions  -----------------------------------------------------
 
-def dsh():
+def dsh(persistent=True):
     '''Returns a usable handle to the configured data store.'''
     return DataStoreProvider().get_data_store_handle(
-            tinyAPI.env_cli() is not True)
+            tinyAPI.env_cli() is not True and persistent)

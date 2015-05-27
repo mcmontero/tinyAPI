@@ -8,12 +8,11 @@ from .exception import DataStoreException
 from .exception import DataStoreDuplicateKeyException
 from .exception import DataStoreForeignKeyException
 from tinyAPI.base.config import ConfigManager
+from tinyAPI.base.stats_logger import StatsLogger
 from tinyAPI.base.data_store.memcache import Memcache
 
-import logging
 import os
 import pymysql
-import random
 import re
 import threading
 import time
@@ -71,7 +70,6 @@ class __DataStoreBase(object):
         self._memcache = None
         self._memcache_key = None
         self._memcache_ttl = None
-        self._cached_data = {}
         self._ping_interval = 300
         self._inactive_since = time.time()
         self.requests = 0
@@ -134,16 +132,9 @@ class RDBMSBase(__DataStoreBase):
         if self._memcache_key is None or Context.env_unit_test():
             return None
 
-        data = self._cached_data.get(self._memcache_key, None)
-        if data is None:
-            if self._memcache is None:
-                self._memcache = Memcache()
-
-            data = self._memcache.retrieve(self._memcache_key)
-            if data is not None:
-                self._cached_data[self._memcache_key] = data
-
-        return data
+        if self._memcache is None:
+            self._memcache = Memcache()
+        return self._memcache.retrieve(self._memcache_key)
 
 
     def memcache_store(self, data):
@@ -236,7 +227,6 @@ class DataStoreMySQL(RDBMSBase):
             if self.persistent is False:
                 self._memcache.close()
                 self._memcache = None
-            self._cached_data = {}
 
 
     def __close_cursor(self):
@@ -544,31 +534,11 @@ class DataStoreProvider(object):
                     _thread_local_data.dsh = \
                         DataStoreMySQL().set_persistent(False)
 
-            if Context.env_unit_test() is False and \
-               Context.env_cli() is False and \
-               random.randint(1, 100000) == 1:
-                log_file = ConfigManager.value('app log file')
-                if log_file is not None:
-                    requests = _thread_local_data.dsh.requests
-                    hits = _thread_local_data.dsh.hits
-
-                    try:
-                        hit_ratio = str((hits / requests) * 100) + '%'
-                    except ZeroDivisionError:
-                        hit_ratio = 'NA'
-
-                    lines = [
-                        '\n----- Persistent Connection Stats (start) -----',
-                        'PID #' + str(self.pid),
-                        'Requests: ' + '{0:,}'.format(requests),
-                        'Hits: ' + '{0:,}'.format(hits),
-                        'Hit Ratio: ' + hit_ratio,
-                        '----- Persistent Connection Stats (stop) ------'
-                    ]
-
-                    logging.basicConfig(filename = log_file)
-                    logging.critical('\n'.join(lines))
-                    logging.shutdown()
+            StatsLogger().hit_ratio(
+                'Persistent Connection Stats',
+                _thread_local_data.dsh.requests,
+                _thread_local_data.dsh.hits,
+                self.pid)
 
             return _thread_local_data.dsh
         else:

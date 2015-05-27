@@ -48,7 +48,7 @@ class MemcacheTestCase(unittest.TestCase):
                 """select 1
                      from dual""")
 
-        self.assertEqual(2, client.get.call_count)
+        self.assertEqual(1, client.get.call_count)
 
         patcher_1.stop()
         patcher_2.stop()

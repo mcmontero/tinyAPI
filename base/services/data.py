@@ -25,8 +25,8 @@ class Serializer(object):
         path += '__' + objects[0] + '__'
 
         if len(objects) == 1:
-            var = re.sub(path, '', key)
-            if len(var) == 0:
+            var = key.replace(path, '')
+            if var == '':
                 raise SerializerException(
                     'could not format to JSON for key "' + key + '"')
 

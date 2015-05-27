@@ -18,23 +18,11 @@ __all__ = [
 class Serializer(object):
     '''Serializes formatted SQL results for transportation via REST API.'''
 
-    def __add_object(self, key, value, path, elem, objects=tuple()):
-        if objects[0] not in elem:
-            elem[objects[0]] = {}
+    def __add(self, entity, data=tuple()):
+        if entity not in data:
+            data[entity] = {}
 
-        path += '__' + objects[0] + '__'
-
-        if len(objects) == 1:
-            var = key.replace(path, '')
-            if var == '':
-                raise SerializerException(
-                    'could not format to JSON for key "' + key + '"')
-
-            elem[objects[0]][var] = value
-
-            return
-
-        self.__add_object(key, value, path, elem[objects[0]], objects[1:])
+        return data
 
 
     def to_json(self, record=tuple()):
@@ -44,11 +32,74 @@ class Serializer(object):
         self.data = {}
 
         for key, value in record.items():
-            objects = re.findall('__([A-Za-z0-9_]+?)__', key)
-            if len(objects) == 0:
+            parts = key.split('__')
+            count = len(parts)
+
+            if parts[-1] == '':
+                raise SerializerException(
+                    'could not format to JSON for key "{}"'
+                        .format(key))
+
+            if count == 1:
                 self.data[key] = value
+            elif count == 3:
+                self.__add(parts[1], self.data)
+
+                self.data \
+                    [parts[1]] \
+                    [parts[2]] = value
+            elif count == 5:
+                self.__add(
+                    parts[1],
+                    self.data)
+                self.__add(
+                    parts[3],
+                    self.data[parts[1]])
+
+                self.data \
+                    [parts[1]] \
+                    [parts[3]] \
+                    [parts[4]] = value
+            elif count == 7:
+                self.__add(
+                    parts[1],
+                    self.data)
+                self.__add(
+                    parts[3],
+                    self.data[parts[1]])
+                self.__add(
+                    parts[5],
+                    self.data[parts[1]][parts[3]])
+
+                self.data \
+                    [parts[1]] \
+                    [parts[3]] \
+                    [parts[5]] \
+                    [parts[6]] = value
+            elif count == 9:
+                self.__add(
+                    parts[1],
+                    self.data)
+                self.__add(
+                    parts[3],
+                    self.data[parts[1]])
+                self.__add(
+                    parts[5],
+                    self.data[parts[1]][parts[3]])
+                self.__add(
+                    parts[7],
+                    self.data[parts[1]][parts[3]][parts[5]])
+
+                self.data \
+                    [parts[1]] \
+                    [parts[3]] \
+                    [parts[5]] \
+                    [parts[7]] \
+                    [parts[8]] = value
             else:
-                self.__add_object(key, value, '', self.data, objects)
+                raise SerializerException(
+                    'depth of {} not supported'
+                        .format(count))
 
         return self.data
 

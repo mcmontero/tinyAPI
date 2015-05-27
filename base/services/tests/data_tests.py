@@ -96,6 +96,16 @@ class DataTestCase(unittest.TestCase):
     def test_serializer_to_json_none(self):
         self.assertIsNone(Serializer().to_json(None))
 
+
+    def test_serializer_to_json_depth_errors(self):
+        try:
+            Serializer().to_json({'__a____b____c____d____e__f': 123})
+
+            self.fail('Was able to serialize to JSON even though the depth '
+                      + 'is not supported.')
+        except SerializerException as e:
+            self.assertEqual('depth of 11 not supported', e.get_message())
+
 # ----- Main ------------------------------------------------------------------
 
 if __name__ == '__main__':

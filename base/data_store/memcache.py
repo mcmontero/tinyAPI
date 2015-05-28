@@ -32,6 +32,14 @@ class Memcache(object):
         self.__handle = None
 
 
+    def clear_local_data(self):
+        _thread_local_data.stats = {
+            'requests': 0,
+            'hits': 0
+        }
+        _thread_local_data.cache = {}
+
+
     def close(self):
         '''Closes all connections to Memcached servers.'''
         if self.__handle is not None:

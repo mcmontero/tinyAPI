@@ -57,6 +57,11 @@ class Memcache(object):
 
     def retrieve(self, key):
         '''Retrieves the data stored at the specified key from the cache.'''
+        StatsLogger().hit_ratio(
+            'Cache Stats',
+            _thread_local_data.stats['requests'],
+            _thread_local_data.stats['hits'])
+
         _thread_local_data.stats['requests'] += 1
 
         if key in _thread_local_data.cache:
@@ -68,16 +73,18 @@ class Memcache(object):
         value = self.__handle.get(key)
         _thread_local_data.cache[key] = value
 
-        StatsLogger().hit_ratio(
-            'Cache Stats',
-            _thread_local_data.stats['requests'],
-            _thread_local_data.stats['hits'])
-
         return value.copy() if value else None
 
 
     def retrieve_multi(self, keys):
         '''Retrieves the data stored for a number of keys from the cache.'''
+        StatsLogger().hit_ratio(
+            'Cache Stats',
+            _thread_local_data.stats['requests'],
+            _thread_local_data.stats['hits'])
+
+        _thread_local_data.stats['requests'] += 1
+
         if key in _thread_local_data.cache:
             _thread_local_data.stats['hits'] += 1
             return _thread_local_data.cache[key].copy()

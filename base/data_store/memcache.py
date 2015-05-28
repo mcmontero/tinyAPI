@@ -61,7 +61,7 @@ class Memcache(object):
 
         if key in _thread_local_data.cache:
             _thread_local_data.stats['hits'] += 1
-            return _thread_local_data.cache[key]
+            return _thread_local_data.cache[key].copy()
 
         self.__connect()
 
@@ -73,21 +73,21 @@ class Memcache(object):
             _thread_local_data.stats['requests'],
             _thread_local_data.stats['hits'])
 
-        return value if value else None
+        return value.copy() if value else None
 
 
     def retrieve_multi(self, keys):
         '''Retrieves the data stored for a number of keys from the cache.'''
         if key in _thread_local_data.cache:
             _thread_local_data.stats['hits'] += 1
-            return _thread_local_data.cache[key]
+            return _thread_local_data.cache[key].copy()
 
         self.__connect()
 
         values = self.__handle.get_multi(keys)
         _thread_local_data.cache[key] = values
 
-        return values if values else {}
+        return values.copy() if values else {}
 
 
     def store(self, key, data, ttl=0):

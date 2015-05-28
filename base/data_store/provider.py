@@ -144,7 +144,12 @@ class RDBMSBase(__DataStoreBase):
 
         if self._memcache is None:
             self._memcache = Memcache()
-        self._memcache.store(self._memcache_key, data, self._memcache_ttl)
+
+        self._memcache.store(
+            self._memcache_key,
+            data,
+            self._memcache_ttl,
+            self._memcache_ttl)
 
 
     def nth(self, index, sql, binds=tuple()):

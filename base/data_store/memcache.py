@@ -9,6 +9,7 @@ from tinyAPI.base.stats_logger import StatsLogger
 
 import memcache
 import threading
+import time
 
 __all__ = [
     'Memcache'
@@ -32,12 +33,13 @@ class Memcache(object):
         self.__handle = None
 
 
-    def clear_local_data(self):
-        _thread_local_data.stats = {
-            'requests': 0,
-            'hits': 0
-        }
-        _thread_local_data.cache = {}
+    def __add_to_local_cache(self, key, data=None, ttl=None):
+        if key not in _thread_local_data.cache:
+            _thread_local_data.cache[key] = {
+                'added': (time.time() if data is not None else None),
+                'data': data,
+                'ttl': ttl
+            }
 
 
     def close(self):
@@ -52,6 +54,20 @@ class Memcache(object):
             self.__handle = \
                 memcache.Client(
                     ConfigManager.value('memcached servers'), debug=0)
+
+
+    def __get_from_local_cache(self, key):
+        if key not in _thread_local_data.cache or \
+           _thread_local_data.cache[key]['data'] is None:
+            return None
+
+        added = _thread_local_data.cache[key]['added']
+        ttl = _thread_local_data.cache[key]['ttl']
+        if added is not None and ttl is not None:
+            if time.time() - added >= ttl:
+                return None
+
+        return _thread_local_data.cache[key]['data'].copy()
 
 
     def purge(self, key):
@@ -72,14 +88,16 @@ class Memcache(object):
 
         _thread_local_data.stats['requests'] += 1
 
-        if key in _thread_local_data.cache:
+        data = self.__get_from_local_cache(key)
+        if data is not None:
             _thread_local_data.stats['hits'] += 1
-            return _thread_local_data.cache[key].copy()
+            return data
 
         self.__connect()
 
         value = self.__handle.get(key)
-        _thread_local_data.cache[key] = value
+        if value is not None:
+            self.__add_to_local_cache(key, value)
 
         return value.copy() if value else None
 
@@ -93,21 +111,23 @@ class Memcache(object):
 
         _thread_local_data.stats['requests'] += 1
 
-        if key in _thread_local_data.cache:
+        data = self.__get_from_local_cache(key)
+        if data is not None:
             _thread_local_data.stats['hits'] += 1
-            return _thread_local_data.cache[key].copy()
+            return data
 
         self.__connect()
 
         values = self.__handle.get_multi(keys)
-        _thread_local_data.cache[key] = values
+        if values is not None:
+            self.__add_to_local_cache(key, values)
 
         return values.copy() if values else {}
 
 
-    def store(self, key, data, ttl=0):
+    def store(self, key, data, ttl=0, local_cache_ttl=None):
         '''Stores the data at the specified key in the cache.'''
         self.__connect()
 
         self.__handle.set(key, data, ttl)
-        _thread_local_data.cache[key] = data
+        self.__add_to_local_cache(key, data, local_cache_ttl)

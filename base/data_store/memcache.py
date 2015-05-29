@@ -33,6 +33,14 @@ class Memcache(object):
         self.__handle = None
 
 
+    def clear_local_cache(self):
+        _thread_local_data.stats = {
+            'requests': 0,
+            'hits': 0
+        }
+        _thread_local_data.cache = {}
+
+
     def __add_to_local_cache(self, key, data=None, ttl=None):
         if key not in _thread_local_data.cache:
             _thread_local_data.cache[key] = {

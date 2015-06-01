@@ -220,6 +220,7 @@ class DataStoreMySQL(RDBMSBase):
     def close(self):
         '''Close the active database connection.'''
         self.__close_cursor()
+        Memcache().clear_local_cache()
 
         self._inactive_since = time.time()
 

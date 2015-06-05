@@ -28,6 +28,8 @@ PYTHON CONFIGURATION
 
     - pip3 install mock
 
+    - pip3 install pylibmc
+
     - Create a module called
 
         tinyAPI_config.py

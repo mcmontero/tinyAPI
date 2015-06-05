@@ -7,7 +7,7 @@ __author__ = 'Michael Montero <mcmontero@gmail.com>'
 from tinyAPI.base.config import ConfigManager
 from tinyAPI.base.stats_logger import StatsLogger
 
-import memcache
+import pylibmc
 import threading
 import time
 
@@ -60,8 +60,12 @@ class Memcache(object):
     def __connect(self):
         if self.__handle is None:
             self.__handle = \
-                memcache.Client(
-                    ConfigManager.value('memcached servers'), debug=0)
+                pylibmc.Client(
+                    ConfigManager.value('memcached servers'),
+                    binary = True,
+                    behaviors = {
+                        'tcp_nodelay': True
+                    })
 
 
     def __get_from_local_cache(self, key):

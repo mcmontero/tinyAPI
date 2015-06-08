@@ -20,7 +20,7 @@ class MemcacheTestCase(unittest.TestCase):
 
 
     def test_cached_data(self):
-        patcher_1 = mock.patch('tinyAPI.base.data_store.memcache.memcache')
+        patcher_1 = mock.patch('tinyAPI.base.data_store.memcache.pylibmc')
         patcher_2 = mock.patch('tinyAPI.base.data_store.provider.Context')
 
         memcache = patcher_1.start()

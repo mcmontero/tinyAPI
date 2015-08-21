@@ -33,15 +33,28 @@ class ViewFlipper(object):
     def execute(self):
         self.__set_table_names()
 
+        record = tinyAPI.dsh().one(
+            """select table_collation
+                 from information_schema.tables
+                where table_schema = %s
+                  and table_name = %s""",
+            [self.__schema_name, self.__inactive_table_name])
+        if record is None or record['table_collation'] is None:
+            raise RuntimeError(
+                'could not determine table collation for "{}.{}"'
+                    .format(self.__schema_name, self.__inactive_table_name))
+
         tinyAPI.dsh().query(
-            "create or replace view "
-            + self.__schema_name
-            + "."
-            + self.view_name
-            + " as select * from "
-            + self.__schema_name
-            + "."
-            + self.__inactive_table_name)
+            "set collation_connection = '{}'"
+                .format(record['table_collation']))
+
+        tinyAPI.dsh().query(
+            "create or replace view {}.{} as select * from {}.{}"
+                .format(self.__schema_name,
+                        self.view_name,
+                        self.__schema_name,
+                        self.__inactive_table_name))
+
         tinyAPI.dsh().commit()
 
 

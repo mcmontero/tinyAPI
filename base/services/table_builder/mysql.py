@@ -1267,7 +1267,8 @@ class Table(object):
 
     def updated(self):
         '''Create a standardized date_updated column.'''
-        self.ts('date_updated', True)
+        self.ts('date_updated')
+        self.__active_column.default_value('0000-00-00 00:00:00')
         self.__active_column.on_update('current_timestamp')
         return self
 

@@ -64,8 +64,9 @@ class SchemaDifferMySQLTestCase(unittest.TestCase):
 
     def test_columns_to_modify(self):
         columns = self.__differ.get_columns_to_modify()
-        self.assertEqual(1, len(columns))
+        self.assertEqual(2, len(columns))
         self.assertTrue('schema_differ_cols.col_b' in columns)
+        self.assertTrue('schema_differ_updated_def_val.date_updated' in columns)
 
 
     def test_foreign_keys_to_create(self):

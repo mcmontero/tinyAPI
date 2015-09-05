@@ -601,8 +601,9 @@ class SchemaDiffer(object):
     def __get_column_terms(self, column_data):
         terms = []
 
-        if column_data['extra'] == 'auto_increment':
-            terms.append('auto_increment')
+        if column_data['extra'] is not None and \
+           len(column_data['extra']) > 0:
+            terms.append(column_data['extra'])
 
         if column_data['character_set_name']:
             terms.append('character set ' + column_data['character_set_name'])

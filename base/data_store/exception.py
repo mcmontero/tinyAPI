@@ -29,3 +29,10 @@ class DataStoreDuplicateKeyException(DataStoreException):
 class DataStoreForeignKeyException(DataStoreException):
     '''A foreign key constraint failed to match a parent record.'''
     pass
+
+class IllegalMixOfCollationsException(DataStoreException):
+    '''An illegal mix of collations error was generated.'''
+
+    def __init__(self, sql, binds):
+        super(IllegalMixOfCollationsException, self) \
+            .__init__('sql:\n\n"{}"\n-----\nbinds:\n\n{}'.format(sql, binds))

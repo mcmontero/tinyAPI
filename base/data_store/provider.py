@@ -7,6 +7,7 @@ __author__ = 'Michael Montero <mcmontero@gmail.com>'
 from .exception import DataStoreException
 from .exception import DataStoreDuplicateKeyException
 from .exception import DataStoreForeignKeyException
+from .exception import IllegalMixOfCollationsException
 from tinyAPI.base.config import ConfigManager
 from tinyAPI.base.stats_logger import StatsLogger
 from tinyAPI.base.data_store.memcache import Memcache
@@ -474,6 +475,8 @@ class DataStoreMySQL(RDBMSBase):
 
             if errno == 1062:
                 raise DataStoreDuplicateKeyException(message)
+            elif errno == 1271:
+                raise IllegalMixOfCollationsException(sql, binds)
             elif errno == 1452:
                 raise DataStoreForeignKeyException(message)
             else:

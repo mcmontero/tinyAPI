@@ -9,7 +9,8 @@ from tinyAPI.base.exception import tinyAPIException
 __all__ = [
     'DataStoreDuplicateKeyException',
     'DataStoreException',
-    'DataStoreForeignKeyException'
+    'DataStoreForeignKeyException',
+    'IllegalMixOfCollationsException'
 ]
 
 # ----- Public Classes --------------------------------------------------------

@@ -470,7 +470,7 @@ class DataStoreMySQL(RDBMSBase):
 
         try:
             cursor.execute(sql, binds)
-        except pymysql.err.IntegrityError as e:
+        except (pymysql.err.IntegrityError, pymysql.err.InternalError) as e:
             errno, message = e.args
 
             if errno == 1062:

@@ -1,0 +1,23 @@
+#!/usr/bin/env /usr/bin/python3
+
+# ----- Imports ---------------------------------------------------------------
+
+from tinyAPI.base.services.cli import cli_main
+
+import random
+
+# ----- Main ------------------------------------------------------------------
+
+def main(cli):
+    cli.header('Generate Encryption Key')
+
+    key = ''
+    for i in range(32):
+        key += chr(random.randint(33, 126))
+
+    cli.notice("Encryption key:")
+    cli.notice(key, 1)
+
+# ----- Instructions ----------------------------------------------------------
+
+cli_main(main)

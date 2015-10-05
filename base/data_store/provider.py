@@ -170,6 +170,8 @@ class RDBMSBase(__DataStoreBase):
         for key, value in record.items():
             setattr(obj, key, value)
 
+        return record
+
 
     def query(self, query, binds = []):
         '''Execute an arbitrary query and return all of the results.'''

@@ -27,3 +27,21 @@ create database if not exists schema_differ_target;
 identified by '';
 
 flush privileges;
+
+/*
++------------------------------------------------------------+
+| UNIT TEST DATABASE                                         |
++------------------------------------------------------------+
+*/
+
+drop database if exists tinyAPI;
+create data if not exists tinyAPI;
+
+     grant all privileges
+        on tinyAPI.*
+        to ''@'localhost'
+identified by '';
+
+flush privileges;
+
+

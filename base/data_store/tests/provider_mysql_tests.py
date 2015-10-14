@@ -20,6 +20,7 @@ class ProviderMySQLTestCase(unittest.TestCase):
             self.__execute_tests = True
 
             tinyAPI.dsh().select_db('local', 'tinyAPI')
+
             tinyAPI.dsh().query(
                 '''create table if not exists unit_test_table
                    (
@@ -30,7 +31,7 @@ class ProviderMySQLTestCase(unittest.TestCase):
 
     def tearDown(self):
         if self.__execute_tests is True:
-            tinyAPI.dsh().query('delete from unit_test_table')
+            tinyAPI.dsh().query('drop table unit_test_table')
 
 
     def test_adding_records_to_table(self):

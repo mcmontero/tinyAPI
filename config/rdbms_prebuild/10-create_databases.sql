@@ -35,7 +35,7 @@ flush privileges;
 */
 
 drop database if exists tinyAPI;
-create data if not exists tinyAPI;
+create database if not exists tinyAPI;
 
      grant all privileges
         on tinyAPI.*

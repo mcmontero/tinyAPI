@@ -22,13 +22,13 @@ class ProviderMySQLTestCase(unittest.TestCase):
             #tinyAPI.dsh().select_db('local', 'test')
             #tinyAPI.dsh().query('create database if not exists tinyAPI')
 
-            tinyAPI.dsh().select_db('local', 'tinyAPI')
-            tinyAPI.dsh().query(
-                '''create table if not exists tinyAPI.unit_test_table
-                   (
-                        id integer not null auto_increment primary key,
-                        value integer not null
-                   )''')
+            #tinyAPI.dsh().select_db('local', 'tinyAPI')
+            #tinyAPI.dsh().query(
+                #'''create table if not exists tinyAPI.unit_test_table
+                   #(
+                        #id integer not null auto_increment primary key,
+                        #value integer not null
+                   #)''')
 
 
     def tearDown(self):

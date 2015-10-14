@@ -24,7 +24,7 @@ class ProviderMySQLTestCase(unittest.TestCase):
 
             tinyAPI.dsh().select_db('local', 'tinyAPI')
             tinyAPI.dsh().query(
-                '''create table if not exists unit_test_table
+                '''create table if not exists tinyAPI.unit_test_table
                    (
                         id integer not null auto_increment primary key,
                         value integer not null

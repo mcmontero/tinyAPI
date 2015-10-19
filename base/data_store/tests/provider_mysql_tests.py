@@ -232,6 +232,30 @@ class ProviderMySQLTestCase(unittest.TestCase):
         tinyAPI.dsh().delete('unit_test_table', {'id': 1000})
         self.assertEqual(1, tinyAPI.dsh().get_row_count())
 
+
+    def test_last_row_id_with_select(self):
+        tinyAPI.dsh().query(
+            '''select 1
+                 from dual''')
+        self.assertIsNone(tinyAPI.dsh().get_last_row_id())
+
+
+    def test_last_row_id_with_insert(self):
+        tinyAPI.dsh().query(
+            '''insert into unit_test_table(
+                  value)
+               values(
+                  %s)''',
+            [99881122])
+        self.assertIsNotNone(tinyAPI.dsh().get_last_row_id())
+
+        record = tinyAPI.dsh().one(
+            """select value
+                 from unit_test_table
+                where id = %s""",
+            [tinyAPI.dsh().get_last_row_id()])
+        self.assertEqual(99881122, record['value'])
+
 # ----- Main ------------------------------------------------------------------
 
 if __name__ == '__main__':

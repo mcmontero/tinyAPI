@@ -218,6 +218,7 @@ class DataStoreMySQL(RDBMSBase):
         self.__mysql = None
         self.__cursor = None
         self.__row_count = None
+        self.__last_row_id = None
 
 
     def close(self):
@@ -431,6 +432,10 @@ class DataStoreMySQL(RDBMSBase):
         return self.__cursor
 
 
+    def get_last_row_id(self):
+        return self.__last_row_id
+
+
     def get_row_count(self):
         return self.__row_count
 
@@ -491,6 +496,7 @@ class DataStoreMySQL(RDBMSBase):
                                 sql, message, binds))
 
         self.__row_count = cursor.rowcount
+        self.__last_row_id = cursor.lastrowid
 
         if is_select:
             results = cursor.fetchall()

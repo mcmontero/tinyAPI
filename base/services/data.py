@@ -98,8 +98,8 @@ class Serializer(object):
                     [parts[8]] = value
             else:
                 raise SerializerException(
-                    'depth of {} not supported'
-                        .format(count))
+                    'depth of {} not supported for key "{}"'
+                        .format(count, key))
 
         return self.data
 

@@ -104,7 +104,9 @@ class DataTestCase(unittest.TestCase):
             self.fail('Was able to serialize to JSON even though the depth '
                       + 'is not supported.')
         except SerializerException as e:
-            self.assertEqual('depth of 11 not supported', e.get_message())
+            self.assertEqual(
+              'depth of 11 not supported for key "__a____b____c____d____e__f"',
+              e.get_message())
 
 # ----- Main ------------------------------------------------------------------
 

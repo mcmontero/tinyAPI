@@ -1,0 +1,179 @@
+#!/usr/bin/env /usr/bin/python3
+
+# ----- Imports ---------------------------------------------------------------
+
+from tinyAPI.base.services.cli import CLIOutputRenderer
+from tinyAPI.base.services.cli import cli_main
+
+import argparse
+import logging
+import pymysql
+import time
+import tinyAPI
+
+# ----- Configuration ---------------------------------------------------------
+
+args = argparse.ArgumentParser(
+    description = 'Attempts to detect transactions that are blocked or have '
+                  + 'been waiting too long to finish executing.'
+)
+
+args.add_argument(
+    'mysql_host',
+    help = 'The hostname of the MySQL server.'
+)
+
+args.add_argument(
+    'mysql_user',
+    help = 'The user to connect to MySQL as.'
+)
+
+args.add_argument(
+    'mysql_password',
+    help = 'The password to use to connect to MySQL.'
+)
+
+args.add_argument(
+    'log_file',
+    help = 'The path of a file to log potentially blocked transactions.'
+)
+
+args.add_argument(
+    'wait_time',
+    help = 'How long a transaction should be waiting before it is declared '
+           + 'blocked'
+)
+
+# ----- Main ------------------------------------------------------------------
+
+def main(cli):
+    cli.header('Log Waiting Transactions')
+
+    mysql = __connect_to_mysql(cli)
+    cursor = mysql.cursor(pymysql.cursors.DictCursor)
+
+    cursor.execute("show variables like 'performance_schema'")
+    results = cursor.fetchall()
+    if len(results) != 1 or \
+       results[0]['Variable_name'] != 'performance_schema' or \
+       results[0]['Value'] != 'ON':
+        raise RuntimeError('performance schedule is not enabled')
+
+    tracked_txs = {}
+    num_iterations = 0
+    while True:
+        num_iterations = cli.time_marker(num_iterations, 8640)
+        mysql.ping(True)
+
+        cli.notice('Retrieving InnoDB transactions...')
+        cursor.execute(
+            """select trx_id,
+                      trx_state,
+                      trx_mysql_thread_id,
+                      trx_query
+                 from information_schema.innodb_trx""")
+        results = cursor.fetchall()
+
+        if len(results) > 0:
+            __process_innodb_transactions(cli, cursor, results, tracked_txs)
+
+        cli.notice('Sleeping...')
+        time.sleep(10)
+
+# ----- Private Functions -----------------------------------------------------
+
+def __connect_to_mysql(cli):
+    cli.notice('Connecting to MySQL...')
+
+    config = {
+        'user': cli.args.mysql_user,
+        'passwd': cli.args.mysql_password,
+        'host': cli.args.mysql_host,
+        'autocommit': False
+    }
+    mysql = pymysql.connect(**config)
+
+    return mysql
+
+
+def __get_running_queries(cli, cursor):
+    cli.notice('pulling running queries', 3)
+
+    sql = "select event_name, sql_text, message_text from " \
+          + "performance_schema.events_statements_current"
+    cursor.execute(sql)
+    results = cursor.fetchall()
+
+    queries = []
+    for record in results:
+        if record['sql_text'] != sql:
+            queries.append(record)
+
+    return queries
+
+
+def __process_innodb_transactions(cli, cursor, results, tracked_txs):
+    cli.notice('Analyzing transactions...')
+
+    active_txs = []
+    for record in results:
+        active_txs.append(record['trx_id'])
+
+        if record['trx_state'] == 'LOCK WAIT':
+            trx_id = record['trx_id']
+
+            cli.notice('found transaction #{}'.format(trx_id), 1)
+
+            if trx_id not in tracked_txs:
+                tracked_txs[trx_id] = {
+                    'logged': False,
+                    'mysql_thread_id': record['trx_mysql_thread_id'],
+                    'query': record['trx_query'],
+                    'started': int(time.time())
+                }
+
+            if (int(time.time()) - tracked_txs[trx_id]['started']) >= \
+               int(cli.args.wait_time) and \
+               tracked_txs[trx_id]['logged'] is False:
+                cli.notice('transaction has been waiting too long; logging', 2)
+
+                running_queries = __get_running_queries(cli, cursor)
+
+                message = \
+                    '\n' + \
+                    CLIOutputRenderer() \
+                        .header('Wait Timeout: Traactions #{}'
+                                    .format(trx_id))
+                message += '\n+ MySQL Thread ID #{}\n' \
+                            .format(tracked_txs[trx_id]['mysql_thread_id'])
+                message += '    {}\n'.format(tracked_txs[trx_id]['query'])
+                message += '+ Active queries:\n'
+
+                for query in running_queries:
+                    message += '    {}\n    {}\n    {}\n    ---\n' \
+                                .format(query['event_name'],
+                                        query['sql_text'],
+                                        query['message_text']
+                                )
+
+                message += '\n# +-------------------------------------------' \
+                           + '-------------------------------+'
+
+                logging.basicConfig(filename = cli.args.log_file)
+                logging.critical(message)
+                logging.shutdown()
+
+                tracked_txs[trx_id]['logged'] = True
+
+
+    if len(tracked_txs) > 0:
+        cli.notice('pruning tracked transactions', 1)
+
+        trx_ids = tracked_txs.keys()
+        for trx_id in trx_ids:
+            if trx_id not in active_txs:
+                del tracked_txs[trx_id]
+
+# ----- Instructions ----------------------------------------------------------
+
+cli_main(main, args)

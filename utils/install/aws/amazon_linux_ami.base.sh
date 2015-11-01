@@ -87,3 +87,5 @@
 /bin/echo ""
 /bin/echo '+ Set "ChallengeResponseAuthentication yes" in /etc/ssh/sshd_config'
 /bin/echo '+ /etc/init.d/sshd restart'
+/bin/echo '+ /sbin/chkconfig memcached on'
+/bin/echo '+ /sbin/chkconfig mysqld on'

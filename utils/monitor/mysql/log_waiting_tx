@@ -169,7 +169,7 @@ def __process_innodb_transactions(cli, cursor, results, tracked_txs):
     if len(tracked_txs) > 0:
         cli.notice('pruning tracked transactions', 1)
 
-        trx_ids = tracked_txs.keys()
+        trx_ids = list(tracked_txs.keys())
         for trx_id in trx_ids:
             if trx_id not in active_txs:
                 del tracked_txs[trx_id]

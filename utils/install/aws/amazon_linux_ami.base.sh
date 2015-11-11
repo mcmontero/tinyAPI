@@ -64,7 +64,8 @@
  cd s3cmd; \
  /usr/bin/python setup.py install; \
  cd $HOME; \
- /bin/rm -rf s3cmd*)
+ /bin/rm -rf s3cmd*; \
+ /bin/ln -sf /usr/local/bin/s3cmd /usr/bin/s3cmd)
 
 /bin/echo "Installing Google Authenticator..."
 (cd $HOME; \

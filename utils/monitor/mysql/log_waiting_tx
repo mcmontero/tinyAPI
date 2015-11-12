@@ -142,7 +142,7 @@ def __process_innodb_transactions(cli, cursor, results, tracked_txs):
                 message = \
                     '\n' + \
                     CLIOutputRenderer() \
-                        .header('Wait Timeout: Traactions #{}'
+                        .header('Wait Timeout: Transactions #{}'
                                     .format(trx_id))
                 message += '\n+ MySQL Thread ID #{}\n' \
                             .format(tracked_txs[trx_id]['mysql_thread_id'])

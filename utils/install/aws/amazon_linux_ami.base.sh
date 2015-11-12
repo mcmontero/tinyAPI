@@ -49,6 +49,7 @@
 /usr/bin/yes | /usr/bin/pip3 install requests
 /usr/bin/yes | /usr/bin/pip3 install twilio
 /usr/bin/yes | /usr/bin/pip3 install geopy
+/usr/bin/yes | /usr/bin/pip3 install pylibmc
 
 /bin/echo "Upgrading pip 2..."
 /usr/local/bin/pip install --upgrade pip

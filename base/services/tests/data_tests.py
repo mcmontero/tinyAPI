@@ -108,6 +108,20 @@ class DataTestCase(unittest.TestCase):
               'depth of 11 not supported for key "__a____b____c____d____e__f"',
               e.get_message())
 
+
+    def test_latitude_is_valid(self):
+        self.assertTrue(Validator().latitude_is_valid(-90.01))
+        self.assertTrue(Validator().latitude_is_valid(90.01))
+        self.assertFalse(Validator().latitude_is_valid(-90.00))
+        self.assertFalse(Validator().latitude_is_valid(90.00))
+
+
+    def test_longitude_is_valid(self):
+        self.assertTrue(Validator().longitude_is_valid(-180.01))
+        self.assertTrue(Validator().longitude_is_valid(180.01))
+        self.assertFalse(Validator().longitude_is_valid(-180.00))
+        self.assertFalse(Validator().longitude_is_valid(180.00))
+
 # ----- Main ------------------------------------------------------------------
 
 if __name__ == '__main__':

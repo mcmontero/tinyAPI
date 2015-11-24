@@ -34,16 +34,12 @@ class CountryCodeTestCase(unittest.TestCase):
 
 
     def test_get(self):
-        self.assertEqual("1", CountryCode().get(233))
+        self.assertEqual("1", CountryCode().get(213))
 
 
     def test_get(self):
-        self.assertEqual("United States", CountryCode().get_country_name(233))
+        self.assertEqual("United States", CountryCode().get_country_name(213))
 
-
-    def test_get_not_stripped(self):
-        self.assertEqual("1784", CountryCode().get(188))
-        self.assertEqual("1-784", CountryCode().get(188, False))
 
 # ----- Main ------------------------------------------------------------------
 

@@ -19,6 +19,7 @@
 /usr/bin/yum -y install mailx
 /usr/bin/yum -y install postfix
 /usr/bin/yum -y install pam-devel
+/usr/bin/yum -y install telnet
 
 /bin/echo "Replacing sendmail with postfix..."
 /bin/rpm -e sendmail

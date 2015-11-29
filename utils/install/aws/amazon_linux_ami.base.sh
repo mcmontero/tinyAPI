@@ -11,7 +11,7 @@
 /usr/bin/yum -y install pcre-devel
 /usr/bin/yum -y install mysql-server
 /usr/bin/yum -y install mysql
-/usr/bin/yum -y install memcache
+/usr/bin/yum -y install memcached
 /usr/bin/yum -y install libmemcached
 /usr/bin/yum -y install libmemcached-devel
 /usr/bin/yum -y install ImageMagick
@@ -50,6 +50,7 @@
 /usr/bin/yes | /usr/bin/pip3 install twilio
 /usr/bin/yes | /usr/bin/pip3 install geopy
 /usr/bin/yes | /usr/bin/pip3 install pylibmc
+/usr/bin/yes | /usr/bin/pip3 install mock
 
 /bin/echo "Upgrading pip 2..."
 /usr/local/bin/pip install --upgrade pip

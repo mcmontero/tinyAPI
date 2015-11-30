@@ -52,6 +52,7 @@
 /usr/bin/yes | /usr/bin/pip3 install geopy
 /usr/bin/yes | /usr/bin/pip3 install pylibmc
 /usr/bin/yes | /usr/bin/pip3 install mock
+/usr/bin/yes | /usr/bin/pip3 install phonenumbers
 
 /bin/echo "Upgrading pip 2..."
 /usr/local/bin/pip install --upgrade pip

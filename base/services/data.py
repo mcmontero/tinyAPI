@@ -143,7 +143,10 @@ class Validator(object):
 
 
     def phone_number_is_valid(self, phone_number):
-        p = phonenumbers.parse(phone_number, None)
+        try:
+            p = phonenumbers.parse(phone_number, None)
+        except phonenumbers.phonenumberutil.NumberParseException:
+            return False
 
         return phonenumbers.is_possible_number(p) and \
                phonenumbers.is_valid_number(p)

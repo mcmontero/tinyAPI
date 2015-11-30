@@ -8,6 +8,7 @@ from tinyAPI.base.services.data import Serializer
 from tinyAPI.base.services.data import Validator
 from tinyAPI.base.services.exception import SerializerException
 
+import phonenumbers
 import tinyAPI
 import unittest
 
@@ -121,6 +122,41 @@ class DataTestCase(unittest.TestCase):
         self.assertTrue(Validator().longitude_is_valid(180.01))
         self.assertFalse(Validator().longitude_is_valid(-180.00))
         self.assertFalse(Validator().longitude_is_valid(180.00))
+
+
+    def test_non_us_phone_number(self):
+        p = phonenumbers.parse('+442083661177', None)
+        self.assertEqual(44, p.country_code)
+        self.assertEqual(2083661177, p.national_number)
+
+
+    def test_us_phone_number(self):
+        p = phonenumbers.parse('+17184734811', None)
+        self.assertEqual(1, p.country_code)
+        self.assertEqual(7184734811, p.national_number)
+
+
+    def test_is_valid_number(self):
+        p = phonenumbers.parse('+11234567890')
+        self.assertFalse(phonenumbers.is_possible_number(p))
+        self.assertFalse(phonenumbers.is_valid_number(p))
+
+        p = phonenumbers.parse('+17184734811')
+        self.assertTrue(phonenumbers.is_possible_number(p))
+        self.assertTrue(phonenumbers.is_valid_number(p))
+
+
+    def test_formatting_e164(self):
+        p = phonenumbers.parse('+17184734811')
+        self.assertEqual(
+            '+17184734811',
+            phonenumbers.format_number(p, phonenumbers.PhoneNumberFormat.E164)
+        )
+
+
+    def test_phone_number_is_valid(self):
+        self.assertFalse(Validator().phone_number_is_valid('+11234567890'))
+        self.assertTrue(Validator().phone_number_is_valid('+17184734811'))
 
 # ----- Main ------------------------------------------------------------------
 

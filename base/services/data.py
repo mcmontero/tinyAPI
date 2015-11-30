@@ -6,6 +6,7 @@ __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
 from .exception import SerializerException
 
+import phonenumbers
 import re
 
 __all__ = [
@@ -139,3 +140,10 @@ class Validator(object):
 
     def longitude_is_valid(self, longitude):
         return longitude < -180.00 or longitude > 180.00
+
+
+    def phone_number_is_valid(self, phone_number):
+        p = phonenumbers.parse(phone_number, None)
+
+        return phonenumbers.is_possible_number(p) and \
+               phonenumbers.is_valid_number(p)

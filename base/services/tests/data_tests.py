@@ -111,17 +111,17 @@ class DataTestCase(unittest.TestCase):
 
 
     def test_latitude_is_valid(self):
-        self.assertTrue(Validator().latitude_is_valid(-90.01))
-        self.assertTrue(Validator().latitude_is_valid(90.01))
-        self.assertFalse(Validator().latitude_is_valid(-90.00))
-        self.assertFalse(Validator().latitude_is_valid(90.00))
+        self.assertTrue(Validator().latitude_is_valid(-90.00))
+        self.assertTrue(Validator().latitude_is_valid(90.00))
+        self.assertFalse(Validator().latitude_is_valid(-90.01))
+        self.assertFalse(Validator().latitude_is_valid(90.01))
 
 
     def test_longitude_is_valid(self):
-        self.assertTrue(Validator().longitude_is_valid(-180.01))
-        self.assertTrue(Validator().longitude_is_valid(180.01))
-        self.assertFalse(Validator().longitude_is_valid(-180.00))
-        self.assertFalse(Validator().longitude_is_valid(180.00))
+        self.assertTrue(Validator().longitude_is_valid(-180.00))
+        self.assertTrue(Validator().longitude_is_valid(180.00))
+        self.assertFalse(Validator().longitude_is_valid(-180.01))
+        self.assertFalse(Validator().longitude_is_valid(180.01))
 
 
     def test_non_us_phone_number(self):

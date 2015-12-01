@@ -135,11 +135,11 @@ class Validator(object):
 
 
     def latitude_is_valid(self, latitude):
-        return latitude < -90.00 or latitude > 90.00
+        return latitude >= -90.00 and latitude <= 90.00
 
 
     def longitude_is_valid(self, longitude):
-        return longitude < -180.00 or longitude > 180.00
+        return longitude >= -180.00 and longitude <= 180.00
 
 
     def phone_number_is_valid(self, phone_number):

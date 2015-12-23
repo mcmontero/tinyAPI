@@ -10,6 +10,11 @@ class CountryCode(object):
     '''
 
     codes = {
+        213: {
+            "code": "1",
+            "country_name": "United States"
+        },
+
         1: {
             "code": "93",
             "country_name": "Afghanistan"
@@ -1018,11 +1023,6 @@ class CountryCode(object):
         212: {
             "code": "44",
             "country_name": "United Kingdom"
-        },
-
-        213: {
-            "code": "1",
-            "country_name": "United States"
         },
 
         214: {

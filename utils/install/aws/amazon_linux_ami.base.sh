@@ -11,6 +11,7 @@
 /usr/bin/yum -y install pcre-devel
 /usr/bin/yum -y install mysql-server
 /usr/bin/yum -y install mysql
+/usr/bin/yum -y install mysql-devel
 /usr/bin/yum -y install memcached
 /usr/bin/yum -y install libmemcached
 /usr/bin/yum -y install libmemcached-devel

@@ -351,20 +351,18 @@ class DataStoreMySQL(RDBMSBase):
         try:
             cursor.execute(sql, vals)
         except mysql.connector.errors.IntegrityError as e:
-            errno, message = e.args
-
-            if errno == 1062:
-                raise DataStoreDuplicateKeyException(message)
-            elif errno == 1452:
-                raise DataStoreForeignKeyException(message)
+            if e.errno == 1062:
+                raise DataStoreDuplicateKeyException(e.msg)
+            elif e.errno == 1452:
+                raise DataStoreForeignKeyException(e.msg)
             else:
                 raise
         except mysql.connector.errors.ProgrammingError as e:
-            errno, message = e.args
-
             raise DataStoreException(
                     self.__format_query_execution_error(
-                                sql, message, binds))
+                        sql, e.msg, binds
+                    )
+                  )
 
         self.__row_count = cursor.rowcount
 
@@ -483,29 +481,26 @@ class DataStoreMySQL(RDBMSBase):
             cursor.execute(sql, binds)
         except (mysql.connector.errors.IntegrityError,
                 mysql.connector.errors.InternalError) as e:
-            errno, message = e.args
-
-            if errno == 1062:
-                raise DataStoreDuplicateKeyException(message)
-            elif errno == 1271:
+            if e.errno == 1062:
+                raise DataStoreDuplicateKeyException(e.msg)
+            elif e.errno == 1271:
                 raise IllegalMixOfCollationsException(sql, binds)
-            elif errno == 1452:
-                raise DataStoreForeignKeyException(message)
+            elif e.errno == 1452:
+                raise DataStoreForeignKeyException(e.msg)
             else:
                 raise
         except mysql.connector.errors.ProgrammingError as e:
-            errno, message = e.args
-
             raise DataStoreException(
                     self.__format_query_execution_error(
-                                sql, message, binds))
+                        sql, e.msg, binds
+                    )
+                  )
 
         self.__row_count = cursor.rowcount
         self.__last_row_id = cursor.lastrowid
 
         if is_select:
             results = cursor.fetchall()
-            print(results)
             if results == ():
                 results = []
 

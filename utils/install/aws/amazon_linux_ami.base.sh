@@ -54,6 +54,7 @@
 /usr/bin/yes | /usr/bin/pip3 install pylibmc
 /usr/bin/yes | /usr/bin/pip3 install mock
 /usr/bin/yes | /usr/bin/pip3 install phonenumbers
+/usr/bin/yes | /usr/bin/pip3 install boto
 
 /bin/echo "Upgrading pip 2..."
 /usr/local/bin/pip install --upgrade pip

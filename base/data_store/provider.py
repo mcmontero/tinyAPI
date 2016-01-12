@@ -299,6 +299,11 @@ class DataStoreMySQL(RDBMSBase):
             'user': connection_data[self._connection_name][1]
         }
 
+        if mysql.connector.version.VERSION[0] < 2 or \
+           mysql.connector.version.VERSION[1] < 1 or \
+           mysql.connector.version.VERSION[2] < 3:
+            del config['use_pure']
+
         self.__mysql = mysql.connector.connect(**config)
 
 

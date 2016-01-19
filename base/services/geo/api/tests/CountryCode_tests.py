@@ -34,11 +34,11 @@ class CountryCodeTestCase(unittest.TestCase):
 
 
     def test_get(self):
-        self.assertEqual("1", CountryCode().get(213))
+        self.assertEqual("1", CountryCode().get(1))
 
 
     def test_get(self):
-        self.assertEqual("United States", CountryCode().get_country_name(213))
+        self.assertEqual("United States", CountryCode().get_country_name(1))
 
 
 # ----- Main ------------------------------------------------------------------

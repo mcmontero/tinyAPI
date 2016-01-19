@@ -509,16 +509,7 @@ class DataStoreMySQL(RDBMSBase):
             if results == ():
                 results = []
 
-            r = []
-            for row in results:
-                new_row = {}
-                for key, value in row.items():
-                    if not isinstance(key, str):
-                        key = key.decode()
-                    new_row[key] = value
-                r.append(new_row)
-
-            results = r
+            results = self.__rows_to_dict(results)
 
             self.memcache_store(results)
         else:
@@ -540,6 +531,19 @@ class DataStoreMySQL(RDBMSBase):
         else:
             self.connect()
             self.__mysql.rollback()
+
+
+    def __rows_to_dict(self, data=tuple()):
+        results = []
+        for row in data:
+            new_row = {}
+            for key, value in row.items():
+                if not isinstance(key, str):
+                    key = key.decode()
+                new_row[key] = value
+            results.append(new_row)
+
+        return results
 
 
 class DataStoreProvider(object):

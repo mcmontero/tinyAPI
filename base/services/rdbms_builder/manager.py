@@ -475,6 +475,7 @@ builtins._tinyapi_ref_unit_test = _tinyapi_ref_unit_test
                               + item['value'])
                 value = re.sub('_ref_', '_', value)
                 value = re.sub('[_]+', '_', value)
+                value = re.sub('[_]+$', '', value)
 
                 content += ('builtins.'
                             + value.upper()

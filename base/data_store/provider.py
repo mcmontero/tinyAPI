@@ -12,8 +12,8 @@ from tinyAPI.base.config import ConfigManager
 from tinyAPI.base.stats_logger import StatsLogger
 from tinyAPI.base.data_store.memcache import Memcache
 
+import mysql.connector
 import os
-import pymysql
 import re
 import threading
 import time
@@ -290,21 +290,27 @@ class DataStoreMySQL(RDBMSBase):
                 + 'selected')
 
         config = {
-            'user': connection_data[self._connection_name][1],
-            'passwd': connection_data[self._connection_name][2],
-            'host': connection_data[self._connection_name][0],
-            'database': self._db_name,
+            'autocommit': False,
             'charset': self._charset,
-            'autocommit': False
+            'database': self._db_name,
+            'host': connection_data[self._connection_name][0],
+            'password': connection_data[self._connection_name][2],
+            'use_pure': False,
+            'user': connection_data[self._connection_name][1]
         }
 
-        self.__mysql = pymysql.connect(**config)
+        if mysql.connector.version.VERSION[0] < 2 or \
+           mysql.connector.version.VERSION[1] < 1 or \
+           mysql.connector.version.VERSION[2] < 3:
+            del config['use_pure']
+
+        self.__mysql = mysql.connector.connect(**config)
 
 
 
     def connection_id(self):
         self.connect()
-        return self.__mysql.thread_id()
+        return self.__mysql.connection_id
 
 
     def __convert_to_prepared(self, separator, data=tuple()):
@@ -349,21 +355,19 @@ class DataStoreMySQL(RDBMSBase):
 
         try:
             cursor.execute(sql, vals)
-        except pymysql.err.IntegrityError as e:
-            errno, message = e.args
-
-            if errno == 1062:
-                raise DataStoreDuplicateKeyException(message)
-            elif errno == 1452:
-                raise DataStoreForeignKeyException(message)
+        except mysql.connector.errors.IntegrityError as e:
+            if e.errno == 1062:
+                raise DataStoreDuplicateKeyException(e.msg)
+            elif e.errno == 1452:
+                raise DataStoreForeignKeyException(e.msg)
             else:
                 raise
-        except pymysql.err.ProgrammingError as e:
-            errno, message = e.args
-
+        except mysql.connector.errors.ProgrammingError as e:
             raise DataStoreException(
                     self.__format_query_execution_error(
-                                sql, message, binds))
+                        sql, e.msg, binds
+                    )
+                  )
 
         self.__row_count = cursor.rowcount
 
@@ -427,13 +431,17 @@ class DataStoreMySQL(RDBMSBase):
         if self.__cursor is not None:
             return self.__cursor
 
-        self.__cursor = self.__mysql.cursor(pymysql.cursors.DictCursor)
+        self.__cursor = self.__mysql.cursor(dictionary = True)
 
         return self.__cursor
 
 
     def get_last_row_id(self):
-        return self.__last_row_id
+        return \
+            self.__last_row_id \
+                if self.__last_row_id is not None and \
+                   self.__last_row_id is not 0 else \
+            None
 
 
     def get_row_count(self):
@@ -454,7 +462,6 @@ class DataStoreMySQL(RDBMSBase):
 
     def nth(self, index, sql, binds=tuple()):
         records = self.query(sql, binds)
-
         if index < len(records):
             return records[index]
         else:
@@ -477,23 +484,22 @@ class DataStoreMySQL(RDBMSBase):
 
         try:
             cursor.execute(sql, binds)
-        except (pymysql.err.IntegrityError, pymysql.err.InternalError) as e:
-            errno, message = e.args
-
-            if errno == 1062:
-                raise DataStoreDuplicateKeyException(message)
-            elif errno == 1271:
+        except (mysql.connector.errors.IntegrityError,
+                mysql.connector.errors.InternalError) as e:
+            if e.errno == 1062:
+                raise DataStoreDuplicateKeyException(e.msg)
+            elif e.errno == 1271:
                 raise IllegalMixOfCollationsException(sql, binds)
-            elif errno == 1452:
-                raise DataStoreForeignKeyException(message)
+            elif e.errno == 1452:
+                raise DataStoreForeignKeyException(e.msg)
             else:
                 raise
-        except pymysql.err.ProgrammingError as e:
-            errno, message = e.args
-
+        except mysql.connector.errors.ProgrammingError as e:
             raise DataStoreException(
                     self.__format_query_execution_error(
-                                sql, message, binds))
+                        sql, e.msg, binds
+                    )
+                  )
 
         self.__row_count = cursor.rowcount
         self.__last_row_id = cursor.lastrowid
@@ -502,6 +508,8 @@ class DataStoreMySQL(RDBMSBase):
             results = cursor.fetchall()
             if results == ():
                 results = []
+
+            results = self.__rows_to_dict(results)
 
             self.memcache_store(results)
         else:
@@ -523,6 +531,19 @@ class DataStoreMySQL(RDBMSBase):
         else:
             self.connect()
             self.__mysql.rollback()
+
+
+    def __rows_to_dict(self, data=tuple()):
+        results = []
+        for row in data:
+            new_row = {}
+            for key, value in row.items():
+                if not isinstance(key, str):
+                    key = key.decode()
+                new_row[key] = value
+            results.append(new_row)
+
+        return results
 
 
 class DataStoreProvider(object):

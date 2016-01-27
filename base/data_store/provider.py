@@ -71,7 +71,7 @@ class __DataStoreBase(object):
         self._memcache = None
         self._memcache_key = None
         self._memcache_ttl = None
-        self._ping_interval = 300
+        self._ping_interval = 3600
         self._inactive_since = time.time()
         self.requests = 0
         self.hits = 0
@@ -266,12 +266,7 @@ class DataStoreMySQL(RDBMSBase):
             self.requests += 1
 
         if self.__mysql:
-            if self.persistent is True:
-                if time.time() - self._inactive_since >= \
-                   self._ping_interval - 3:
-                    self.__mysql.ping(True)
-                else:
-                    self.hits += 1
+            self.__ping()
             return
 
         if not self._connection_name:
@@ -431,7 +426,8 @@ class DataStoreMySQL(RDBMSBase):
         if self.__cursor is not None:
             return self.__cursor
 
-        self.__cursor = self.__mysql.cursor(dictionary = True)
+        self.__ping()
+        self.__cursor = self.__mysql.cursor(dictionary=True)
 
         return self.__cursor
 
@@ -466,6 +462,14 @@ class DataStoreMySQL(RDBMSBase):
             return records[index]
         else:
             return None
+
+
+    def __ping(self):
+        if self.persistent is True:
+            if self.__should_ping() is True:
+                self.__mysql.ping(reconnect=True, attempts=2, delay=2)
+            else:
+                self.hits += 1
 
 
     def query(self, sql, binds=tuple()):
@@ -544,6 +548,10 @@ class DataStoreMySQL(RDBMSBase):
             results.append(new_row)
 
         return results
+
+
+    def __should_ping(self):
+        return time.time() - self._inactive_since >= self._ping_interval - 3
 
 
 class DataStoreProvider(object):

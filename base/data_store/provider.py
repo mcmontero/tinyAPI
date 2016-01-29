@@ -414,7 +414,10 @@ class DataStoreMySQL(RDBMSBase):
 
         binds = []
         for value in list(data.values()):
-            if re.match('current_timestamp', str(value)) is not None:
+            str_value = str(value)
+
+            if re.match('current_timestamp', str_value) is not None or \
+               str_value == 'current_date':
                 binds.append(value)
             else:
                 binds.append('%s')
@@ -445,7 +448,10 @@ class DataStoreMySQL(RDBMSBase):
 
         values = []
         for value in data:
-            if re.match('current_timestamp', str(value)) is None:
+            str_value = str(value)
+
+            if re.match('current_timestamp', str_value) is None and \
+               str_value != 'current_date':
                 values.append(value)
 
         return values

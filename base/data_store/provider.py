@@ -426,16 +426,8 @@ class DataStoreMySQL(RDBMSBase):
         if self.__cursor is not None:
             return self.__cursor
 
-        for i in range(3):
-            try:
-                self.__cursor = self.__mysql.cursor(dictionary=True)
-                break
-            except (mysql.connector.errors.MySQLInterfaceError,
-                    mysql.connector.errors.OperationalError):
-                if i >= 2:
-                    raise
-                else:
-                    self.__mysql.ping(reconnect=True, attempts=1)
+        self.__ping()
+        self.__cursor = self.__mysql.cursor(dictionary=True)
 
         return self.__cursor
 

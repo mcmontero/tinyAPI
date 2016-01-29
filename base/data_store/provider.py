@@ -430,7 +430,8 @@ class DataStoreMySQL(RDBMSBase):
             try:
                 self.__cursor = self.__mysql.cursor(dictionary=True)
                 break
-            except mysql.connector.errors.OperationalError:
+            except (mysql.connector.errors.MySQLInterfaceError,
+                    mysql.connector.errors.OperationalError):
                 if i >= 2:
                     raise
                 else:

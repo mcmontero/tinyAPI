@@ -12,8 +12,8 @@ from tinyAPI.base.config import ConfigManager
 from tinyAPI.base.stats_logger import StatsLogger
 from tinyAPI.base.data_store.memcache import Memcache
 
-import mysql.connector
 import os
+import pymysql
 import re
 import threading
 import time
@@ -290,27 +290,20 @@ class DataStoreMySQL(RDBMSBase):
                 + 'selected')
 
         config = {
-            'autocommit': False,
-            'charset': self._charset,
-            'database': self._db_name,
+            'user': connection_data[self._connection_name][1],
+            'passwd': connection_data[self._connection_name][2],
             'host': connection_data[self._connection_name][0],
-            'password': connection_data[self._connection_name][2],
-            'use_pure': False,
-            'user': connection_data[self._connection_name][1]
+            'database': self._db_name,
+            'charset': self._charset,
+            'autocommit': False
         }
 
-        if mysql.connector.version.VERSION[0] < 2 or \
-           mysql.connector.version.VERSION[1] < 1 or \
-           mysql.connector.version.VERSION[2] < 3:
-            del config['use_pure']
-
-        self.__mysql = mysql.connector.connect(**config)
-
+        self.__mysql = pymysql.connect(**config)
 
 
     def connection_id(self):
         self.connect()
-        return self.__mysql.connection_id
+        return self.__mysql.thread_id()
 
 
     def __convert_to_prepared(self, separator, data=tuple()):
@@ -355,7 +348,7 @@ class DataStoreMySQL(RDBMSBase):
 
         try:
             cursor.execute(sql, vals)
-        except mysql.connector.errors.IntegrityError as e:
+        except pymysql.err.IntegrityError as e:
             errno, message = e.args
 
             if errno == 1062:
@@ -364,7 +357,7 @@ class DataStoreMySQL(RDBMSBase):
                 raise DataStoreForeignKeyException(message)
             else:
                 raise
-        except mysql.connector.errors.ProgrammingError as e:
+        except pymysql.err.ProgrammingError as e:
             errno, message = e.args
 
             raise DataStoreException(
@@ -433,17 +426,13 @@ class DataStoreMySQL(RDBMSBase):
         if self.__cursor is not None:
             return self.__cursor
 
-        self.__cursor = self.__mysql.cursor(dictionary = True)
+        self.__cursor = self.__mysql.cursor(pymysql.cursors.DictCursor)
 
         return self.__cursor
 
 
     def get_last_row_id(self):
-        return \
-            self.__last_row_id \
-                if self.__last_row_id is not None and \
-                   self.__last_row_id is not 0 else \
-            None
+        return self.__last_row_id
 
 
     def get_row_count(self):
@@ -464,6 +453,7 @@ class DataStoreMySQL(RDBMSBase):
 
     def nth(self, index, sql, binds=tuple()):
         records = self.query(sql, binds)
+
         if index < len(records):
             return records[index]
         else:
@@ -486,8 +476,7 @@ class DataStoreMySQL(RDBMSBase):
 
         try:
             cursor.execute(sql, binds)
-        except (mysql.connector.errors.IntegrityError,
-                mysql.connector.errors.InternalError) as e:
+        except (pymysql.err.IntegrityError, pymysql.err.InternalError) as e:
             errno, message = e.args
 
             if errno == 1062:
@@ -498,7 +487,7 @@ class DataStoreMySQL(RDBMSBase):
                 raise DataStoreForeignKeyException(message)
             else:
                 raise
-        except mysql.connector.errors.ProgrammingError as e:
+        except pymysql.err.ProgrammingError as e:
             errno, message = e.args
 
             raise DataStoreException(
@@ -510,11 +499,8 @@ class DataStoreMySQL(RDBMSBase):
 
         if is_select:
             results = cursor.fetchall()
-            print(results)
             if results == ():
                 results = []
-
-            results = self.__rows_to_dict(results)
 
             self.memcache_store(results)
         else:

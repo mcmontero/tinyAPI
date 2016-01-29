@@ -44,12 +44,15 @@ class Manager(object):
                 file_run_time_start = time.time()
                 num_file_tests = 0
 
-                output = subprocess.check_output(
-                            "export ENV_UNIT_TEST=1 ; "
-                            + sys.executable + " " + file + " -v ; "
-                            + "exit 0",
-                            stderr=subprocess.STDOUT,
-                            shell=True).decode();
+                output = \
+                    subprocess.check_output(
+                        "export ENV_UNIT_TEST=1 ; "
+                        + sys.executable + " " + file + " -v ; "
+                        + "exit 0",
+                        stderr=subprocess.STDOUT,
+                        shell=True
+                    ) \
+                        .decode();
 
                 failed = False
                 for line in output.split("\n"):
@@ -57,16 +60,39 @@ class Manager(object):
                         test_case = ''
                         matches = re.search(' \(.*?\.(.*?)\)', line)
                         if matches is not None:
-                            test_case = matches.group(1) + '::'
+                            test_case = matches.group(1)
 
-                        method_name = re.sub(' \(.*?\..*?\)', '', line)
+                        parts = line.split(' ')
+                        if len(parts) == 4:
+                            method_name = parts[0]
+                            message = parts[3]
+                        else:
+                            raise RuntimeError(
+                                '\n{}\n{}::{}\n\nproduced\n\n{}\n{}'
+                                    .format(
+                                        '=' * 75,
+                                        test_case,
+                                        parts[0],
+                                        ' '.join(parts[3:]),
+                                        '=' * 75
+                                    )
+                            )
+
                         if method_name is not None and method_name != line:
-                            length = len(test_case) + len(method_name) + 4
+                            length = len(test_case) + len(method_name) + 12
                             if length > 79:
                                 method_name = \
                                     '...' + method_name[(length - 76):]
 
-                        self.__cli.notice(test_case + method_name, 1)
+                        self.__cli.notice(
+                            '{}::{} .. {}'
+                                .format(
+                                    test_case,
+                                    method_name,
+                                    message
+                                ),
+                            1
+                        )
                     elif line == 'OK':
                         self.__cli.notice('', 1)
                     elif line != '':

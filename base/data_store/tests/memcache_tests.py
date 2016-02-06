@@ -16,7 +16,7 @@ class MemcacheTestCase(unittest.TestCase):
 
     def setUp(self):
         if ConfigManager().value('data store') == 'mysql':
-            tinyAPI.dsh().select_db('local', 'tinyAPI')
+            tinyAPI.dsh.select_db('local', 'tinyAPI')
 
 
     def test_cached_data(self):

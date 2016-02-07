@@ -543,6 +543,35 @@ class DataStoreMySQL(RDBMSBase):
         return results
 
 
+class DataStoreNOOP(RDBMSBase):
+    '''
+    This data store provider handles the case where a data store connection
+    has not been established but one of the operations contained in this
+    class is being executed.  For example, you may have code like this:
+
+        if (...):
+            tinyAPI.dsh.select_db(...)
+
+        tinyAPI.dsh().commit()
+
+    In this case the commit is a "catch all" to be executed at the end of the
+    if or outside of the scope of it.  Either way, the commit should execute
+    fine as nothing actually needs to occur because there is no data store
+    connection.
+    '''
+
+    def close(self):
+        pass
+
+
+    def commit(self, ignore_exceptions=False):
+        pass
+
+
+    def rollback(self, ignore_exceptions=False):
+        pass
+
+
 class DataStoreProvider(object):
     '''Defines the main mechanism for retrieving a handle to a configured data
        store.'''

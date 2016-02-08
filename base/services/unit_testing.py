@@ -126,7 +126,7 @@ class TransactionalDataStoreTestCase(unittest.TestCase):
         default_schema = ConfigManager.value('default schema')
         default_connection = ConfigManager.value('default unit test connection')
         if default_schema and default_connection:
-            tinyAPI.dsh.select_db(default_connection, default_schema)
+            tinyAPI.dsh().select_db(default_connection, default_schema)
 
         self.maxDiff = None
         self.set_up()

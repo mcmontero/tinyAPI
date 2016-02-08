@@ -19,7 +19,7 @@ class ProviderMySQLTestCase(unittest.TestCase):
         if ConfigManager().value('data store') == 'mysql':
             self.__execute_tests = True
 
-            tinyAPI.dsh.select_db('local', 'tinyAPI')
+            tinyAPI.dsh().select_db('local', 'tinyAPI')
 
             tinyAPI.dsh().query(
                 '''create table if not exists unit_test_table

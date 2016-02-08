@@ -1082,8 +1082,8 @@ builtins._tinyapi_ref_unit_test = _tinyapi_ref_unit_test
         if ConfigManager.value('data store') != 'mysql':
             self.__data_store_not_supported()
 
-        tinyAPI.dsh.select_db(self.__cli.args.connection_name,
-                              'information_schema')
+        tinyAPI.dsh().select_db(self.__cli.args.connection_name,
+                                'information_schema')
 
         databases = tinyAPI.dsh().query('show databases')
         for database in databases:

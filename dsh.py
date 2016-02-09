@@ -14,13 +14,17 @@ __all__ = [
 
 # ----- Private Classes -------------------------------------------------------
 
-class UnitTestNullDSH(object):
+class NoOpDSH(object):
     '''
-    Supports unit test cases that do not perform transactional data store
-    operations but attempt to close or rollback transactions.
+    The use of this object in __DSH is ambiguous.  It's unclear why a call
+    to a commit or rollback command would be executed without a connection
+    ever being established.
     '''
 
     def close(self):
+        pass
+
+    def commit(self, ignore_exceptions=True):
         pass
 
 
@@ -33,16 +37,10 @@ class __DSH(object):
 
     def __init__(self):
         self.__provider = None
-        self.__unit_test_null_dsh = UnitTestNullDSH()
+
 
     def __call__(self):
-        if self.__provider is None:
-            if tinyAPI.env_unit_test() is True:
-                return self.__unit_test_null_dsh
-            else:
-                raise RuntimeError('data store handle has not been selected')
-
-        return self.__provider
+        return self.__provider if self.__provider is not None else NoOpDSH()
 
 
     def select_db(self, connection, db, persistent=True):

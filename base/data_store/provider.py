@@ -547,35 +547,42 @@ class DataStoreProvider(object):
     '''Defines the main mechanism for retrieving a handle to a configured data
        store.'''
 
-    __persistent_connections = {}
+    __persistent = {}
 
     def __init__(self):
         self.pid = os.getpid()
 
 
-    def get_data_store_handle(self, persistent=False):
+    def get_data_store_handle(self, connection, db, persistent=False):
         '''Get the active data store handle against which to execute
            operations.'''
+
         if ConfigManager.value('data store') == 'mysql':
-            if not hasattr(_thread_local_data, 'dsh'):
+            if connection not in self.__persistent:
+                self.__persistent[connection] = {}
+
+            if not hasattr(_thread_local_data, connection):
                 if persistent is True:
-                    if self.pid not in self.__persistent_connections:
-                        self.__persistent_connections[self.pid] = \
+                    if self.pid not in self.__persistent[connection]:
+                        self.__persistent[connection][self.pid] = \
                             DataStoreMySQL()
 
-                    _thread_local_data.dsh = \
-                        self.__persistent_connections[self.pid]
+                    dsh = self.__persistent[connection][self.pid]
+                    setattr(_thread_local_data, connection, dsh)
                 else:
-                    _thread_local_data.dsh = \
-                        DataStoreMySQL().set_persistent(False)
+                    dsh = DataStoreMySQL().set_persistent(False)
+                    setattr(_thread_local_data, connection, dsh)
+            else:
+                dsh = getattr(_thread_local_data, connection)
 
             StatsLogger().hit_ratio(
                 'Persistent Connection Stats',
-                _thread_local_data.dsh.requests,
-                _thread_local_data.dsh.hits,
-                self.pid)
+                dsh.requests,
+                dsh.hits,
+                self.pid
+            )
 
-            return _thread_local_data.dsh
+            return dsh.select_db(connection, db)
         else:
             raise DataStoreException(
                 'configured data store is not currently supported')

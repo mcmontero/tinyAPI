@@ -12,7 +12,7 @@ def main(cli):
     '''Executes an example of a RDBMS duplicate key exception.'''
     cli.header('Duplicate Key - RDBMS')
 
-    tinyAPI.dsh().select_db('local', 'tinyAPI')
+    tinyAPI.dsh.select_db('local', 'tinyAPI')
 
     cli.notice('Creating table called "a_table"...')
     tinyAPI.dsh().query(

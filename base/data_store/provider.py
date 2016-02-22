@@ -298,7 +298,10 @@ class DataStoreMySQL(RDBMSBase):
             'autocommit': False
         }
 
-        self.__mysql = pymysql.connect(**config)
+        self.__mysql = \
+            pymysql.connect(**config)
+        self.__mysql.decoders[pymysql.FIELD_TYPE.TIME] = \
+            pymysql.converters.convert_time
 
 
     def connection_id(self):

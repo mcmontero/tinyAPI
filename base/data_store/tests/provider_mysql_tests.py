@@ -6,6 +6,8 @@ __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
 from tinyAPI.base.config import ConfigManager
 from tinyAPI.base.data_store.exception import DataStoreException
+
+import datetime
 import tinyAPI
 import tinyAPI.base.data_store.provider as provider
 import unittest
@@ -25,7 +27,8 @@ class ProviderMySQLTestCase(unittest.TestCase):
                 '''create table if not exists unit_test_table
                    (
                         id integer not null auto_increment primary key,
-                        value integer not null
+                        value integer not null,
+                        ti time null
                    )''')
 
 
@@ -255,6 +258,28 @@ class ProviderMySQLTestCase(unittest.TestCase):
                 where id = %s""",
             [tinyAPI.dsh().get_last_row_id()])
         self.assertEqual(99881122, record['value'])
+
+
+    def test_native_conversion_of_time_columns(self):
+        tinyAPI.dsh().query(
+            '''insert into unit_test_table(
+                value,
+                ti)
+               values(
+                %s,
+                %s)''',
+            [12345, '08:30:00']
+        )
+
+        record = tinyAPI.dsh().one(
+            """select ti
+                 from unit_test_table
+                where value = %s""",
+            [12345]
+        )
+        self.assertIsNotNone(record)
+        self.assertIsInstance(record['ti'], datetime.time)
+        self.assertEqual('08:30:00', str(record['ti']))
 
 # ----- Main ------------------------------------------------------------------
 

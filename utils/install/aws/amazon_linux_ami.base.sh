@@ -40,6 +40,7 @@
 /bin/ln -sf /usr/local/bin/pip3.5 /usr/bin/pip3
 
 /bin/echo "Installing Python packages..."
+/usr/bin/yes | /usr/bin/pip3 install --upgrade pip
 /usr/bin/yes | /usr/bin/pip3 install uwsgi
 /usr/bin/yes | /usr/bin/pip3 install pymysql
 /usr/bin/yes | /usr/bin/pip3 install python3-memcached

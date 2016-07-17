@@ -4,7 +4,6 @@ __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
 # ----- Imports ---------------------------------------------------------------
 
-import re
 import subprocess
 
 __all__ = [

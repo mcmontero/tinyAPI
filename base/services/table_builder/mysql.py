@@ -1322,7 +1322,7 @@ class RefTable(Table):
         self.__display_orders = {}
         self.__display_order = 1
 
-        self.id('id', True, True) \
+        self.serial() \
             .vchar('value', 100, True) \
             .int('display_order')
 

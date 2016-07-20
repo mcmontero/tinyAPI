@@ -738,7 +738,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
     def test_ref_table(self):
         table_definition = '''create table abc_ref_def
 (
-    id bigint unsigned not null auto_increment unique,
+    id bigint unsigned not null auto_increment primary key,
     value varchar(100) character set utf8 collate utf8_unicode_ci not null,
     display_order int default null
 ) engine = innodb default charset = utf8 collate = utf8_unicode_ci;'''

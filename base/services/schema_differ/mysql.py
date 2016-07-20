@@ -744,12 +744,28 @@ class SchemaDiffer(object):
         if len(self.__index_usage_parser.clustered_indexes) > 0:
             self.__notice('clustered indexes', 1)
             for entry in self.__index_usage_parser.clustered_indexes:
-                self.__notice('(~) ' + entry[0], 2)
+                self.__notice(
+                    '(~) {}'
+                        .format(
+                            entryi[0][:63] + '..'
+                                if len(entry[0]) >= 66 else
+                            entry[0]
+                        ),
+                    2
+                )
 
         if len(self.__index_usage_parser.redundant_indexes) > 0:
             self.__notice('redundant indexes', 1)
             for entry in self.__index_usage_parser.redundant_indexes:
-                self.__notice('(!) ' + entry[0], 2)
+                self.__notice(
+                    '(!) {}'
+                        .format(
+                            entryi[0][:63] + '..'
+                                if len(entry[0]) >= 66 else
+                            entry[0]
+                        ),
+                    2
+                )
 
 
     def __process_fks(self, data=tuple()):

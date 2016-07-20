@@ -732,7 +732,8 @@ class SchemaDiffer(object):
         output = \
             subprocess.checkoutput(
                 [index_check['path'],
-                '--server={}'.format(index_check['server'])]
+                '--server={}'.format(index_check['server']),
+                index_check['database']]
             )
 
 

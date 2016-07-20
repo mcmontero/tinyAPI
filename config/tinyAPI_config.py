@@ -50,7 +50,8 @@ values = {
     # the Schema Difference tool.
     ##
     'index check': {
-        'path': '/usr/local/bin/mysqlindexcheck'
+        'database': 'db_name',
+        'path': '/usr/local/bin/mysqlindexcheck',
         'server': '[user]:[password]@[host]'
     }
 

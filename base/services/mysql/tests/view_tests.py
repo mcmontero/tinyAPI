@@ -14,7 +14,7 @@ import unittest
 
 # ----- Test  -----------------------------------------------------------------
 
-class MySQLTestCase(TransactionalDataStoreTestCase):
+class ViewTestCase(TransactionalDataStoreTestCase):
 
     def test_view_flipper(self):
         mysql = DataStoreMySQL()

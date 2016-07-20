@@ -6,6 +6,7 @@ __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
 from tinyAPI.base.config import ConfigManager
 from tinyAPI.base.data_store.provider import DataStoreMySQL
+from tinyAPI.base.services.mysql.index_check import MySQLIndexUsageParser
 
 import os
 import re
@@ -735,6 +736,11 @@ class SchemaDiffer(object):
                 '--server={}'.format(index_check['server']),
                 index_check['database']]
             )
+        parser = \
+            MySQLIndexUsageParser(
+                output
+            ) \
+                .execute()
 
 
     def __process_fks(self, data=tuple()):

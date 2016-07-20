@@ -742,12 +742,12 @@ class SchemaDiffer(object):
                 .execute(output)
 
         if len(self.__index_usage_parser.clustered_indexes) > 0:
-            cli.__notice('clustered indexes', 1)
+            self.__notice('clustered indexes', 1)
             for entry in self.__index_usage_parser.clustered_indexes:
                 self.__notice('(~) ' + entry[0], 2)
 
         if len(self.__index_usage_parser.redundant_indexes) > 0:
-            cli.__notice('redundant indexes', 1)
+            self.__notice('redundant indexes', 1)
             for entry in self.__index_usage_parser.redundant_indexes:
                 self.__notice('(!) ' + entry[0], 2)
 

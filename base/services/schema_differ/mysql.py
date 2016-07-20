@@ -747,7 +747,7 @@ class SchemaDiffer(object):
                 self.__notice(
                     '(~) {}'
                         .format(
-                            entryi[0][:63] + '..'
+                            entry[0][:63] + '..'
                                 if len(entry[0]) >= 66 else
                             entry[0]
                         ),
@@ -760,7 +760,7 @@ class SchemaDiffer(object):
                 self.__notice(
                     '(!) {}'
                         .format(
-                            entryi[0][:63] + '..'
+                            entry[0][:63] + '..'
                                 if len(entry[0]) >= 66 else
                             entry[0]
                         ),

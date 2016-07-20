@@ -26,15 +26,19 @@ class IndexCheckTestCase(TransactionalDataStoreTestCase):
 
         self.assertEqual(
             [
-                ['abc_def_uk', '(col_a, col_b)'],
-                ['mno_pqr_uk', '(col_a, col_b, col_c)'],
+                ['def.abc_def_uk', '(col_a, col_b)'],
+                ['stu.mno_pqr_uk', '(col_a, col_b, col_c)'],
                 ['abc_pk', '(col_d, col_e, col_f)']
             ],
             parser.clustered_indexes
         )
         self.assertEqual(
             [
-                ['abc_def_idx', '(col_a)', 'ghi_jkl_idx', '(col_a, col_b)']
+                [
+                    'def.abc_def_idx',
+                    '(col_a)',
+                    'def.ghi_jkl_idx',
+                    '(col_a, col_b)']
             ],
             parser.redundant_indexes
         )

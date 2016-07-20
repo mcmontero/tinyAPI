@@ -83,7 +83,7 @@ class MySQLIndexUsageParser(object):
     def __extract_index_details(self, line):
         matches = \
             re.search(
-                'create( unique)? index `(.*)` on `.*`\.`.*` (\(.*\))',
+                'create( unique)? index `(.*)` on `.*`\.`(.*)` (\(.*\))',
                 line.lower()
             )
         if matches is None:
@@ -99,4 +99,9 @@ class MySQLIndexUsageParser(object):
                     matches.group(1) + '_pk', re.sub('`', '', matches.group(2))
         else:
             return \
-                matches.group(2), re.sub('`', '', matches.group(3))
+                '{}.{}' \
+                    .format(
+                        matches.group(3),
+                        matches.group(2)
+                    ), \
+                re.sub('`', '', matches.group(4))

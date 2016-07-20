@@ -50,6 +50,7 @@ class SchemaDiffer(object):
         self.__indexes_to_drop = None
         self.__unique_keys_to_create = None
         self.__unique_keys_to_drop = None
+        self.__index_usage_parser = None
 
         self.__source = DataStoreMySQL()
         self.__source.select_db(source_connection_name, 'information_schema')
@@ -736,9 +737,19 @@ class SchemaDiffer(object):
                 '--server={}'.format(index_check['server']),
                 index_check['database']]
             )
-        parser = \
+        self.__index_usage_parser = \
             MySQLIndexUsageParser() \
                 .execute(output)
+
+        if len(self.__index_usage_parser.clustered_indexes) > 0:
+            cli.__notice('clustered indexes', 1)
+            for entry in self.__index_usage_parser.clustered_indexes:
+                self.__notice('(~) ' + entry[0], 2)
+
+        if len(self.__index_usage_parser.redundant_indexes) > 0:
+            cli.__notice('redundant indexes', 1)
+            for entry in self.__index_usage_parser.redundant_indexes:
+                self.__notice('(!) ' + entry[0], 2)
 
 
     def __process_fks(self, data=tuple()):

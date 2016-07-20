@@ -53,7 +53,7 @@ values = {
         'database': 'db_name',
         'path': '/usr/local/bin/mysqlindexcheck',
         'server': '[user]:[password]@[host]'
-    }
+    },
 
     ##
     # An array of Memcached servers to use for caching.  The array should be

@@ -737,10 +737,8 @@ class SchemaDiffer(object):
                 index_check['database']]
             )
         parser = \
-            MySQLIndexUsageParser(
-                output
-            ) \
-                .execute()
+            MySQLIndexUsageParser() \
+                .execute(output)
 
 
     def __process_fks(self, data=tuple()):

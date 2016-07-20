@@ -4,9 +4,12 @@ __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
 # ----- Imports ---------------------------------------------------------------
 
+from tinyAPI.base.config import ConfigManager
 from tinyAPI.base.data_store.provider import DataStoreMySQL
 
+import os
 import re
+import subprocess
 
 __all__ = [
     'SchemaDiffer'
@@ -574,6 +577,7 @@ class SchemaDiffer(object):
         self.__compute_ref_table_data_differences()
         self.__compute_index_differences()
         self.__compute_unique_key_differences()
+        self.__perform_index_check()
 
         if not self.there_are_differences():
             self.__notice('Both schemas are the same!')
@@ -708,6 +712,28 @@ class SchemaDiffer(object):
             return
 
         self.__cli.notice(message, indent)
+
+
+    def __perform_index_check(self):
+        self.__notice('Performing index check...')
+
+        try:
+            index_check = ConfigManager.value('index check')
+        except:
+            self.__notice('not enabled; skipping', 1)
+            return False
+
+        if not os.path.isfile(index_check['path']):
+            raise RuntimeError(
+                'could not find script at "{}"'
+                    .format(index_check['path'])
+            )
+
+        output = \
+            subprocess.checkoutput(
+                [index_check['path'],
+                '--server={}'.format(index_check['server'])]
+            )
 
 
     def __process_fks(self, data=tuple()):

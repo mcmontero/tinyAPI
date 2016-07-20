@@ -46,6 +46,15 @@ values = {
     'default unit test connection': None,
 
     ##
+    # Executes the mysqlindexcheck script and reports the output as part of
+    # the Schema Difference tool.
+    ##
+    'index check': {
+        'path': '/usr/local/bin/mysqlindexcheck'
+        'server': '[user]:[password]@[host]'
+    }
+
+    ##
     # An array of Memcached servers to use for caching.  The array should be
     # in the following format:
     #

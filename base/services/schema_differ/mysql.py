@@ -1093,6 +1093,38 @@ class SchemaDiffer(object):
         self.__write_file(file_name, contents)
 
 
+    def __write_index_check(self):
+        if self.__index_usage_parser is None:
+            return
+
+        file_name = '90-index_check.txt'
+
+        self.__notice(file_name, 1)
+
+        contents = ''
+        for data in self.__index_usage_parser.redundant_indexes:
+            contents += \
+                '{} {}\n    is duplicate of \n{} {}\n{}' \
+                    .format(
+                        data[0],
+                        data[1],
+                        data[2],
+                        data[3],
+                        '-' * 50
+                    )
+
+        for data in self.__index_parser_usage.clustered_indexes:
+            contents += \
+                '{} {}\n    is clustered and potentially redundant\n{}' \
+                    .format(
+                        data[0],
+                        data[1],
+                        '-' * 50
+                    )
+
+        self.__write_file(file_name, contents)
+
+
     def __write_ref_table_data_sql(self):
         file_name = '50-ref_data.sql'
 
@@ -1153,3 +1185,4 @@ class SchemaDiffer(object):
         self.__write_add_foreign_key_constraint_sql()
         self.__write_add_unique_key_constraint_sql()
         self.__write_add_indexes_sql()
+        self.__write_index_check()

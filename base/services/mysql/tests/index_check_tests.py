@@ -38,7 +38,8 @@ class IndexCheckTestCase(TransactionalDataStoreTestCase):
                     'def.abc_def_idx',
                     '(col_a)',
                     'def.ghi_jkl_idx',
-                    '(col_a, col_b)']
+                    '(col_a, col_b)'
+                ]
             ],
             parser.redundant_indexes
         )

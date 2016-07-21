@@ -1113,7 +1113,7 @@ class SchemaDiffer(object):
                         '-' * 50
                     )
 
-        for data in self.__index_parser_usage.clustered_indexes:
+        for data in self.__index_usage_parser.clustered_indexes:
             contents += \
                 '{} {}\n    is clustered and potentially redundant\n{}' \
                     .format(

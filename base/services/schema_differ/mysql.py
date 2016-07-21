@@ -1104,22 +1104,21 @@ class SchemaDiffer(object):
         contents = ''
         for data in self.__index_usage_parser.redundant_indexes:
             contents += \
-                '{} {}\n    is duplicate of \n{} {}\n{}' \
+                '{}\n    {}\n        is duplicate of \n{}\n    {}\n\n' \
                     .format(
                         data[0],
                         data[1],
                         data[2],
-                        data[3],
-                        '-' * 50
+                        data[3]
                     )
 
         for data in self.__index_usage_parser.clustered_indexes:
             contents += \
-                '{} {}\n    is clustered and potentially redundant\n{}' \
+                '{}\n    {}\n{}is clustered and potentially redundant\n\n' \
                     .format(
                         data[0],
                         data[1],
-                        '-' * 50
+                        ' ' * 8
                     )
 
         self.__write_file(file_name, contents)

@@ -1112,6 +1112,10 @@ class SchemaDiffer(object):
                         data[3]
                     )
 
+        if len(self.__index_usage_parser.redundant_indexes) > 0 and \
+           len(self.__index_usage_parser.clustered_indexes) > 0:
+            contents += '-' * 78 + '\n\n'
+
         for data in self.__index_usage_parser.clustered_indexes:
             contents += \
                 '{}\n    {}\n{}is clustered and potentially redundant\n\n' \

@@ -31,6 +31,7 @@ class DataArmor(object):
 
         self.__key = key
         self.__data = data
+        self.timestamp = None
 
 
     def __decrypt(self, data):
@@ -52,10 +53,23 @@ class DataArmor(object):
     def lock(self):
         '''Secure the data.'''
         data = json.dumps(self.__data)
-        now = str(int(time.time()))
-        sha = hashlib.sha224(data.encode('utf8') +
-                             now.encode('utf8')).hexdigest()
-        data = data + chr(2) + now
+
+        timestamp = \
+            str \
+            (
+                int(time.time())
+                    if self.timestamp is None else
+                self.timestamp
+            )
+
+        sha = \
+            hashlib.sha224(
+                data.encode('utf8') +
+                timestamp.encode('utf8')
+            ) \
+                .hexdigest()
+
+        data = data + chr(2) + timestamp
 
         return self.__encrypt(data).decode() + '-' + sha
 
@@ -63,6 +77,11 @@ class DataArmor(object):
     def __pad(self, data):
         bs = AES.block_size
         return data + (bs - len(data) % bs) * chr(bs - len(data) % bs)
+
+
+    def set_timestamp(self, timestamp):
+        self.timestamp = timestamp
+        return self
 
 
     def unlock(self, ttl=None):
@@ -81,17 +100,19 @@ class DataArmor(object):
         data = parts[0]
 
         try:
-            timestamp = parts[1]
+            self.timestamp = int(parts[1])
         except IndexError:
             raise CryptoException(
                 'could not find timestamp; encryption key was likely incorrect')
 
         if hashlib.sha224(
-            data.encode('utf8') + timestamp.encode('utf8')).hexdigest() != sha:
+            data.encode('utf8') + str(self.timestamp).encode('utf8')
+           ) \
+            .hexdigest() != sha:
                 raise CryptoException('armored token has been tampered with');
 
         if ttl is not None:
-            if (int(time.time()) - int(timestamp)) > ttl:
+            if (int(time.time()) - self.timestamp) > ttl:
                 raise CryptoException('token has expired')
 
         return json.loads(data)

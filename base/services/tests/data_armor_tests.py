@@ -50,6 +50,19 @@ class CryptoTestCase(unittest.TestCase):
             self.assertEqual('armored token has been tampered with',
                              e.get_message())
 
+
+    def test_timestamp_is_set(self):
+        key = '12345678901234567890123456789012'
+        string = 'hello world!'
+
+        token = DataArmor(key, string).lock()
+        self.assertIsNotNone(token)
+
+        token = DataArmor(key, token)
+        token.unlock()
+
+        self.assertIsNotNone(token.timestamp)
+
 # ----- Main ------------------------------------------------------------------
 
 if __name__ == '__main__':

@@ -84,7 +84,7 @@ class CLI(object):
         try:
             if self.__enable_status is True:
                 self.status()
-        except AttributeError:
+        except (AttributeError, TypeError):
             pass
 
         try:
@@ -94,7 +94,7 @@ class CLI(object):
                 except OSError as e:
                     if e.errno != errno.ENOENT:
                         raise
-        except AttributeError:
+        except (AttributeError, TypeError):
             pass
 
 

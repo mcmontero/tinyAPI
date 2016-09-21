@@ -481,7 +481,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
         text = '''create table abc
 (
     id bigint unsigned not null auto_increment unique,
-    date_updated timestamp default '0000-00-00 00:00:00' on update current_timestamp
+    date_updated timestamp default '2000-01-01 00:00:00' on update current_timestamp
 ) engine = innodb default charset = utf8 collate = utf8_unicode_ci;'''
 
         self.assertEqual(text,

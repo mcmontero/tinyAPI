@@ -795,13 +795,21 @@ builtins._tinyapi_ref_unit_test = _tinyapi_ref_unit_test
         # +------------------------------------------------------------------+
         # | Step 15                                                          |
         # |                                                                  |
+        # | Find potentially incorrect default values.                       |
+        # +------------------------------------------------------------------+
+
+        self.__find_potentially_incorrect_default_values()
+
+        # +------------------------------------------------------------------+
+        # | Step 16                                                          |
+        # |                                                                  |
         # | Compile reference table data into variables.                     |
         # +------------------------------------------------------------------+
 
         self.__compile_reference_definitions()
 
         # +------------------------------------------------------------------+
-        # | Step 16                                                          |
+        # | Step 17                                                          |
         # |                                                                  |
         # | Execute any SQL files that are intended to be loaded after the   |
         # | build.                                                           |
@@ -811,7 +819,7 @@ builtins._tinyapi_ref_unit_test = _tinyapi_ref_unit_test
             self.__execute_postbuild_scripts()
 
         # +------------------------------------------------------------------+
-        # | Step 17                                                          |
+        # | Step 18                                                          |
         # |                                                                  |
         # | Report interesting stats about the build.                        |
         # +------------------------------------------------------------------+
@@ -929,6 +937,29 @@ builtins._tinyapi_ref_unit_test = _tinyapi_ref_unit_test
             [file])
 
         return len(records) == 0 or records[0]['sha1'] != sha1
+
+
+    def __find_potentially_incorrect_default_values(self):
+        if ConfigManager.value('data store') != 'mysql':
+            self.__data_store_not_supported()
+
+        self.__notice('Finding potentially incorrect default values...')
+
+        records = tinyAPI.dsh().query(
+            """select table_name,
+                      column_name
+                 from information_schema.columns
+                 where table_schema in (""" + self.__managed_schemas + """)
+                   and column_default = %s""",
+            ['0000-00-00 00:00:00']
+        )
+        for record in records:
+            self.__notice(
+                '(!) {}.{}'
+                    .format(record['table_name'], record['column_name']),
+                1
+            )
+            self.__notice('has default of "0000-00-00 00:00:00"', 3)
 
 
     def __get_exec_sql_command(self):

@@ -10,6 +10,8 @@ from tinyAPI.base.data_store.provider import DataStoreMySQL
 from tinyAPI.base.services.table_builder.mysql import Table, RefTable, View
 from tinyAPI.base.services.table_builder.reference import refv
 
+import tinyAPI.base.data_store.ConnectionManager
+
 # ----- Instructions ----------------------------------------------------------
 
 ref_defs_file = ConfigManager.value('reference definition file')

@@ -33,6 +33,55 @@ values = {
     'data store': 'mysql',
 
     ##
+    # Defines the data stores accessible to tinyAPI.  The format for this
+    # setting is as follows:
+    #
+    #   'data store config': {
+    #       '[server name]': {
+    #           '[group 1]': {
+    #               'durability': 'randomizer',
+    #               'hosts': [
+    #                   ['[host 1]', '[username 1]', '[password 1]'],
+    #                   ...
+    #                   ['[host N]', '[username N]', '[password N]']
+    #               ]
+    #           },
+    #           ...
+    #           '[group N]': {
+    #               'durability': 'randomizer',
+    #               'hosts': [
+    #                   ['[host 1]', '[username 1]', '[password 1]'],
+    #                   ...
+    #                   ['[host N]', '[username N]', '[password N]']
+    #               ]
+    #           },
+    #           'type': '[mysql|postgresql]'
+    #       }
+    #   }
+    #
+    # For the sake of simplicity only one "server name" configuration is shown
+    # but there is no limit to the number that can be configured.
+    #
+    # durability:
+    #   randomizer      A host is selected from the list at random
+    #
+    # Fail over is built into all durability algorithms where appropriate.  If
+    # the connection to the chosen host fails another will be selected both at
+    # the time of initial connection and usage.
+    ##
+    'data store config': {
+        'my server': {
+            'read write': {
+                'algo': 'randomizer',
+                'hosts': [
+                    ['host', 'username', 'password']
+                ]
+            ],
+            'type': 'mysql'
+        }
+    }
+
+    ##
     # tinyAPI comes with various libraries that can install data structures
     # into an RDBMS.  The schema defined here is where the objects will be
     # placed.  If this value is set to None, nothing will be loaded.

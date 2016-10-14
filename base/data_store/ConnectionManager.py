@@ -79,16 +79,16 @@ class ConnectionManager(object):
 # ----- Protected Functions ---------------------------------------------------
 
 def _configure_dsh_builtins(dsh):
-    builtins.__c = dsh.count
-    builtins.__cr = dsh.create
-    builtins.__close = dsh.close
-    builtins.__commit = dsh.commit
-    builtins.__dsh = dsh
-    builtins.__o = dsh.one
-    builtins.__q = dsh.query
-    builtins.__rollback = dsh.rollback
+    builtins._c = dsh.count
+    builtins._cr = dsh.create
+    builtins._close = dsh.close
+    builtins._commit = dsh.commit
+    builtins._dsh = dsh
+    builtins._o = dsh.one
+    builtins._q = dsh.query
+    builtins._rollback = dsh.rollback
 
 # ----- Intstructions ---------------------------------------------------------
 
-builtins.__dscm = ConnectionManager()
-builtins.__ds = builtins.__dscm.acquire
+builtins._dscm = ConnectionManager()
+builtins._ds = builtins._dscm.acquire

@@ -76,10 +76,10 @@ values = {
                 'hosts': [
                     ['host', 'username', 'password']
                 ]
-            ],
+            },
             'type': 'mysql'
         }
-    }
+    },
 
     ##
     # tinyAPI comes with various libraries that can install data structures

@@ -70,11 +70,8 @@ class MySQL(RDBMSBase):
 
     def connect(self):
         if self.__mysql:
-            if self.persistent is True:
-                if time.time() - self._inactive_since >= \
-                   self._ping_interval - 3:
-                    self.__mysql.ping(True)
-
+            if self.should_ping() is True:
+                self.__mysql.ping(True)
             return
 
         if self._settings is None or self._db is None or self._group is None:

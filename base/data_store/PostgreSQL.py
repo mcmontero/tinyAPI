@@ -69,12 +69,9 @@ class PostgreSQL(RDBMSBase):
 
     def connect(self):
         if self.__postgresql:
-            if self.persistent is True:
-                if time.time() - self._inactive_since >= \
-                   self._ping_interval - 3:
-                    self.query('select 1')
-                    self.commit()
-
+            if self.should_ping() is True:
+                self.query('select 1')
+                self.commit()
             return
 
         if self._settings is None or self._db is None or self._group is None:

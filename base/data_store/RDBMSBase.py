@@ -199,3 +199,15 @@ class RDBMSBase(__DataStoreBase):
     def set_persistent(self, persistent):
         self.persistent = persistent
         return self
+
+    def should_ping(self):
+        if self.persistent is False:
+            return False
+
+        should_ping = False
+        if (time.time() - self._inactive_since) >= (self._ping_interval - 3):
+            should_ping = True
+
+        self._inactive_since = time.time()
+
+        return should_ping

@@ -21,6 +21,8 @@
 /usr/bin/yum -y install postfix
 /usr/bin/yum -y install pam-devel
 /usr/bin/yum -y install telnet
+/usr/bin/yum -y install postgresql
+/usr/bin/yum -y install postgresql-devel
 
 /bin/echo "Replacing sendmail with postfix..."
 /bin/rpm -e sendmail
@@ -56,6 +58,7 @@
 /usr/bin/yes | /usr/bin/pip3 install mock
 /usr/bin/yes | /usr/bin/pip3 install phonenumbers
 /usr/bin/yes | /usr/bin/pip3 install boto
+/usr/bin/yes | /usr/bin/pip3 install psycopg2
 
 /bin/echo "Upgrading pip 2..."
 /usr/local/bin/pip install --upgrade pip

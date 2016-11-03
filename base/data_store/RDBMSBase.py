@@ -28,6 +28,7 @@ class __DataStoreBase(object):
         self._memcache_ttl = None
         self._ping_interval = 300
         self._inactive_since = time.time()
+        self._ordered_dict_cursor = False
 
         self.persistent = True
         if Context.env_cli() is True:
@@ -169,6 +170,10 @@ class RDBMSBase(__DataStoreBase):
             setattr(obj, key, value)
 
         return record
+
+    def ordered_dict_cursor(self):
+        self._ordered_dict_cursor = True
+        return self
 
     def query(self, query, binds = []):
         '''

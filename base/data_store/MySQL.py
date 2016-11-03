@@ -4,11 +4,13 @@ __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
 # ----- Imports ---------------------------------------------------------------
 
+from collections import OrderedDict
 from .exception import DataStoreException
 from .exception import DataStoreDuplicateKeyException
 from .exception import DataStoreForeignKeyException
 from .exception import IllegalMixOfCollationsException
 from .FallBack import FallBack
+from pymysql.cursors import DictCursorMixin, Cursor
 from .Randomizer import Randomizer
 from .RDBMSBase import RDBMSBase
 from tinyAPI.base.data_store.memcache import Memcache
@@ -240,7 +242,12 @@ class MySQL(RDBMSBase):
         if self.__cursor is not None:
             return self.__cursor
 
-        self.__cursor = self.__mysql.cursor(pymysql.cursors.DictCursor)
+        self.__cursor = \
+            self.__mysql.cursor(
+                pymysql.cursors.DictCursor
+                    if self._ordered_dict_cursor is False else
+                OrderedDictCursor
+            )
 
         return self.__cursor
 
@@ -336,3 +343,8 @@ class MySQL(RDBMSBase):
         else:
             self.connect()
             self.__mysql.rollback()
+
+# ----- Private Classes -------------------------------------------------------
+
+class OrderedDictCursor(DictCursorMixin, Cursor):
+    dict_type = OrderedDict

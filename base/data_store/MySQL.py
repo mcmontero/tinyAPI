@@ -39,8 +39,6 @@ class MySQL(RDBMSBase):
         self.__close_cursor()
         Memcache().clear_local_cache()
 
-        self._inactive_since = time.time()
-
         if self.__mysql:
             if self.persistent is False:
                 self.__mysql.close()
@@ -117,6 +115,8 @@ class MySQL(RDBMSBase):
                     durability.next()
                 else:
                     raise
+
+        self._inactive_since = time.time()
 
     def connection_id(self):
         self.connect()

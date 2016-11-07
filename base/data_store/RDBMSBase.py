@@ -212,7 +212,6 @@ class RDBMSBase(__DataStoreBase):
         should_ping = False
         if (time.time() - self._inactive_since) >= (self._ping_interval - 3):
             should_ping = True
-
-        self._inactive_since = time.time()
+            self._inactive_since = time.time()
 
         return should_ping

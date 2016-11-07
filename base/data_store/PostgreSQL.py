@@ -36,8 +36,6 @@ class PostgreSQL(RDBMSBase):
         self.__close_cursor()
         Memcache().clear_local_cache()
 
-        self._inactive_since = time.time()
-
         if self.__postgresql:
             if self.persistent is False:
                 self.__postgresql.close()
@@ -103,6 +101,8 @@ class PostgreSQL(RDBMSBase):
                 break
             except psycopg2.OperationalError as e:
                 durability.next()
+
+        self._inactive_since = time.time()
 
     def connection_id(self):
         self.connect()

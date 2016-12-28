@@ -405,7 +405,8 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
         self.assertEqual(
             "abcdef year(2) not null unique default \'1\'",
             _MySQLDateTimeColumn('abcdef')
-                .year(2)
+                .date_time_type(_MySQLDateTimeColumn.TYPE_YEAR)
+                .precision(2)
                 .default_value(1)
                 .not_null()
                 .unique()
@@ -416,7 +417,8 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
         self.assertEqual(
             "abcdef year(4) not null unique default \'1\'",
             _MySQLDateTimeColumn('abcdef')
-                .year(4)
+                .date_time_type(_MySQLDateTimeColumn.TYPE_YEAR)
+                .precision(4)
                 .default_value(1)
                 .not_null()
                 .unique()
@@ -481,7 +483,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
         text = '''create table abc
 (
     id bigint unsigned not null auto_increment unique,
-    date_updated timestamp default '2000-01-01 00:00:00' on update current_timestamp
+    date_updated timestamp not null default '2000-01-01 00:00:00' on update current_timestamp
 ) engine = innodb default charset = utf8 collate = utf8_unicode_ci;'''
 
         self.assertEqual(text,
@@ -1071,7 +1073,7 @@ add constraint abc_0_fk
         self.assertEqual(
             text,
             tinyAPI.Table('db', 'abc') \
-                .email('em_address', True)\
+                .email('em_address', True) \
                 .get_definition())
 
 
@@ -1109,6 +1111,32 @@ add constraint abc_0_fk
             text,
             tinyAPI.Table('db', 'abc')
                 .money('def', True)
+                .get_definition())
+
+
+    def test_date_created_with_precision(self):
+        text = '''create table abc
+(
+    date_created datetime(6) not null
+) engine = innodb default charset = utf8 collate = utf8_unicode_ci;'''
+
+        self.assertEqual(
+            text,
+            tinyAPI.Table('db', 'abc') \
+                .created(6) \
+                .get_definition())
+
+
+    def test_date_updated_with_precision(self):
+        text = '''create table abc
+(
+    date_updated timestamp(6) not null default current_timestamp(6) on update current_timestamp(6)
+) engine = innodb default charset = utf8 collate = utf8_unicode_ci;'''
+
+        self.assertEqual(
+            text,
+            tinyAPI.Table('db', 'abc') \
+                .updated(6) \
                 .get_definition())
 
 # ----- Main ------------------------------------------------------------------

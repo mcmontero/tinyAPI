@@ -41,8 +41,8 @@ class __MySQLColumn(object):
                 return None
 
         term = 'default '
-        if self._default == 'current_timestamp':
-            term += 'current_timestamp'
+        if re.match('current_timestamp', str(self._default)):
+            term += self._default
         else:
             term += "'" + str(self._default) + "'"
 
@@ -432,7 +432,7 @@ class _MySQLDateTimeColumn(__MySQLColumn):
         super(_MySQLDateTimeColumn, self).__init__(name)
 
         self.__type_id = None
-        self.__num_digits = None
+        self.__precision = None
 
 
     def date_time_type(self, type_id):
@@ -445,20 +445,25 @@ class _MySQLDateTimeColumn(__MySQLColumn):
     def get_definition(self):
         terms = [self._name]
 
+        precision = ''
+        if self.__precision is not None:
+            precision = '({})'.format(self.__precision)
+
         if self.__type_id == self.TYPE_DATE:
-            terms.append('date')
+            terms.append('date' + precision)
         elif self.__type_id == self.TYPE_DATETIME:
-            terms.append('datetime')
+            terms.append('datetime' + precision)
         elif self.__type_id == self.TYPE_TIMESTAMP:
-            terms.append('timestamp')
+            terms.append('timestamp' + precision)
         elif self.__type_id == self.TYPE_TIME:
-            terms.append('time')
+            terms.append('time' + precision)
         elif self.__type_id == self.TYPE_YEAR:
-            terms.append('year(' + str(self.__num_digits) + ')')
+            terms.append('year' + precision)
         else:
-            raise TableBuilderException('unrecognized date/time column type "'
-                                         + self.__type_id
-                                         + '"')
+            raise TableBuilderException(
+                'unrecognized date/time column type "{}"'
+                    .format(self.__type_id)
+            )
 
         if self._not_null is True:
             terms.append('not null')
@@ -479,6 +484,11 @@ class _MySQLDateTimeColumn(__MySQLColumn):
         return ' '.join(terms)
 
 
+    def precision(self, precision):
+        self.__precision = precision
+        return self
+
+
     def __validate_type_id(self, type_id):
         if type_id not in [self.TYPE_DATE,
                            self.TYPE_DATETIME,
@@ -486,12 +496,6 @@ class _MySQLDateTimeColumn(__MySQLColumn):
                            self.TYPE_TIME,
                            self.TYPE_YEAR]:
             raise TableBuilderException('the type ID provided was invalid')
-
-
-    def year(self, num_digits=4):
-        self.__type_id = self.TYPE_YEAR
-        self.__num_digits = num_digits
-        return self
 
 # ----- Public Classes  -------------------------------------------------------
 
@@ -625,9 +629,9 @@ class Table(object):
         return self
 
 
-    def created(self):
+    def created(self, precision=None):
         '''Create a standardized date_created column.'''
-        self.dtt('date_created', True)
+        self.dtt('date_created', True, precision)
         return self
 
 
@@ -681,11 +685,13 @@ class Table(object):
         return self
 
 
-    def dtt(self, name, not_null=False):
+    def dtt(self, name, not_null=False, precision=None):
         '''Define a date/time column.'''
         self.__add_column(
             _MySQLDateTimeColumn(name)
-                .date_time_type(_MySQLDateTimeColumn.TYPE_DATETIME))
+                .date_time_type(_MySQLDateTimeColumn.TYPE_DATETIME)
+                .precision(precision)
+        )
 
         self.__set_attributes(not_null, None, None)
 
@@ -1221,11 +1227,13 @@ class Table(object):
         return self
 
 
-    def ts(self, name, not_null=False):
+    def ts(self, name, not_null=False, precision=None):
         '''Define a timestamp column.'''
         self.__add_column(
             _MySQLDateTimeColumn(name)
-                .date_time_type(_MySQLDateTimeColumn.TYPE_TIMESTAMP))
+                .date_time_type(_MySQLDateTimeColumn.TYPE_TIMESTAMP)
+                .precision(precision)
+        )
 
         self.__set_attributes(not_null, None, None)
 
@@ -1265,11 +1273,25 @@ class Table(object):
         return self
 
 
-    def updated(self):
+    def updated(self, precision=None):
         '''Create a standardized date_updated column.'''
-        self.ts('date_updated')
-        self.__active_column.default_value('2000-01-01 00:00:00')
-        self.__active_column.on_update('current_timestamp')
+        self.ts('date_updated', True, precision)
+
+        if precision is None:
+            self.__active_column.default_value(
+                '2000-01-01 00:00:00'
+            )
+            self.__active_column.on_update(
+                'current_timestamp'
+            )
+        else:
+            self.__active_column.default_value(
+                'current_timestamp({})'.format(precision)
+            )
+            self.__active_column.on_update(
+                'current_timestamp({})'.format(precision)
+            )
+
         return self
 
 
@@ -1303,10 +1325,16 @@ class Table(object):
         return self
 
 
-    def yr(self, name, not_null=False, num_digits=4):
+    def yr(self, name, not_null=False, precision=4):
         '''Define a year column.'''
-        self.__add_column(_MySQLDateTimeColumn(name).year(num_digits))
+        self.__add_column(
+            _MySQLDateTimeColumn(name)
+                .date_time_type(_MySQLDateTimeColumn.TYPE_YEAR)
+                .precision(precision)
+        )
+
         self.__set_attributes(not_null, None, None)
+
         return self
 
 

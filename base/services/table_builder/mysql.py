@@ -1275,7 +1275,7 @@ class Table(object):
 
     def updated(self, precision=None):
         '''Create a standardized date_updated column.'''
-        self.ts('date_updated', True, precision)
+        self.ts('date_updated', False, precision)
 
         if precision is None:
             self.__active_column.default_value(

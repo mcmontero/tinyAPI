@@ -483,7 +483,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
         text = '''create table abc
 (
     id bigint unsigned not null auto_increment unique,
-    date_updated timestamp not null default '2000-01-01 00:00:00' on update current_timestamp
+    date_updated timestamp default '2000-01-01 00:00:00' on update current_timestamp
 ) engine = innodb default charset = utf8 collate = utf8_unicode_ci;'''
 
         self.assertEqual(text,
@@ -1130,7 +1130,7 @@ add constraint abc_0_fk
     def test_date_updated_with_precision(self):
         text = '''create table abc
 (
-    date_updated timestamp(6) not null default current_timestamp(6) on update current_timestamp(6)
+    date_updated timestamp(6) default current_timestamp(6) on update current_timestamp(6)
 ) engine = innodb default charset = utf8 collate = utf8_unicode_ci;'''
 
         self.assertEqual(

@@ -4,6 +4,7 @@ __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
 # ----- Imports ---------------------------------------------------------------
 
+from .exception import ColumnCannotBeNullException
 from .exception import DataStoreException
 from .exception import DataStoreDuplicateKeyException
 from .exception import DataStoreForeignKeyException
@@ -354,7 +355,11 @@ class DataStoreMySQL(RDBMSBase):
         except pymysql.err.IntegrityError as e:
             errno, message = e.args
 
-            if errno == 1062:
+            if errno == 1048:
+                raise ColumnCannotBeNullException(
+                    self.__extract_not_null_column(message)
+                )
+            elif errno == 1062:
                 raise DataStoreDuplicateKeyException(message)
             elif errno == 1452:
                 raise DataStoreForeignKeyException(message)
@@ -400,6 +405,10 @@ class DataStoreMySQL(RDBMSBase):
         self._reset_memcache()
 
         return True
+
+
+    def __extract_not_null_column(self, message):
+        return re.match("Column '(.*)' cannot be null", message).group(1)
 
 
     def __format_query_execution_error(self, sql, message, binds=tuple()):
@@ -488,7 +497,11 @@ class DataStoreMySQL(RDBMSBase):
         except (pymysql.err.IntegrityError, pymysql.err.InternalError) as e:
             errno, message = e.args
 
-            if errno == 1062:
+            if errno == 1048:
+                raise ColumnCannotBeNullException(
+                    self.__extract_not_null_column(message)
+                )
+            elif errno == 1062:
                 raise DataStoreDuplicateKeyException(message)
             elif errno == 1271:
                 raise IllegalMixOfCollationsException(sql, binds)

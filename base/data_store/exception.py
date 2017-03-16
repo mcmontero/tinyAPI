@@ -21,6 +21,17 @@ class DataStoreException(tinyAPIException):
     pass
 
 
+class ColumnCannotBeNullException(DataStoreException):
+
+    def __init__(self, column_name):
+        super(ColumnCannotBeNullException, self) \
+            .__init__(
+                "Column '{}' cannot be null.".format(column_name)
+            )
+
+        self.column_name = column_name
+
+
 class DataStoreDuplicateKeyException(DataStoreException):
     '''Named exception identifying when a duplicate key is being added to a
        RDBMS.'''
@@ -31,9 +42,12 @@ class DataStoreForeignKeyException(DataStoreException):
     '''A foreign key constraint failed to match a parent record.'''
     pass
 
+
 class IllegalMixOfCollationsException(DataStoreException):
     '''An illegal mix of collations error was generated.'''
 
     def __init__(self, sql, binds):
         super(IllegalMixOfCollationsException, self) \
-            .__init__('sql:\n\n"{}"\n-----\nbinds:\n\n{}'.format(sql, binds))
+            .__init__(
+                'sql:\n\n"{}"\n-----\nbinds:\n\n{}'.format(sql, binds)
+            )

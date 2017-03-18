@@ -86,6 +86,18 @@ class ProviderMySQLTestCase(unittest.TestCase):
                 tinyAPI.dsh().count('select count(*) from unit_test_table'))
 
 
+    def test_asserting_is_dsh_errors(self):
+        try:
+            provider.assert_is_dsh('abc')
+
+            self.fail('Was able to assert is DSH even though the value '
+                      + 'provided was not instance of __DataStoreBase')
+        except DataStoreException as e:
+            self.assertEqual(
+                'provided value is not instance of __DataStoreBase',
+                e.get_message())
+
+
     def test_two_active_data_store_handles(self):
         dsh_1 = provider.DataStoreMySQL()
         dsh_2 = provider.DataStoreMySQL()
@@ -97,64 +109,11 @@ class ProviderMySQLTestCase(unittest.TestCase):
         self.assertIsInstance(dsh_2.connection_id(), int)
         self.assertNotEqual(dsh_1.connection_id(), dsh_2.connection_id())
 
-        dsh_1.query(
-            '''insert into unit_test_table(
-                  id,
-                  value)
-               values(
-                  1000,
-                  123)''')
-        dsh_2.query(
-            '''insert into unit_test_table(
-                  id,
-                  value)
-               values(
-                  2000,
-                  456)''')
-
-        self.assertEqual(
-            1,
-            dsh_1.count(
-                '''select count(*)
-                     from unit_test_table
-                    where id = 1000'''))
-        self.assertEqual(
-            0,
-            dsh_1.count(
-                '''select count(*)
-                     from unit_test_table
-                    where id = 2000'''))
-
-        self.assertEqual(
-            1,
-            dsh_2.count(
-                '''select count(*)
-                     from unit_test_table
-                    where id = 2000'''))
-        self.assertEqual(
-            0,
-            dsh_2.count(
-                '''select count(*)
-                     from unit_test_table
-                    where id = 1000'''))
-
-        dsh_1.commit()
-        dsh_2.commit()
+        self.assertEqual(123, dsh_1.count('select 123 from dual'))
+        self.assertEqual(456, dsh_2.count('select 456 from dual'))
 
         dsh_1.close()
         dsh_2.close()
-
-
-    def test_asserting_is_dsh_errors(self):
-        try:
-            provider.assert_is_dsh('abc')
-
-            self.fail('Was able to assert is DSH even though the value '
-                      + 'provided was not instance of __DataStoreBase')
-        except DataStoreException as e:
-            self.assertEqual(
-                'provided value is not instance of __DataStoreBase',
-                e.get_message())
 
 
     def test_use_of_autonomous_transactions(self):

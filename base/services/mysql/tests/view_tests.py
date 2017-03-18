@@ -4,6 +4,7 @@ __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
 # ----- Imports ---------------------------------------------------------------
 
+from tinyAPI.base.config import ConfigManager
 from tinyAPI.base.data_store.provider import DataStoreMySQL
 from tinyAPI.base.services.mysql.view import ViewFlipper
 from tinyAPI.base.services.unit_testing import TransactionalDataStoreTestCase
@@ -18,7 +19,10 @@ class ViewTestCase(TransactionalDataStoreTestCase):
 
     def test_view_flipper(self):
         mysql = DataStoreMySQL()
-        mysql.select_db('local', 'tinyAPI')
+        mysql.select_db(
+            ConfigManager().value('default unit test connection'),
+            'tinyAPI'
+        )
 
         mysql.query(
             "create table if not exists "

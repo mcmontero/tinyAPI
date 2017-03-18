@@ -21,7 +21,10 @@ class ProviderMySQLTestCase(unittest.TestCase):
         if ConfigManager().value('data store') == 'mysql':
             self.__execute_tests = True
 
-            tinyAPI.dsh.select_db('local', 'tinyAPI')
+            tinyAPI.dsh.select_db(
+                ConfigManager().value('default unit test connection'),
+                'tinyAPI'
+            )
 
             tinyAPI.dsh().query(
                 '''create table if not exists unit_test_table
@@ -102,8 +105,14 @@ class ProviderMySQLTestCase(unittest.TestCase):
         dsh_1 = provider.DataStoreMySQL()
         dsh_2 = provider.DataStoreMySQL()
 
-        dsh_1.select_db('local', 'tinyAPI')
-        dsh_2.select_db('local', 'tinyAPI')
+        dsh_1.select_db(
+            ConfigManager().value('default unit test connection'),
+            'tinyAPI'
+        )
+        dsh_2.select_db(
+            ConfigManager().value('default unit test connection'),
+            'tinyAPI'
+        )
 
         self.assertIsInstance(dsh_1.connection_id(), int)
         self.assertIsInstance(dsh_2.connection_id(), int)
@@ -117,8 +126,16 @@ class ProviderMySQLTestCase(unittest.TestCase):
 
 
     def test_use_of_autonomous_transactions(self):
-        dsh_1 = provider.autonomous_tx_start('local', 'tinyAPI')
-        dsh_2 = provider.autonomous_tx_start('local', 'tinyAPI')
+        dsh_1 = \
+            provider.autonomous_tx_start(
+                ConfigManager().value('default unit test connection'),
+                'tinyAPI'
+            )
+        dsh_2 = \
+            provider.autonomous_tx_start(
+                ConfigManager().value('default unit test connection'),
+                'tinyAPI'
+            )
 
         self.assertIsInstance(dsh_1.connection_id(), int)
         self.assertIsInstance(dsh_2.connection_id(), int)

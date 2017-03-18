@@ -4,6 +4,7 @@ __author__ = 'Michael Montero <mcmontero@gmail.com>'
 
 # ----- Imports ---------------------------------------------------------------
 
+from tinyAPI.base.config import ConfigManager
 from tinyAPI.base.services.schema_differ.mysql import SchemaDiffer
 
 import tinyAPI
@@ -16,10 +17,14 @@ class SchemaDifferMySQLTestCase(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(SchemaDifferMySQLTestCase, self).__init__(*args, **kwargs)
 
-        self.__differ = SchemaDiffer('local', 'schema_differ_source',
-                                     'local', 'schema_differ_target') \
-                            .dont_write_upgrade_scripts() \
-                            .execute()
+        self.__differ = SchemaDiffer(
+            ConfigManager().value('default unit test connection'),
+            'schema_differ_source',
+            ConfigManager().value('default unit test connection'),
+            'schema_differ_target'
+        ) \
+            .dont_write_upgrade_scripts() \
+            .execute()
 
 
     def test_there_are_differences(self):

@@ -227,8 +227,6 @@ class DataStoreMySQL(RDBMSBase):
         self.__close_cursor()
         Memcache().clear_local_cache()
 
-        self._inactive_since = time.time()
-
         if self.__mysql:
             if self.persistent is False:
                 self.__mysql.close()
@@ -271,6 +269,7 @@ class DataStoreMySQL(RDBMSBase):
                 if time.time() - self._inactive_since >= \
                    self._ping_interval - 3:
                     self.__mysql.ping(True)
+                    self._inactive_since = time.time()
                 else:
                     self.hits += 1
             return
@@ -303,6 +302,8 @@ class DataStoreMySQL(RDBMSBase):
             pymysql.connect(**config)
         self.__mysql.decoders[pymysql.FIELD_TYPE.TIME] = \
             pymysql.converters.convert_time
+
+        self._inactive_since = time.time()
 
 
     def connection_id(self):

@@ -109,6 +109,9 @@ class Validator(object):
     '''Provides functionality for validating various types of data.'''
 
     def email_is_valid(self, em_address):
+        if em_address != re.sub('[\r\n]', '', em_address):
+            return False
+
         try:
             name, domain = em_address.split('@')
         except ValueError:

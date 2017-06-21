@@ -60,10 +60,12 @@ class FileSystemQueue(object):
                     continue
 
             with open(file_path, 'r') as f:
-                queue.append({
-                    'file': file_path,
-                    'data': json.loads(f.read())
-                })
+                payload = f.read()
+                if payload is not None and len(payload) > 0:
+                    queue.append({
+                        'file': file_path,
+                        'data': json.loads(payload)
+                    })
 
             if remove_queue_file is True:
                 os.unlink(file_path)

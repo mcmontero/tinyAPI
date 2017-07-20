@@ -66,7 +66,6 @@ class DataTestCase(unittest.TestCase):
             'a!@b.com',
             'a@b',
             'a@b!.com',
-            'a@b.invalidtld',
             'a@.com',
             'a@...com',
             'a@b.c^.com',
@@ -91,7 +90,8 @@ class DataTestCase(unittest.TestCase):
             'a12345@b.com',
             'A@B.COM',
             'a@b.c.d.com',
-            'abc@a-b.c.org'
+            'abc@a-b.c.org',
+            'a@b.solutions'
         ]
 
         for em_address in valid:

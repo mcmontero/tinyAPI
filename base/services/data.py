@@ -131,7 +131,7 @@ class Validator(object):
                 return False
 
         # Attempt to validate the top level domain - .com, .org, .net, etc.
-        if not re.search('^[A-Za-z]{2,6}$', domain_parts[-1]):
+        if not re.search('^[A-Za-z]{2,16}$', domain_parts[-1]):
             return False
 
         return True

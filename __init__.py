@@ -13,9 +13,13 @@ from tinyAPI.base.services.table_builder.reference import refv
 
 import tinyAPI.base.data_store.ConnectionManager
 
+# ----- Public Functions ------------------------------------------------------
+
+def load_reference_definitions(ref_defs_file):
+    if ref_defs_file is not None:
+        loader = SourceFileLoader('reference_definition', ref_defs_file)
+        loader.load_module('reference_definition')
+
 # ----- Instructions ----------------------------------------------------------
 
-ref_defs_file = ConfigManager.value('reference definition file')
-if ref_defs_file is not None:
-    loader = SourceFileLoader('reference_definition', ref_defs_file)
-    loader.load_module('reference_definition')
+load_reference_definitions(ConfigManager.value('reference definition file'))

@@ -141,7 +141,7 @@ class DataTestCase(unittest.TestCase):
 
 
     def test_is_valid_number(self):
-        p = phonenumbers.parse('+11234567890')
+        p = phonenumbers.parse('+1123456789')
         self.assertFalse(phonenumbers.is_possible_number(p))
         self.assertFalse(phonenumbers.is_valid_number(p))
 

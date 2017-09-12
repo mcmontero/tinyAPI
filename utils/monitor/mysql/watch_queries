@@ -1,0 +1,91 @@
+#!/usr/bin/env /usr/bin/python3
+
+# ----- Imports ---------------------------------------------------------------
+
+from tinyAPI.base.services.cli import cli_main
+
+import argparse
+import pymysql
+import time
+import tinyAPI
+
+# ----- Configuration ---------------------------------------------------------
+
+args = argparse.ArgumentParser(
+    description = 'Attempts to detect transactions that are blocked or have '
+                  + 'been waiting too long to finish executing.'
+)
+
+args.add_argument(
+    'mysql_host',
+    help = 'The hostname of the MySQL server.'
+)
+
+args.add_argument(
+    'mysql_user',
+    help = 'The user to connect to MySQL as.'
+)
+
+args.add_argument(
+    'mysql_password',
+    help = 'The password to use to connect to MySQL.'
+)
+
+args.add_argument(
+    'db_to_watch',
+    help = 'The database to watch queries for.'
+)
+
+# ----- Main ------------------------------------------------------------------
+
+def main(cli):
+    cli.header('Watching Queries')
+
+    mysql = __connect_to_mysql(cli)
+    cursor = mysql.cursor(pymysql.cursors.DictCursor)
+
+    cli.notice('Monitoring now...\n')
+
+    while True:
+        cursor.execute(
+            """select time,
+                      info
+                 from information_schema.processlist
+                where db = %s
+                  and info not in (
+                        'Sleep', 'SLEEP',
+                        'Commit', 'COMMIT',
+                        'Rollback', 'ROLLBACK'
+                      )""",
+            [cli.args.db_to_watch]
+        )
+        results = cursor.fetchall()
+        if results != ():
+            for result in results:
+                print('+{}+\n'.format('-' * 76))
+                print('Execution time:\n{}\n'.format(result['time']))
+                print('Query:\n{}'.format(result['info']))
+                print('\n+{}+\n'.format('-' * 76))
+
+        mysql.commit()
+
+        time.sleep(.25)
+
+# ----- Private Functions -----------------------------------------------------
+
+def __connect_to_mysql(cli):
+    cli.notice('Connecting to MySQL...')
+
+    config = {
+        'user': cli.args.mysql_user,
+        'passwd': cli.args.mysql_password,
+        'host': cli.args.mysql_host,
+        'autocommit': False
+    }
+    mysql = pymysql.connect(**config)
+
+    return mysql
+
+# ----- Instructions ----------------------------------------------------------
+
+cli_main(main, args)

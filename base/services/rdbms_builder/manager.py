@@ -433,8 +433,12 @@ class Manager(object):
 # ----- Imports ---------------------------------------------------------------
 
 import builtins
+import gettext
 
 # ----- Instructions ----------------------------------------------------------
+
+# Language translation support
+builtins._ = gettext.gettext
 
 # TABLE tinyAPI_ref_unit_test
 builtins.TINYAPI_UNIT_TEST_ONE = 1

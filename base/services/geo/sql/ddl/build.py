@@ -28,6 +28,21 @@ def geo_build():
             .add(4, 'Southwest')
             .add(5, 'West'),
 
+        tinyAPI.RefTable(db, 'geo_ref_canadian_province')
+            .add(1, 'AB')
+            .add(2, 'BC')
+            .add(3, 'MB')
+            .add(4, 'NB')
+            .add(5, 'NL')
+            .add(6, 'NS')
+            .add(7, 'NT')
+            .add(8, 'NU')
+            .add(9, 'ON')
+            .add(10, 'PE')
+            .add(11, 'QC')
+            .add(12, 'SK')
+            .add(13, 'YT'),
+
         tinyAPI.Table(db, 'geo_country')
             .serial()
             .vchar('name', 100, True)

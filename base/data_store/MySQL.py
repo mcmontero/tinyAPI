@@ -214,6 +214,20 @@ class MySQL(RDBMSBase):
 
         return True
 
+    def dissociate(self, data, delim_row, delim_column, key_on_first=False):
+        if key_on_first is True:
+            results = {}
+            for row in data.split(delim_row):
+                columns = row.split(delim_column)
+
+                results[columns[0]] = columns[1:]
+        else:
+            results = []
+            for row in data.split(delim_row):
+                results.append(row.split(delim_column))
+
+        return results
+
     def __format_query_execution_error(self, sql, message, binds=tuple()):
         return ('execution of this query:\n\n'
                 + sql

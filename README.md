@@ -37,7 +37,7 @@ PYTHON CONFIGURATION
     - Create it with the default values found in the documentation version of
       this file here:
 
-        conf/tinyAPI_config.py
+        config/tinyAPI_config.py
 
     - Customize it for your project.
 

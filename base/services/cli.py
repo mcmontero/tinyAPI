@@ -156,7 +156,7 @@ class CLI(object):
             raise CLIException(
                 'base directory "' + base_name + '" does not exist')
 
-        base_name += '/' +os.path.basename(sys.argv[0])
+        base_name += '/' + os.path.basename(sys.argv[0])
 
         if len(params) > 0:
             base_name += '-' + re.sub('[^A-Za-z0-9_\-]', '', params_str.lower())

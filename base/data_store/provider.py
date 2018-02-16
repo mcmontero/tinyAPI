@@ -174,6 +174,11 @@ class RDBMSBase(__DataStoreBase):
         return record
 
 
+    def ping(self):
+        '''Make sure the connection is still open and, if not, reconnect.'''
+        raise NotImplementedError
+
+
     def query(self, query, binds = []):
         '''Execute an arbitrary query and return all of the results.'''
         return None
@@ -477,6 +482,15 @@ class DataStoreMySQL(RDBMSBase):
             return records[index]
         else:
             return None
+
+
+    def ping(self):
+        if self.__mysql:
+            if time.time() - self._inactive_since >= self._ping_interval - 3:
+                self.__mysql.ping(True)
+                self._inactive_since = time.time()
+
+        return self
 
 
     def query(self, sql, binds=tuple()):

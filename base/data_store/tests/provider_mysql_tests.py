@@ -257,6 +257,26 @@ class ProviderMySQLTestCase(unittest.TestCase):
         self.assertIsInstance(record['ti'], datetime.time)
         self.assertEqual('08:30:00', str(record['ti']))
 
+
+    def test_ping(self):
+        self.assertEqual(
+            1,
+            tinyAPI.dsh().count(
+                """select 1
+                     from dual"""
+            )
+        )
+
+        tinyAPI.dsh().ping()
+
+        self.assertEqual(
+            2,
+            tinyAPI.dsh().count(
+                """select 2
+                     from dual"""
+            )
+        )
+
 # ----- Main ------------------------------------------------------------------
 
 if __name__ == '__main__':

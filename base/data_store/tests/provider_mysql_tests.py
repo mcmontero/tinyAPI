@@ -31,7 +31,8 @@ class ProviderMySQLTestCase(unittest.TestCase):
                    (
                         id integer not null auto_increment primary key,
                         value integer not null,
-                        ti time null
+                        ti time null,
+                        message blob null
                    )''')
 
 
@@ -276,6 +277,26 @@ class ProviderMySQLTestCase(unittest.TestCase):
                      from dual"""
             )
         )
+
+
+    def test_create_with_binary(self):
+        id = tinyAPI.dsh().create(
+            'unit_test_table',
+            {'value': 123,
+             '_binary message': 'abc def ghi'}
+        )
+        self.assertIsNotNone(id)
+
+        record = tinyAPI.dsh().one(
+            """select value,
+                      message
+                 from unit_test_table
+                where id = %s""",
+            [id]
+        )
+        self.assertIsNotNone(record)
+        self.assertEqual(123, record['value'])
+        self.assertEqual('abc def ghi', record['message'].decode())
 
 # ----- Main ------------------------------------------------------------------
 

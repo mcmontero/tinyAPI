@@ -341,7 +341,10 @@ class DataStoreMySQL(RDBMSBase):
         if len(data) == 0:
             return None
 
-        keys = list(data.keys())
+        keys = []
+        for key in list(data.keys()):
+            keys.append(re.sub('_binary ', '', key))
+
         binds = self.__get_binds(data)
         vals = self.__get_values(data.values())
 
@@ -431,14 +434,17 @@ class DataStoreMySQL(RDBMSBase):
             return tuple()
 
         binds = []
-        for value in list(data.values()):
+        for key, value in data.items():
             str_value = str(value)
 
             if re.match('current_timestamp', str_value) is not None or \
                str_value == 'current_date':
                 binds.append(value)
             else:
-                binds.append('%s')
+                if re.search('^_binary ', key):
+                    binds.append('_binary %s')
+                else:
+                    binds.append('%s')
 
         return binds
 

@@ -858,13 +858,25 @@ builtins._tinyapi_ref_unit_test = _tinyapi_ref_unit_test
                         self.__notice(file, 2)
 
                         try:
-                            subprocess.check_output(
-                                dir + '/' + file,
-                                stderr=subprocess.STDOUT,
-                                shell=True)
+                            output = \
+                                subprocess.check_output(
+                                    dir + '/' + file,
+                                    stderr=subprocess.STDOUT,
+                                    shell=True
+                                )
+
+                            if self.__cli.args.verbose is True:
+                                self.__notice(output.decode(), 3)
                         except subprocess.CalledProcessError as e:
+                            self.__error(
+                                'execution failed with the following output:',
+                                3
+                            )
+                            self.__error(output, 4)
+
                             raise RDBMSBuilderException(
-                                    e.output.rstrip().decode())
+                                e.output.rstrip().decode()
+                            )
 
 
     def __execute_prebuild_scripts(self):

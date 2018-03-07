@@ -28,7 +28,7 @@ args.add_argument(
 args.add_argument(
     '--verbose',
     help='Provide more output.',
-    dest='all',
+    dest='verbose',
     action='store_true')
 args.set_defaults(all=False)
 

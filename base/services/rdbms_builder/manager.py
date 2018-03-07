@@ -866,7 +866,9 @@ builtins._tinyapi_ref_unit_test = _tinyapi_ref_unit_test
                                 )
 
                             if self.__cli.args.verbose is True:
-                                self.__notice(output.decode(), 3)
+                                output = output.decode()
+                                if output != '':
+                                    self.__notice(output.decode(), 3)
                         except subprocess.CalledProcessError as e:
                             self.__error(
                                 'execution failed with the following output:',

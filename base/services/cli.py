@@ -200,8 +200,11 @@ class CLI(object):
 
 
     def __print_message(self, message, char, indent=None):
+        if not isinstance(message, str):
+            message = message.decode()
+
         if indent is not None:
-            print((' ' * 4 *indent) + message)
+            print((' ' * 4 * indent) + message)
         else:
             print(char + ' ' + message)
 

@@ -508,7 +508,8 @@ class DataStoreMySQL(RDBMSBase):
         self.connect()
 
         is_select = False
-        if re.match('^\(?select ', sql) or re.match('^show ', sql):
+        if re.match('^\(?select ', sql, re.IGNORECASE) or \
+           re.match('^show ', sql, re.IGNORECASE):
             is_select = True
 
         cursor = self.__get_cursor()

@@ -64,6 +64,10 @@ class Memcache(object):
                     ConfigManager.value('memcached servers'),
                     binary = True,
                     behaviors = {
+                        'dead_timeout': 60,
+                        'ketama': 1,
+                        'remove_failed': 1,
+                        'retry_timeout': 1,
                         'tcp_nodelay': True
                     })
 

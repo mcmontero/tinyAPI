@@ -54,56 +54,70 @@ class Manager(object):
                     ) \
                         .decode();
 
-                failed = False
+                failed = flush = False
+                test_info = None
                 for line in output.split("\n"):
-                    if re.search('^test_', line) is not None:
-                        test_case = ''
-                        matches = re.search(' \(.*?\.(.*?)\)', line)
-                        if matches is not None:
-                            test_case = matches.group(1)
+                    # Attempt to capture test results
+                    results = re.search(r' \.\.\. (?P<output>.*)(?P<message>ok|fail|error|skipped)$', line, re.IGNORECASE)
+                    if test_info is None:
+                        test_info = re.match(r'^(?P<method>test_[^ ]+) \(.*?\.(?P<class>.*?)\)', line)
+                        if test_info is not None:
+                            flush = False
 
-                        parts = line.split(' ')
-                        if len(parts) == 4:
-                            method_name = parts[0]
-                            message = parts[3]
-                        else:
+                    if re.match('FAILED \(', line) or re.search('Error:', line):
+                        flush = True
+                        failed = True
+
+                    # If results delimiter is found we need to validate case output
+                    if results is not None:
+                        test_class = test_method = message = ''
+                        if test_info is not None:
+                            test_method = test_info.group('method')
+                            test_class = test_info.group('class')
+                            message = results.group('message')
+
+                        # Validate that no output occured
+                        if results.group('output'):
                             raise RuntimeError(
                                 '\n{}\n{}::{}\n\nproduced\n\n{}\n{}'
                                     .format(
                                         '=' * 75,
-                                        test_case,
-                                        parts[0],
-                                        ' '.join(parts[3:]),
+                                        test_class,
+                                        test_method,
+                                        results.group('output'),
                                         '=' * 75
                                     )
                             )
+                        else:
+                            if test_method is not None and test_method != line:
+                                length = len(test_class) + len(test_method) + 12
+                                if length > 79:
+                                    test_method = \
+                                        '...' + test_method[(length - 76):]
 
-                        if method_name is not None and method_name != line:
-                            length = len(test_case) + len(method_name) + 12
-                            if length > 79:
-                                method_name = \
-                                    '...' + method_name[(length - 76):]
+                            self.__cli.notice(
+                                '{}::{} .. {}'
+                                    .format(
+                                        test_class,
+                                        test_method,
+                                        message.upper()
+                                    ),
+                                1
+                            )
 
-                        self.__cli.notice(
-                            '{}::{} .. {}'
-                                .format(
-                                    test_case,
-                                    method_name,
-                                    message
-                                ),
-                            1
-                        )
+                            # We've already caught the end the current test
+                            # Flush the rest of the incoming lines before the next test
+                            flush = True
+                            test_info = results = None
+                            test_method = test_class = message = ''
                     elif line == 'OK':
                         self.__cli.notice('', 1)
-                    elif line != '':
+                    elif line != '' and flush:
                         self.__cli.notice(line, 1)
 
                     matches = re.match('Ran (\d+) test', line)
                     if matches is not None:
                         self.__total_tests += int(matches.group(1))
-
-                    if re.match('FAILED \(', line) or re.search('Error:', line):
-                        failed = True
 
                 if failed is True:
                     sys.exit(1)

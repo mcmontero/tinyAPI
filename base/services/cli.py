@@ -98,6 +98,11 @@ class CLI(object):
             pass
 
 
+    def disable_status(self):
+        self.__enable_status = False
+        return self
+
+
     def dont_stop_on_signal(self):
         self.__stop_on_signal = False
         return self

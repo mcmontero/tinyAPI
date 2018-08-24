@@ -150,10 +150,13 @@ def __process_innodb_transactions(cli, cursor, results, tracked_txs):
                 message += '+ Active queries:\n'
 
                 for query in running_queries:
-                    message += '    {}\n    {}\n    {}\n    ---\n' \
-                                .format(query['event_name'],
-                                        query['sql_text'],
-                                        query['message_text']
+                    if query['sql_text'] not in ['COMMIT', 'ROLLBACK']:
+                        message += \
+                            '    {}\n    {}\n    {}\n    ---\n' \
+                                .format(
+                                    query['event_name'],
+                                    query['sql_text'],
+                                    query['message_text']
                                 )
 
                 message += '\n# +-------------------------------------------' \

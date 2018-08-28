@@ -107,7 +107,13 @@ def __get_running_queries(cli, cursor):
     queries = []
     for record in results:
         if record['sql_text'] != sql:
-            queries.append(record)
+            if query['sql_text'] not in [
+                'COMMIT',
+                'ROLLBACK',
+                'select current_timestamp from dual',
+                'SET AUTOCOMMIT = 1'
+            ]:
+                queries.append(record)
 
     return queries
 
@@ -138,6 +144,7 @@ def __process_innodb_transactions(cli, cursor, results, tracked_txs):
                 cli.notice('transaction has been waiting too long; logging', 2)
 
                 running_queries = __get_running_queries(cli, cursor)
+                innodb_status = __show_innodb_status(cli, cursor)
 
                 message = \
                     '\n' + \
@@ -150,19 +157,17 @@ def __process_innodb_transactions(cli, cursor, results, tracked_txs):
                 message += '+ Active queries:\n'
 
                 for query in running_queries:
-                    if query['sql_text'] not in [
-                        'COMMIT',
-                        'ROLLBACK',
-                        'select current_timestamp from dual',
-                        'SET AUTOCOMMIT = 1'
-                       ]:
-                        message += \
-                            '    {}\n    {}\n    {}\n    ---\n' \
-                                .format(
-                                    query['event_name'],
-                                    query['sql_text'],
-                                    query['message_text']
-                                )
+                    message += \
+                        '    {}\n    {}\n    ---\n' \
+                            .format(
+                                query['event_name'],
+                                query['sql_text']
+                            )
+
+                message += '\n----------------------------------------------' \
+                           + '-------------------------------+\n'
+
+                message += innodb_status
 
                 message += '\n# +-------------------------------------------' \
                            + '-------------------------------+'
@@ -181,6 +186,15 @@ def __process_innodb_transactions(cli, cursor, results, tracked_txs):
         for trx_id in trx_ids:
             if trx_id not in active_txs:
                 del tracked_txs[trx_id]
+
+
+def __show_innodb_status(cli, cursor):
+    cli.notice('getting InnoDB engine status', 3)
+
+    cursor.execute('show engine innodb status')
+    results = cursor.fetchall()
+
+    return results[0]['Status']
 
 # ----- Instructions ----------------------------------------------------------
 

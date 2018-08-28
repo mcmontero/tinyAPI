@@ -57,7 +57,7 @@ def main(cli):
     if len(results) != 1 or \
        results[0]['Variable_name'] != 'performance_schema' or \
        results[0]['Value'] != 'ON':
-        raise RuntimeError('performance schedule is not enabled')
+        raise RuntimeError('performance schema is not enabled')
 
     tracked_txs = {}
     num_iterations = 0

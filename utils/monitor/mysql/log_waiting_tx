@@ -150,7 +150,12 @@ def __process_innodb_transactions(cli, cursor, results, tracked_txs):
                 message += '+ Active queries:\n'
 
                 for query in running_queries:
-                    if query['sql_text'] not in ['COMMIT', 'ROLLBACK']:
+                    if query['sql_text'] not in [
+                        'COMMIT',
+                        'ROLLBACK',
+                        'select current_timestamp from dual',
+                        'SET AUTOCOMMIT = 1'
+                       ]:
                         message += \
                             '    {}\n    {}\n    {}\n    ---\n' \
                                 .format(

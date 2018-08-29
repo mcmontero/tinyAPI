@@ -52,13 +52,6 @@ def main(cli):
     mysql = __connect_to_mysql(cli)
     cursor = mysql.cursor(pymysql.cursors.DictCursor)
 
-    cursor.execute("show variables like 'performance_schema'")
-    results = cursor.fetchall()
-    if len(results) != 1 or \
-       results[0]['Variable_name'] != 'performance_schema' or \
-       results[0]['Value'] != 'ON':
-        raise RuntimeError('performance schema is not enabled')
-
     tracked_txs = {}
     num_iterations = 0
     while True:

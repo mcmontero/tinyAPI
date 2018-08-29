@@ -107,7 +107,7 @@ def __get_running_queries(cli, cursor):
     queries = []
     for record in results:
         if record['sql_text'] != sql:
-            if query['sql_text'] not in [
+            if record['sql_text'] not in [
                 'COMMIT',
                 'ROLLBACK',
                 'select current_timestamp from dual',

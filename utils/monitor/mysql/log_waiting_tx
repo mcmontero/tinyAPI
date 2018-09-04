@@ -158,7 +158,7 @@ def __process_innodb_transactions(cli, cursor, results, tracked_txs):
                             )
 
                 message += '\n----------------------------------------------' \
-                           + '-------------------------------+\n'
+                           + '--------------------------------\n'
 
                 message += innodb_status
 

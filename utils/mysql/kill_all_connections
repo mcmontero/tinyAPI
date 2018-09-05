@@ -1,0 +1,96 @@
+#!/usr/bin/env /usr/bin/python3
+
+# ----- Imports ---------------------------------------------------------------
+
+from tinyAPI.base.services.cli import cli_main
+
+import argparse
+import re
+import pymysql
+import tinyAPI
+
+# ----- Configuration ---------------------------------------------------------
+
+args = argparse.ArgumentParser(
+    description =
+        'Kills all connections for the named database and, optionally, '
+        + 'allows "lock table" statements to keep running.'
+)
+
+args.add_argument(
+    'mysql_host',
+    help = 'The hostname of the MySQL server.'
+)
+
+args.add_argument(
+    'mysql_user',
+    help = 'The user to connect to MySQL as.'
+)
+
+args.add_argument(
+    'mysql_password',
+    help = 'The password to use to connect to MySQL.'
+)
+
+args.add_argument(
+    'db',
+    help = 'The database in which to kill connections.'
+)
+
+args.add_argument(
+    '--allow-lock-table',
+    help = "Don't kill lock table statements."
+)
+
+# ----- Main ------------------------------------------------------------------
+
+def main(cli):
+    cli.header('Kill All Connections')
+
+    mysql = __connect_to_mysql(cli)
+    cursor = mysql.cursor(pymysql.cursors.DictCursor)
+
+    cursor.execute('show full processlist')
+    records = cursor.fetchall()
+
+    if records is not None and len(records) > 0:
+        cli.notice('Killing processes...')
+
+        for record in records:
+            if record['db'] == cli.args.db or \
+               record['Id'] == mysql.thread_id():
+                cli.notice('found {}'.format(record['Id']), 1)
+
+                if record['Id'] == mysql.thread_id():
+                    cli.notice("skipping, that's me", 2)
+                    continue
+
+                if cli.args.allow_lock_table == '1' and \
+                   record['Info'] is not None and \
+                   re.search('^lock table .*$', record['Info']):
+                    cli.notice('skipping lock table statement', 2)
+                    continue
+
+                cursor.execute('kill {}'.format(record['Id']))
+                cli.notice('killed', 2)
+    else:
+        cli.notice('No connections to kill.')
+
+# ----- Private Functions -----------------------------------------------------
+
+def __connect_to_mysql(cli):
+    cli.notice('Connecting to MySQL...')
+
+    config = {
+        'user': cli.args.mysql_user,
+        'passwd': cli.args.mysql_password,
+        'host': cli.args.mysql_host,
+        'autocommit': False
+    }
+    mysql = pymysql.connect(**config)
+
+    return mysql
+
+# ----- Instructions ----------------------------------------------------------
+
+cli_main(main, args)

@@ -42,10 +42,15 @@ args.add_argument(
     help = "Don't kill lock table statements."
 )
 
+args.add_argument(
+    '--kill-all',
+    help = 'Kill all connections, not just sleep ones.'
+)
+
 # ----- Main ------------------------------------------------------------------
 
 def main(cli):
-    cli.header('Kill All Connections')
+    cli.header('Kill Connections')
 
     mysql = __connect_to_mysql(cli)
     cursor = mysql.cursor(pymysql.cursors.DictCursor)
@@ -59,7 +64,14 @@ def main(cli):
         for record in records:
             if record['db'] == cli.args.db or \
                record['Id'] == mysql.thread_id():
-                cli.notice('found {}'.format(record['Id']), 1)
+                cli.notice(
+                    'found {} ({})'
+                        .format(
+                            record['Id'],
+                            record['Command']
+                        ),
+                    1
+                )
 
                 if record['Id'] == mysql.thread_id():
                     cli.notice("skipping, that's me", 2)
@@ -71,8 +83,9 @@ def main(cli):
                     cli.notice('skipping lock table statement', 2)
                     continue
 
-                cursor.execute('kill {}'.format(record['Id']))
-                cli.notice('killed', 2)
+                if record['Command'] == 'Sleep' or cli.args.kill_all == '1':
+                    cursor.execute('kill {}'.format(record['Id']))
+                    cli.notice('killed', 2)
     else:
         cli.notice('No connections to kill.')
 

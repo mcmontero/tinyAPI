@@ -227,13 +227,13 @@ class DataStoreMySQL(RDBMSBase):
         self.__last_row_id = None
 
 
-    def close(self):
+    def close(self, force=False):
         '''Close the active database connection.'''
         self.__close_cursor()
         Memcache().clear_local_cache()
 
         if self.__mysql:
-            if self.persistent is False:
+            if self.persistent is False or force is True:
                 self.__mysql.close()
                 self.__mysql = None
 
@@ -505,38 +505,61 @@ class DataStoreMySQL(RDBMSBase):
             self._reset_memcache()
             return results_from_cache
 
-        self.connect()
-
         is_select = False
         if re.match('^\(?select ', sql, re.IGNORECASE) or \
            re.match('^show ', sql, re.IGNORECASE):
             is_select = True
 
-        cursor = self.__get_cursor()
+        secs_backoff = .25
+        while True:
+            try:
+                self.connect()
 
-        try:
-            cursor.execute(sql, binds)
-        except (pymysql.err.IntegrityError, pymysql.err.InternalError) as e:
-            errno, message = e.args
+                cursor = self.__get_cursor()
+                cursor.execute(sql, binds)
 
-            if errno == 1048:
-                raise ColumnCannotBeNullException(
-                    self.__extract_not_null_column(message)
-                )
-            elif errno == 1062:
-                raise DataStoreDuplicateKeyException(message)
-            elif errno == 1271:
-                raise IllegalMixOfCollationsException(sql, binds)
-            elif errno == 1452:
-                raise DataStoreForeignKeyException(message)
-            else:
-                raise
-        except pymysql.err.ProgrammingError as e:
-            errno, message = e.args
+                break
+            except (
+                pymysql.err.IntegrityError, pymysql.err.InternalError
+            ) as e:
+                errno, message = e.args
 
-            raise DataStoreException(
-                    self.__format_query_execution_error(
-                                sql, message, binds))
+                if errno == 1048:
+                    raise ColumnCannotBeNullException(
+                        self.__extract_not_null_column(message)
+                    )
+                elif errno == 1062:
+                    raise DataStoreDuplicateKeyException(message)
+                elif errno == 1271:
+                    raise IllegalMixOfCollationsException(sql, binds)
+                elif errno == 1452:
+                    raise DataStoreForeignKeyException(message)
+                else:
+                    raise
+            except (
+                pymysql.err.InterfaceError, pymysql.err.OperationalError
+            ) as e:
+                if isinstance(e, pymysql.err.OperationalError):
+                    errno, messages = e.args
+                    if errno not in [2003, 2013]:
+                        raise
+
+                self.close(force=True)
+
+                time.sleep(secs_backoff)
+                secs_backoff += secs_backoff
+
+                if secs_backoff >= 4.0:
+                    raise
+            except pymysql.err.ProgrammingError as e:
+                errno, message = e.args
+
+                raise \
+                    DataStoreException(
+                        self.__format_query_execution_error(
+                            sql, message, binds
+                        )
+                    )
 
         self.__row_count = cursor.rowcount
         self.__last_row_id = cursor.lastrowid

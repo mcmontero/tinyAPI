@@ -298,6 +298,22 @@ class ProviderMySQLTestCase(unittest.TestCase):
         self.assertEqual(123, record['value'])
         self.assertEqual('abc def ghi', record['message'].decode())
 
+
+    def test_auto_reconnect(self):
+        connection_id = tinyAPI.dsh().connection_id()
+        self.assertIsNotNone(connection_id)
+
+        dsh_1 = \
+            provider.autonomous_tx_start(
+                ConfigManager().value('default unit test connection'),
+                'tinyAPI'
+            )
+        dsh_1.query('kill {}'.format(connection_id))
+        provider.autonomous_tx_stop_commit(dsh_1)
+
+        records = tinyAPI.dsh().query('select 1 from dual')
+        self.assertEqual(1, len(records))
+
 # ----- Main ------------------------------------------------------------------
 
 if __name__ == '__main__':

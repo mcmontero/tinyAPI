@@ -541,7 +541,7 @@ class DataStoreMySQL(RDBMSBase):
             ) as e:
                 if isinstance(e, pymysql.err.OperationalError):
                     errno, messages = e.args
-                    if errno not in [2003, 2013]:
+                    if errno not in [2003, 2006, 2013]:
                         raise
 
                 self.close(force=True)

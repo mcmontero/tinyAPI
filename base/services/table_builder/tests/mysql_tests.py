@@ -572,7 +572,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
 
     def test_string_binary_binary(self):
         self.assertEqual(
-            "abc binary(15) character set def collate ghi default null",
+            "abc binary(15) default null",
             _MySQLStringColumn('abc')
                 .binary_type(_MySQLStringColumn.TYPE_BINARY, 15)
                 .charset('def')
@@ -582,7 +582,7 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
 
     def test_string_binary_varbinary(self):
         self.assertEqual(
-            "abc varbinary(15) character set def collate ghi default null",
+            "abc varbinary(15) default null",
             _MySQLStringColumn('abc')
                 .binary_type(_MySQLStringColumn.TYPE_VARBINARY, 15)
                 .charset('def')
@@ -675,8 +675,8 @@ class TableBuilderMySQLTestCase(unittest.TestCase):
 (
     def char(15) character set utf8 collate utf8_unicode_ci not null,
     ghi varchar(16) character set utf8 collate utf8_unicode_ci not null,
-    jkl binary(17) character set utf8 collate utf8_unicode_ci not null,
-    mno varbinary(18) character set utf8 collate utf8_unicode_ci not null,
+    jkl binary(17) not null,
+    mno varbinary(18) not null,
     pqr tinyblob not null,
     stu blob(19) not null,
     vwx mediumblob not null,

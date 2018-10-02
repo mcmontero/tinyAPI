@@ -358,7 +358,9 @@ class _MySQLStringColumn(__MySQLColumn):
         if self.__type_id not in [self.TYPE_TINYBLOB,
                                   self.TYPE_BLOB,
                                   self.TYPE_MEDIUMBLOB,
-                                  self.TYPE_LONGBLOB]:
+                                  self.TYPE_LONGBLOB,
+                                  self.TYPE_VARBINARY,
+                                  self.TYPE_BINARY]:
             if self.__charset is not None:
                 terms.append('character set ' + self.__charset)
 

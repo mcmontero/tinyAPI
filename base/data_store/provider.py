@@ -640,6 +640,7 @@ class DataStoreProvider(object):
     __persistent = {}
 
     def __init__(self):
+        self.__log_connection_stats = False
         self.pid = os.getpid()
 
 
@@ -665,14 +666,20 @@ class DataStoreProvider(object):
             else:
                 dsh = getattr(_thread_local_data, connection)
 
-            StatsLogger().hit_ratio(
-                'Persistent Connection Stats',
-                dsh.requests,
-                dsh.hits,
-                self.pid
-            )
+            if self.__log_connection_stats is True:
+                StatsLogger().hit_ratio(
+                    'Persistent Connection Stats',
+                    dsh.requests,
+                    dsh.hits,
+                    self.pid
+                )
 
             return dsh.select_db(connection, db)
         else:
             raise DataStoreException(
                 'configured data store is not currently supported')
+
+
+    def log_connection_stats(self):
+        self.__log_connection_stats = True
+        return self

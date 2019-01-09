@@ -18,6 +18,7 @@ class ContextTestCase(unittest.TestCase):
     def tearDown(self):
         try:
             del os.environ['APP_SERVER_ENV']
+            del os.environ['APP_SERVER_DOMAIN']
         except KeyError:
             pass
 
@@ -31,7 +32,7 @@ class ContextTestCase(unittest.TestCase):
                       + 'not set.')
         except ContextException as e:
             self.assertEqual(
-                'could not find environment variable called "APP_SERVER_ENV"',
+                'could not find environment variable "APP_SERVER_ENV"',
                 e.get_message())
 
         os.environ['APP_SERVER_ENV'] = 'invalid'
@@ -46,9 +47,27 @@ class ContextTestCase(unittest.TestCase):
                 'application server environment "invalid" is not valid',
                 e.get_message())
 
+        os.environ['APP_SERVER_ENV'] = 'staging'
+        os.environ['APP_SERVER_DOMAIN'] = 'invalid'
+
+        try:
+            Context().get_server_env()
+
+            this.fail('Was able to get server environment even though the '
+                      + 'domain provided was invalid.')
+        except ContextException as e:
+            self.assertEqual(
+                'unrecognized server domain "invalid"',
+                e.get_message()
+            )
+
     def test_getting_server_env(self):
         os.environ['APP_SERVER_ENV'] = Context.LOCAL
         self.assertEqual(Context.LOCAL, Context().get_server_env())
+
+    def test_server_env_demo(self):
+        os.environ['APP_SERVER_ENV'] = Context.DEMO
+        self.assertTrue(tinyAPI.env_demo())
 
     def test_server_env_local(self):
         os.environ['APP_SERVER_ENV'] = Context.LOCAL
@@ -67,6 +86,9 @@ class ContextTestCase(unittest.TestCase):
         self.assertTrue(tinyAPI.env_prod())
 
     def test_server_env_not_prod(self):
+        os.environ['APP_SERVER_ENV'] = Context.DEMO
+        self.assertTrue(tinyAPI.env_not_prod())
+
         os.environ['APP_SERVER_ENV'] = Context.LOCAL
         self.assertTrue(tinyAPI.env_not_prod())
 
@@ -96,6 +118,13 @@ class ContextTestCase(unittest.TestCase):
     def test_unit_test(self):
         Context().set_unit_test()
         self.assertTrue(Context().is_unit_test())
+
+    def test_server_env_demo_from_domain(self):
+        os.environ['APP_SERVER_ENV'] = Context.LOCAL
+        os.environ['APP_SERVER_DOMAIN'] = 'demo'
+
+        self.assertTrue(tinyAPI.env_demo())
+        self.assertFalse(tinyAPI.env_local())
 
 # ----- Main ------------------------------------------------------------------
 

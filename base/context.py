@@ -11,6 +11,7 @@ import os
 
 __all__ = [
     'env_cli',
+    'env_demo',
     'env_local',
     'env_not_prod',
     'env_prod',
@@ -27,6 +28,10 @@ def __context_env_matches(env):
     return Context().get_server_env() == env
 
 # ----- Public Functions ------------------------------------------------------
+
+def env_demo():
+    return __context_env_matches(Context.DEMO)
+
 
 def env_local():
     return __context_env_matches(Context.LOCAL)
@@ -65,6 +70,7 @@ class Context(metaclass=Singleton):
     '''Provides information about the context in which the application is
        running.'''
 
+    DEMO = 'demo'
     LOCAL = 'local'
     STAGING = 'staging'
     QA = 'qa'
@@ -79,17 +85,30 @@ class Context(metaclass=Singleton):
             server_env = os.environ.get('APP_SERVER_ENV')
             if server_env is None:
                 raise ContextException(
-                        'could not find environment variable called '
-                        + '"APP_SERVER_ENV"')
+                    'could not find environment variable "APP_SERVER_ENV"'
+                )
 
-            if server_env not in [self.LOCAL,
-                                  self.STAGING,
-                                  self.QA,
-                                  self.PRODUCTION]:
+            if server_env not in [
+                self.DEMO,
+                self.LOCAL,
+                self.STAGING,
+                self.QA,
+                self.PRODUCTION
+            ]:
                 raise ContextException(
-                        'application server environment "'
-                        + server_env
-                        + '" is not valid')
+                    'application server environment "{}" is not valid'
+                        .format(server_env)
+                )
+
+            server_domain = os.environ.get('APP_SERVER_DOMAIN')
+            if server_domain is not None:
+                if server_domain == 'demo':
+                    server_env = self.DEMO
+                else:
+                    raise ContextException(
+                        'unrecognized server domain "{}"'
+                            .format(server_domain)
+                    )
 
             self.__server_env = server_env
 

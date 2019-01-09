@@ -51,7 +51,7 @@ class ContextTestCase(unittest.TestCase):
         os.environ['APP_SERVER_DOMAIN'] = 'invalid'
 
         try:
-            Context().get_server_env()
+            Context().get_server_domain()
 
             this.fail('Was able to get server environment even though the '
                       + 'domain provided was invalid.')
@@ -64,6 +64,10 @@ class ContextTestCase(unittest.TestCase):
     def test_getting_server_env(self):
         os.environ['APP_SERVER_ENV'] = Context.LOCAL
         self.assertEqual(Context.LOCAL, Context().get_server_env())
+
+    def test_getting_server_domain(self):
+        os.environ['APP_SERVER_DOMAIN'] = Context.DEMO
+        self.assertEqual(Context.DEMO, Context().get_server_domain())
 
     def test_server_env_demo(self):
         os.environ['APP_SERVER_ENV'] = Context.DEMO
@@ -123,8 +127,8 @@ class ContextTestCase(unittest.TestCase):
         os.environ['APP_SERVER_ENV'] = Context.LOCAL
         os.environ['APP_SERVER_DOMAIN'] = 'demo'
 
+        self.assertTrue(tinyAPI.env_local())
         self.assertTrue(tinyAPI.env_demo())
-        self.assertFalse(tinyAPI.env_local())
 
 # ----- Main ------------------------------------------------------------------
 

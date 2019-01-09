@@ -30,7 +30,9 @@ def __context_env_matches(env):
 # ----- Public Functions ------------------------------------------------------
 
 def env_demo():
-    return __context_env_matches(Context.DEMO)
+    return \
+        __context_env_matches(Context.DEMO) or \
+        Context().get_server_domain() == Context.DEMO
 
 
 def env_local():
@@ -80,6 +82,21 @@ class Context(metaclass=Singleton):
         self.reset()
 
 
+    def get_server_domain(self):
+        if self.__server_domain is None:
+            server_domain = os.environ.get('APP_SERVER_DOMAIN')
+            if server_domain is not None:
+                if server_domain == 'demo':
+                    self.__server_domain = self.DEMO
+                else:
+                    raise ContextException(
+                        'unrecognized server domain "{}"'
+                            .format(server_domain)
+                    )
+
+        return self.__server_domain
+
+
     def get_server_env(self):
         if self.__server_env is None:
             server_env = os.environ.get('APP_SERVER_ENV')
@@ -100,16 +117,6 @@ class Context(metaclass=Singleton):
                         .format(server_env)
                 )
 
-            server_domain = os.environ.get('APP_SERVER_DOMAIN')
-            if server_domain is not None:
-                if server_domain == 'demo':
-                    server_env = self.DEMO
-                else:
-                    raise ContextException(
-                        'unrecognized server domain "{}"'
-                            .format(server_domain)
-                    )
-
             self.__server_env = server_env
 
         return self.__server_env
@@ -129,6 +136,7 @@ class Context(metaclass=Singleton):
 
     def reset(self):
         self.__server_env = None
+        self.__server_domain = None
         self.__is_cli = False
         self.__is_web = False
         self.__is_unit_test = False

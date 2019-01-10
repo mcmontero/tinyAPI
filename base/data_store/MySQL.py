@@ -99,7 +99,8 @@ class MySQL(RDBMSBase):
                 'host': host,
                 'database': self._db,
                 'charset': self._charset,
-                'autocommit': False
+                'autocommit': False,
+                'local_infile': True,
             }
 
             try:

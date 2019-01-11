@@ -300,6 +300,7 @@ class DataStoreMySQL(RDBMSBase):
             'host': connection_data[self._connection_name][0],
             'database': self._db_name,
             'charset': self._charset,
+            'local_infile': True,
             'autocommit': False
         }
 

@@ -582,7 +582,7 @@ class Table(object):
              max_display_width=None,
              unsigned=False,
              zero_fill=False):
-        '''Define a bit integer column.'''
+        '''Define a big integer column.'''
         self.__add_column(
             _MySQLNumericColumn(name)
                 .integer_type(_MySQLNumericColumn.TYPE_BIGINT,

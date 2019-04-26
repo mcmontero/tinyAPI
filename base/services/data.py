@@ -119,7 +119,7 @@ class Validator(object):
 
         if len(name) == 0 or \
            len(domain) == 0 or \
-           not re.search('^[A-Za-z0-9\._%+-]+$', name):
+           not re.search("^[A-Za-z0-9\._%+'-]+$", name):
             return False
 
         domain_parts = domain.split('.')
